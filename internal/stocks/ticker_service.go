@@ -36,6 +36,11 @@ func (service *TickerService) UpdateTickerEOD() (*Ticker, *TickerControl, []*Tic
 
 	service.loadTickerDetails()
 	tha, _ := service.loadTickerHistory()
+	//sort by ascending
+	sort.Slice(tha, func(i, j int) bool {
+		return tha[i].Date.Before(tha[j].Date)
+	})
+
 	slog.Debug("UpdateTickersEOD", "ID", t.ID, "History Count", len(tha))
 
 	if len(tha) == 0 {
@@ -75,11 +80,6 @@ func (service *TickerService) UpdateTickerEOD() (*Ticker, *TickerControl, []*Tic
 func (service *TickerService) updatePrice(tha []*TickerHistory) {
 
 	t := service.T
-
-	//sort by ascending
-	sort.Slice(tha, func(i, j int) bool {
-		return tha[i].Date.Before(tha[j].Date)
-	})
 
 	var lth *TickerHistory
 	var pth *TickerHistory
@@ -189,6 +189,7 @@ func (service *TickerService) updateTechnicals(tha []*TickerHistory, historyUpda
 			// slog.Debug("updateTechnicals", "RSI Period", period, "Value", rsi)
 		}
 	}
+
 }
 
 // matchTechnicalStrategies updates ticker strategies by running the techan strategy rules
@@ -220,6 +221,11 @@ func (Service *TickerService) matchTechnicalStrategies(tha []*TickerHistory) []s
 			slog.Debug("matchTechnicalStrategies", "ShouldEnter", "Yes", "TradingRecord", record)
 			strategies = append(strategies, strategy)
 		}
+		if ruleStrategy.ShouldExit(series.LastIndex(), record) {
+			slog.Debug("matchTechnicalStrategies", "ShouldExit", "Yes", "TradingRecord", record)
+			strategies = append(strategies, strategy)
+		}
+
 	}
 	return strategies
 }
@@ -355,6 +361,7 @@ func (service *TickerService) loadTickerHistory() ([]*TickerHistory, error) {
 	}
 
 	ttha = tthm[t.Symbol]
+
 	for _, tth := range ttha {
 
 		th := &TickerHistory{}
@@ -370,6 +377,10 @@ func (service *TickerService) loadTickerHistory() ([]*TickerHistory, error) {
 		th.Volume = utils.ConvertFloatToDecimal(tth.Volume)
 		th.SplitFactor = tth.SplitFactor
 		tha = append(tha, th)
+		// if len(tha) == len(ttha) {
+		// 	slog.Debug("loadTickerHistory", "TickerHistory", ttha[len(tha)-1])
+		// 	slog.Debug("loadTickerHistory", "TickerHistory", th)
+		// }
 	}
 
 	return tha, nil
