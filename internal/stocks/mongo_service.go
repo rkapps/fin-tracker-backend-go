@@ -263,7 +263,7 @@ func (s StocksService) updateTickersEOD(ctx context.Context, ts Tickers, load bo
 		if load {
 			tcr := mongodb.NewMongoRepository[*TickerControl](*s.client)
 			tcr.DeleteByID(ctx, t.ID)
-			thr.DeleteByID(ctx, t.ID)
+			thr.DeleteMany(ctx, []string{t.ID})
 		}
 
 		//Find ticker control
