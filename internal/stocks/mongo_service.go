@@ -3,6 +3,7 @@ package stocks
 import (
 	"context"
 	"fmt"
+	"log"
 	"log/slog"
 	"rkapps/fin-tracker-backend-go/internal/providers"
 	"rkapps/fin-tracker-backend-go/internal/utils"
@@ -37,11 +38,19 @@ func (s StocksService) getTickersByFilter(ctx context.Context, filter any, sort 
 	return tr.Find(ctx, filter, sort, 0, 0)
 }
 
-// GetTickers returns the ticker for the exchange:symbol
+// GetTicker returns the ticker for the exchange:symbol
 func (s StocksService) GetTicker(ctx context.Context, id string) (*Ticker, error) {
 
 	tr := mongodb.NewMongoRepository[*Ticker](*s.client)
 	return tr.FindByID(ctx, id)
+}
+
+// GetTickerHistory returns the ticker history for the exchange:symbol
+func (s StocksService) GetTickerHistory(ctx context.Context, id string) ([]*TickerHistory, error) {
+
+	th := mongodb.NewMongoRepository[*TickerHistory](*s.client)
+	filter := bson.D{{Key: FIELD_ID, Value: id}}
+	return th.Find(ctx, filter, nil, 0, 0)
 }
 
 // GetTickers returns the tickers for the symbols
@@ -261,6 +270,12 @@ func (s StocksService) updateTickersEOD(ctx context.Context, ts Tickers, load bo
 		ta = append(ta, t)
 		ids = append(ids, t.ID)
 		utha = append(utha, tha...)
+		for i, th := range tha {
+			if i == len(tha)-1 {
+				log.Println(th.RSI)
+			}
+		}
+
 		if i%25 == 0 || (i == len(ts)-1) {
 			slog.Info("updateTickersEOD", "Updating Tickers...", fmt.Sprintf("%d/%d", i+1, len(ts)))
 			slog.Info("updateTickersEOD", "Saving Ticker History Data", len(utha))
@@ -268,6 +283,9 @@ func (s StocksService) updateTickersEOD(ctx context.Context, ts Tickers, load bo
 			thr := mongodb.NewMongoRepository[*TickerHistory](*s.client)
 			if len(utha) > 0 {
 				err = thr.InsertMany(ctx, utha)
+				if err != nil {
+					slog.Debug("updateTickersEOD", "TickerHistory", len(utha), "Error", err)
+				}
 				utha = []*TickerHistory{}
 			}
 		}

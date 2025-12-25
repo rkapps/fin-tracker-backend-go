@@ -24,7 +24,8 @@ func (h *StocksHandler) RegisterRoutes(router *gin.Engine) {
 
 	sGroup := router.Group("/stocks")
 	sGroup.GET("", h.GetTickers)
-	sGroup.GET("/:symbol", h.GetTicker)
+	sGroup.GET("/:id", h.GetTicker)
+	sGroup.GET("/:id/history", h.GetTickerHistory)
 	sGroup.POST("/load", h.LoadTickers)
 	sGroup.POST("/search", h.SearchTickers)
 	sGroup.GET("/updateEOD", h.UpdateEOD)
@@ -35,6 +36,18 @@ func (h *StocksHandler) RegisterRoutes(router *gin.Engine) {
 func (h *StocksHandler) GetTicker(c *gin.Context) {
 	symbol := c.Param("symbol")
 	tk, err := h.Service.GetTicker(c, symbol)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, tk)
+}
+
+// GetTicker gets a single ticker based on the symbol
+func (h *StocksHandler) GetTickerHistory(c *gin.Context) {
+	id := c.Param("id")
+	tk, err := h.Service.GetTickerHistory(c, id)
 	if err != nil {
 		c.Error(err)
 		return

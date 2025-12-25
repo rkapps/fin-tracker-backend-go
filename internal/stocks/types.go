@@ -11,6 +11,7 @@ import (
 const (
 
 	//Fields
+	FIELD_ID                 = "id"
 	FIELD_SYMBOL             = "symbol"
 	FIELD_EXCHANGE           = "exchange"
 	FIELD_NAME               = "name"
