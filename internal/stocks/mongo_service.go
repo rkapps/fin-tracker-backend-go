@@ -3,7 +3,6 @@ package stocks
 import (
 	"context"
 	"fmt"
-	"log"
 	"log/slog"
 	"rkapps/fin-tracker-backend-go/internal/providers"
 	"rkapps/fin-tracker-backend-go/internal/utils"
@@ -250,7 +249,7 @@ func (s StocksService) updateTickersEOD(ctx context.Context, ts Tickers, load bo
 
 	var tca []*TickerControl
 	var ta []*Ticker
-	var utha []*TickerHistory
+	// var utha []*TickerHistory
 
 	tcr := mongodb.NewMongoRepository[*TickerControl](*s.client)
 
@@ -261,33 +260,29 @@ func (s StocksService) updateTickersEOD(ctx context.Context, ts Tickers, load bo
 
 		//Find ticker control
 		tc, _ := tcr.FindByID(ctx, t.ID)
-		tu := &TickerService{T: t, Tc: tc}
+		tu := &TickerService{T: t, Tc: tc, Load: load}
 		t, tc, tha := tu.UpdateTickerEOD()
+
+		ta = append(ta, t)
+		ids = append(ids, t.ID)
+
+		// Save the TickerHistory data
+		if len(tha) > 0 {
+			thr := mongodb.NewMongoRepository[*TickerHistory](*s.client)
+			err = thr.InsertMany(ctx, tha)
+			if err != nil {
+				slog.Debug("updateTickersEOD", "TickerHistory", len(tha), "Error", err)
+				continue
+			}
+		}
+
+		//update the ticket control once the history is updated
 		if tc != nil {
 			tca = append(tca, tc)
 		}
 
-		ta = append(ta, t)
-		ids = append(ids, t.ID)
-		utha = append(utha, tha...)
-		for i, th := range tha {
-			if i == len(tha)-1 {
-				log.Println(th.RSI)
-			}
-		}
-
 		if i%25 == 0 || (i == len(ts)-1) {
 			slog.Info("updateTickersEOD", "Updating Tickers...", fmt.Sprintf("%d/%d", i+1, len(ts)))
-			slog.Info("updateTickersEOD", "Saving Ticker History Data", len(utha))
-			// Save the TickerHistory data
-			thr := mongodb.NewMongoRepository[*TickerHistory](*s.client)
-			if len(utha) > 0 {
-				err = thr.InsertMany(ctx, utha)
-				if err != nil {
-					slog.Debug("updateTickersEOD", "TickerHistory", len(utha), "Error", err)
-				}
-				utha = []*TickerHistory{}
-			}
 		}
 	}
 
