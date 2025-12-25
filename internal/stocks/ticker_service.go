@@ -279,7 +279,7 @@ func (service *TickerService) loadTickerDetails() *Ticker {
 	}
 
 	or, url, err := providers.GetTickerDetailsFromAlpha(t.Symbol)
-	time.Sleep(200 * time.Millisecond)
+	// time.Sleep(200 * time.Millisecond)
 
 	if err != nil {
 		slog.Info("LoadTickerDetailsFromAlpha", "Error", fmt.Sprintf("%s - %v", url, err))

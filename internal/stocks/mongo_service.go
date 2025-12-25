@@ -263,6 +263,13 @@ func (s StocksService) updateTickersEOD(ctx context.Context, ts Tickers, load bo
 		utha = append(utha, tha...)
 		if i%25 == 0 || (i == len(ts)-1) {
 			slog.Info("updateTickersEOD", "Updating Tickers...", fmt.Sprintf("%d/%d", i+1, len(ts)))
+			slog.Info("updateTickersEOD", "Saving Ticker History Data", len(utha))
+			// Save the TickerHistory data
+			thr := mongodb.NewMongoRepository[*TickerHistory](*s.client)
+			if len(utha) > 0 {
+				err = thr.InsertMany(ctx, utha)
+				utha = []*TickerHistory{}
+			}
 		}
 	}
 
@@ -283,13 +290,6 @@ func (s StocksService) updateTickersEOD(ctx context.Context, ts Tickers, load bo
 		if err != nil {
 			return err
 		}
-	}
-
-	slog.Info("updateTickersEOD", "Saving Ticker History Data", len(utha))
-	// Save the TickerHistory data
-	thr := mongodb.NewMongoRepository[*TickerHistory](*s.client)
-	if len(utha) > 0 {
-		err = thr.InsertMany(ctx, utha)
 	}
 
 	slog.Info("updateTickersEOD", "Saving Data", "Done")
