@@ -249,14 +249,22 @@ func (s StocksService) updateTickersEOD(ctx context.Context, ts Tickers, load bo
 
 	var tca []*TickerControl
 	var ta []*Ticker
-	// var utha []*TickerHistory
 
+	tr := mongodb.NewMongoRepository[*Ticker](*s.client)
 	tcr := mongodb.NewMongoRepository[*TickerControl](*s.client)
+	thr := mongodb.NewMongoRepository[*TickerHistory](*s.client)
 
 	for i, t := range ts {
 
 		//Set the Id
 		t.SetId()
+
+		//if loading the data, remove the ticker control and ticker history
+		if load {
+			tcr := mongodb.NewMongoRepository[*TickerControl](*s.client)
+			tcr.DeleteByID(ctx, t.ID)
+			thr.DeleteByID(ctx, t.ID)
+		}
 
 		//Find ticker control
 		tc, _ := tcr.FindByID(ctx, t.ID)
@@ -268,7 +276,6 @@ func (s StocksService) updateTickersEOD(ctx context.Context, ts Tickers, load bo
 
 		// Save the TickerHistory data
 		if len(tha) > 0 {
-			thr := mongodb.NewMongoRepository[*TickerHistory](*s.client)
 			err = thr.InsertMany(ctx, tha)
 			if err != nil {
 				slog.Debug("updateTickersEOD", "TickerHistory", len(tha), "Error", err)
@@ -297,7 +304,6 @@ func (s StocksService) updateTickersEOD(ctx context.Context, ts Tickers, load bo
 
 	slog.Info("updateTickersEOD", "Saving Ticker Data", len(ts))
 	// Save the Ticker data
-	tr := mongodb.NewMongoRepository[*Ticker](*s.client)
 	if len(ts) > 0 {
 		err = tr.BulkWrite(ctx, ids, ts)
 		if err != nil {
