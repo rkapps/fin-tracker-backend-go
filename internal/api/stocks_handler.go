@@ -52,7 +52,7 @@ func (h *StocksHandler) GetTickerHistory(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-
+	slog.Debug("GetTickerHistory", "id", id, "Count", len(tk))
 	c.JSON(http.StatusOK, tk)
 }
 
