@@ -38,7 +38,7 @@ func PriceDiff(last decimal.Decimal, prev decimal.Decimal) (diff decimal.Decimal
 	} else {
 		percent = decimal.Zero
 	}
-	return diff, percent
+	return diff, percent.RoundUp(2)
 }
 
 // RoundUp rounds the float value to 2 decimal places
