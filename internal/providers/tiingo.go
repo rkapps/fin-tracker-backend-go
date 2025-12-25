@@ -2,6 +2,7 @@ package providers
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"rkapps/fin-tracker-backend-go/internal/utils"
 	"strings"
@@ -36,7 +37,7 @@ type TTickerHistory struct {
 	Low         float64   `json:"low"`
 	Close       float64   `json:"close"`
 	Volume      float64   `json:"volume"`
-	SplitFactor int       `json:"splitFactor"`
+	SplitFactor float64   `json:"splitFactor"`
 }
 
 // GetTickerRealTimeQuoteFromTiingo returns the real time last price and date
@@ -107,7 +108,10 @@ func getTickerHistory(symbol string, st time.Time, et time.Time) []*TTickerHisto
 	var tths []*TTickerHistory
 	dates := fmt.Sprintf("&startDate=%s&endDate=%s", utils.DateFormat1(st), utils.DateFormat1(et))
 	url := strings.Join([]string{TIINGO_EOD_URL, symbol, "/prices?token=", TIINGO_API_TOKEN, dates}, "")
-	RunHTTPGet(url, &tths)
+	err := RunHTTPGet(url, &tths)
+	if err != nil {
+		slog.Debug("getTickerHistory", "url", url, "error", err)
+	}
 
 	return tths
 }
