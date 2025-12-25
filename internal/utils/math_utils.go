@@ -15,7 +15,7 @@ func ConvertDecimalToFloat64(dec decimal.Decimal) float64 {
 
 // ConvertFloat64ToDecimal converts  float64 to decimal
 func ConvertFloatToDecimal(value float64) decimal.Decimal {
-	return decimal.NewFromFloatWithExponent(value, 8)
+	return decimal.NewFromFloatWithExponent(value, -6)
 }
 
 // ConvertIntoToDecimal converts int to decimal
