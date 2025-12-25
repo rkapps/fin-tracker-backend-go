@@ -194,21 +194,21 @@ type TickerSearch struct {
 
 // TickerHistory holds historical data for tickers
 type TickerHistory struct {
-	ID       string    `bson:"id"`
-	Date     time.Time `bson:"date"`
+	ID       string    `json:"id" bson:"id"`
+	Date     time.Time `json:"date" bson:"date"`
 	Metadata struct {
-		Symbol   string `bson:"symbol"`
-		Exchange string `bson:"exchange"`
-	} `bson:"metadata"`
-	Open        decimal.Decimal            `bson:"open"`
-	High        decimal.Decimal            `bson:"high"`
-	Low         decimal.Decimal            `bson:"low"`
-	Close       decimal.Decimal            `bson:"close"`
-	Volume      decimal.Decimal            `bson:"volume"`
-	SplitFactor float64                    `bson:"splitFactor"`
-	SMA         map[string]decimal.Decimal `bson:"sma"`
-	EMA         map[string]decimal.Decimal `bson:"ema"`
-	RSI         map[string]decimal.Decimal `bson:"rsi"`
+		Symbol   string `json:"symbol" bson:"symbol"`
+		Exchange string `json:"exchange" bson:"exchange"`
+	} `json:"metadata" bson:"metadata"`
+	Open        decimal.Decimal            `json:"open" bson:"open"`
+	High        decimal.Decimal            `json:"high" bson:"high"`
+	Low         decimal.Decimal            `json:"low" bson:"low"`
+	Close       decimal.Decimal            `json:"close" bson:"close"`
+	Volume      decimal.Decimal            `json:"volume" bson:"volume"`
+	SplitFactor float64                    `json:"-" bson:"splitFactor"`
+	SMA         map[string]decimal.Decimal `json:"sma" bson:"sma"`
+	EMA         map[string]decimal.Decimal `json:"ema" bson:"ema"`
+	RSI         map[string]decimal.Decimal `json:"rsi" bson:"rsi"`
 }
 
 // Id returns the unique id for the ticker
