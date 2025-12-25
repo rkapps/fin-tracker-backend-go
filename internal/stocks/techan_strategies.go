@@ -7,7 +7,52 @@ import (
 )
 
 var StrategyCatalog = map[string]func(series *techan.TimeSeries) techan.RuleStrategy{
-	"RSI_OverSold": RSIOverSoldStrategy,
+	"RSI_OverSold":   RSIOverSoldStrategy,
+	"RSI_OverBought": RsiStochasticOverboughtStrategy,
+}
+
+func RsiStochasticOverboughtStrategy(series *techan.TimeSeries) techan.RuleStrategy {
+	// 1. Initialize Indicators
+	closePrices := techan.NewClosePriceIndicator(series)
+
+	// RSI 14-period
+	rsi := techan.NewRelativeStrengthIndexIndicator(closePrices, 14)
+
+	// Stochastic 14-period %K and 3-period %D
+	// stochastic oscillator
+	kPeriod := 14
+	dPeriod := 3
+	kIndicator := techan.NewFastStochasticIndicator(series, kPeriod)
+	dIndicator := techan.NewSimpleMovingAverage(kIndicator, dPeriod)
+
+	rsiLevel := techan.NewConstantIndicator(70)
+	stochLevel := techan.NewConstantIndicator(80)
+
+	// 2. Define the Exit Rule (The Sell Signal)
+	// Must be positioned above 80/70 thresholds AND K must cross down D
+
+	// Condition A: K is above 80
+	kIsOverbought := techan.NewCrossUpIndicatorRule(kIndicator, stochLevel)
+
+	// Condition B: D is above 80 (ensures both are deep in OB territory)
+	dIsOverbought := techan.NewCrossUpIndicatorRule(dIndicator, stochLevel)
+	// Condition C: RSI is above 70
+	rsiCrossUp := techan.NewCrossUpIndicatorRule(rsi, rsiLevel)
+	// Condition D: K crosses down below D (The trigger event)
+	kCrossesDownD := techan.NewCrossDownIndicatorRule(kIndicator, dIndicator)
+
+	// Combine all conditions: Must be overbought on both metrics AND the K/D cross happened
+	exitRule := techan.And(techan.And(kIsOverbought, dIsOverbought), techan.And(rsiCrossUp,
+		kCrossesDownD),
+	)
+
+	entryRule := techan.PositionNewRule{} // Opens a position immediately at start
+
+	return techan.RuleStrategy{
+		EntryRule:      entryRule,
+		ExitRule:       exitRule,
+		UnstablePeriod: 14, // Wait for enough data
+	}
 }
 
 // RSIOverSoldStrategy returns a rule strategy for oversold stocks
@@ -17,23 +62,21 @@ func RSIOverSoldStrategy(series *techan.TimeSeries) techan.RuleStrategy {
 	rsi := techan.NewRelativeStrengthIndexIndicator(closePrices, 14)
 	emaFast := techan.NewEMAIndicator(closePrices, 10)
 
-	// 2. Define Entry Rules
+	// Define Entry Rules
 	// Signal: RSI < 30 AND price crosses above 10-EMA (Confirmation)
-	oversoldThreshold := techan.NewConstantIndicator(30)
-	crossDownRule := techan.NewCrossDownIndicatorRule(rsi, oversoldThreshold)
+
+	rsiLevel := techan.NewConstantIndicator(30)
+	rsiCrossDown := techan.NewCrossDownIndicatorRule(rsi, rsiLevel)
 
 	entryRule := techan.And(
-		crossDownRule,
+		rsiCrossDown,
 		techan.And(
 			techan.NewCrossUpIndicatorRule(closePrices, emaFast), // Price > 10-EMA
 			techan.PositionNewRule{},                             // Only if no position open
 		),
 	)
 
-	// Exit Rule: RSI is over 70
-	overboughtThreshold := techan.NewConstantIndicator(70)
-	exitRule := techan.NewCrossUpIndicatorRule(rsi, overboughtThreshold)
-
+	exitRule := techan.PositionNewRule{}
 	return techan.RuleStrategy{
 		EntryRule: entryRule,
 		ExitRule:  exitRule,
