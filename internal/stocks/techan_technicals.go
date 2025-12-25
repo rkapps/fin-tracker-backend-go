@@ -25,8 +25,12 @@ func createTechanTimeSeries(tha []*TickerHistory) *techan.TimeSeries {
 }
 
 var StrategyCatalog = map[string]func(series *techan.TimeSeries) bool{
-	"RSI_OverSold":   RSIOverSoldStrategy,
-	"RSI_OverBought": RsiStochasticOverboughtStrategy,
+	"RSI_OverBought":   RsiStochasticOverboughtStrategy,
+	"RSI_OverSold":     RSIOverSoldStrategy,
+	"MACD_GoldenCross": MACDGoldenCrossStrategy,
+	"MACD DeathCross":  MACDDeathCrossStrategy,
+	"BB_OverBought":    BollingBandsOverBoughtStrategy,
+	"BB_OverSold":      BollingBandsOverSoldStrategy,
 }
 
 // RSIOverSoldStrategy returns a rule strategy for oversold stocks
@@ -59,6 +63,7 @@ func RSIOverSoldStrategy(series *techan.TimeSeries) bool {
 	return rs.ShouldEnter(series.LastIndex(), record)
 }
 
+// RsiStochasticOverboughtStrategy returns a rule strategy on overbought stocks based on rsi and stocashtic oscillator
 func RsiStochasticOverboughtStrategy(series *techan.TimeSeries) bool {
 	// 1. Initialize Indicators
 	closePrices := techan.NewClosePriceIndicator(series)
@@ -103,6 +108,75 @@ func RsiStochasticOverboughtStrategy(series *techan.TimeSeries) bool {
 	}
 	record := techan.NewTradingRecord()
 	return rs.ShouldExit(series.LastIndex(), record)
+}
+
+// MACDGoldenCrossStrategy returns true if the stocks MACD line crosses over the SIGNAL line
+func MACDGoldenCrossStrategy(series *techan.TimeSeries) bool {
+	// 1. Initialize Indicators
+	closePrices := techan.NewClosePriceIndicator(series)
+
+	//macd
+	macdLine := techan.NewMACDIndicator(closePrices, 12, 26)
+	macdHistogram := techan.NewMACDHistogramIndicator(macdLine, 9)
+	signalLine := techan.NewEMAIndicator(macdHistogram, 9)
+
+	goldenCrossRule := techan.NewCrossUpIndicatorRule(macdLine, signalLine)
+	record := techan.NewTradingRecord()
+	return goldenCrossRule.IsSatisfied(series.LastIndex(), record)
+
+}
+
+// MACDDeathCrossStrategy returns true if the stocks MACD line crosses over the SIGNAL line
+func MACDDeathCrossStrategy(series *techan.TimeSeries) bool {
+	// 1. Initialize Indicators
+	closePrices := techan.NewClosePriceIndicator(series)
+
+	//macd
+	macdLine := techan.NewMACDIndicator(closePrices, 12, 26)
+	macdHistogram := techan.NewMACDHistogramIndicator(macdLine, 9)
+	signalLine := techan.NewEMAIndicator(macdHistogram, 9)
+
+	goldenCrossRule := techan.NewCrossDownIndicatorRule(macdLine, signalLine)
+	record := techan.NewTradingRecord()
+	return goldenCrossRule.IsSatisfied(series.LastIndex(), record)
+
+}
+
+// BollingBandsOverSoldStrategy returns true if the price is above middle and low band
+func BollingBandsOverSoldStrategy(series *techan.TimeSeries) bool {
+
+	closePrices := techan.NewClosePriceIndicator(series)
+
+	middleBand := techan.NewSimpleMovingAverage(closePrices, 20)
+	// upperBand := techan.NewBollingerUpperBandIndicator(closePrices, 20, 2.0)
+	lowerBand := techan.NewBollingerLowerBandIndicator(closePrices, 20, 2.0)
+
+	crossAboveMid := techan.NewCrossUpIndicatorRule(closePrices, middleBand)
+	currentPrice := closePrices.Calculate(series.LastIndex())
+	lowerVal := lowerBand.Calculate(series.LastIndex())
+
+	isAboveLower := currentPrice.GT(lowerVal)
+	record := techan.NewTradingRecord()
+
+	return isAboveLower && crossAboveMid.IsSatisfied(series.LastIndex(), record)
+}
+
+// BollingBandsOverBoughtStrategy returns true if the price is above the upper band
+func BollingBandsOverBoughtStrategy(series *techan.TimeSeries) bool {
+
+	closePrices := techan.NewClosePriceIndicator(series)
+
+	// middleBand := techan.NewSimpleMovingAverage(closePrices, 20)
+	upperBand := techan.NewBollingerUpperBandIndicator(closePrices, 20, 2.0)
+
+	// crossAboveMid := techan.NewCrossUpIndicatorRule(closePrices, middleBand)
+	currentPrice := closePrices.Calculate(series.LastIndex())
+	upperVal := upperBand.Calculate(series.LastIndex())
+
+	isOverbought := currentPrice.GT(upperVal)
+	// record := techan.NewTradingRecord()
+
+	return isOverbought
 }
 
 func examples(series *techan.TimeSeries) {
