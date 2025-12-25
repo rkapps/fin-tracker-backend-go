@@ -47,18 +47,17 @@ func getClient() *mongodb.MongoClient {
 	return client
 }
 
-func getHistoryData(client *mongodb.MongoClient) ([]*TickerHistory, error) {
+func getHistoryData(client *mongodb.MongoClient, id string) ([]*TickerHistory, error) {
 
-	// th := mongodb.NewMongoRepository[*TickerHistory](*client)
 	stocksService := NewMongoService(client)
-	return stocksService.GetTickerHistory(context.Background(), "NYSEARCA:GLD")
+	return stocksService.GetTickerHistory(context.Background(), id)
 }
 
 func TestTechan(t *testing.T) {
 
 	t.Run("rsi", func(t *testing.T) {
 		client := getClient()
-		tha, err := getHistoryData(client)
+		tha, err := getHistoryData(client, "NYSEARCA:GLD")
 		log.Println(len(tha))
 		if err != nil {
 			log.Println(err)
@@ -70,6 +69,59 @@ func TestTechan(t *testing.T) {
 		// RSI 14-period
 		period := 14
 		rsi := techan.NewRelativeStrengthIndexIndicator(closePrices, period)
+
 		log.Printf("Rsi for period: %v - %v", period, rsi.Calculate(index))
+
+		kPeriod := 14
+		dPeriod := 3
+		kIndicator := techan.NewFastStochasticIndicator(series, kPeriod)
+		dIndicator := techan.NewSlowStochasticIndicator(kIndicator, dPeriod)
+
+		log.Printf("kIndicator: %v", kIndicator.Calculate(index))
+		log.Printf("dIndicator: %v", dIndicator.Calculate(index))
+
+		rsiLevel := techan.NewConstantIndicator(70)
+		stochLevel := techan.NewConstantIndicator(80)
+
+		kIsOverbought := techan.NewCrossUpIndicatorRule(kIndicator, stochLevel)
+		dIsOverbought := techan.NewCrossUpIndicatorRule(dIndicator, stochLevel)
+
+		rsiCrossDown := techan.NewCrossDownIndicatorRule(rsi, rsiLevel)
+		kCrossesDownD := techan.NewCrossDownIndicatorRule(kIndicator, dIndicator)
+
+		record := techan.NewTradingRecord()
+		log.Printf("kIsOverbought :%v", kIsOverbought.IsSatisfied(series.LastIndex(), record))
+		log.Printf("dIsOverbought :%v", dIsOverbought.IsSatisfied(series.LastIndex(), record))
+		log.Printf("kCrossDownD :%v", kCrossesDownD.IsSatisfied(series.LastIndex(), record))
+		log.Printf("rsiCrossDown :%v", rsiCrossDown.IsSatisfied(series.LastIndex(), record))
+	})
+
+	t.Run("macd", func(t *testing.T) {
+		client := getClient()
+		tha, err := getHistoryData(client, "NASDAQ:MSFT")
+		log.Println(len(tha))
+		if err != nil {
+			log.Println(err)
+		}
+
+		series := createTechanTimeSeries(tha)
+		index := series.LastIndex()
+
+		ema := tha[index].EMA
+		log.Println(ema["12"])
+		log.Println(ema["26"])
+		log.Println(ema["12"].Sub(ema["26"]))
+
+		closePrices := techan.NewClosePriceIndicator(series)
+
+		macdLine := techan.NewMACDIndicator(closePrices, 12, 26)
+		macdHistogram := techan.NewMACDHistogramIndicator(macdLine, 9)
+		signalLine := techan.NewEMAIndicator(macdLine, 9)
+
+		macdValue := macdLine.Calculate(index)
+		signalValue := signalLine.Calculate(index)
+		histogramValue := macdHistogram.Calculate(index)
+		log.Printf("MACD - macdline: %v signalline: %v histogram: %v", macdValue, signalValue, histogramValue)
+
 	})
 }
