@@ -6,7 +6,6 @@ import (
 	"rkapps/fin-tracker-backend-go/internal/providers"
 	"rkapps/fin-tracker-backend-go/internal/utils"
 	"strconv"
-	"strings"
 
 	"sort"
 	"time"
@@ -21,26 +20,31 @@ type TickerService struct {
 	Tc *TickerControl
 }
 
-func (service *TickerService) UpdateTickerEOD() (*TickerControl, []*TickerHistory) {
+func (service *TickerService) UpdateTickerEOD() (*Ticker, *TickerControl, []*TickerHistory) {
 
 	t := service.T
 	tc := service.Tc
 
 	date := time.Now()
 	if tc == nil {
-		tc = &TickerControl{Symbol: t.Symbol, Exchange: t.Exchange, DateCreated: &date}
+		tc = &TickerControl{Symbol: t.Symbol, Exchange: t.Exchange, CreateDate: &date}
 		tc.SetId()
+
+		//we are adding this for the first time. set this to true
+		t.Active = true
 	}
 
 	service.loadTickerDetails()
 	tha, _ := service.loadTickerHistory()
+	slog.Debug("UpdateTickersEOD", "ID", t.ID, "History Count", len(tha))
+
 	if len(tha) == 0 {
 		// no ticker history
-		return tc, tha
+		return t, tc, tha
 	}
 
 	//update technicals
-	service.updateTechnicals(tha, tc.LastHistoryUpdated)
+	service.updateTechnicals(tha, tc.HistoryUpdatedDate)
 
 	//update price
 	service.updatePrice(tha)
@@ -49,28 +53,22 @@ func (service *TickerService) UpdateTickerEOD() (*TickerControl, []*TickerHistor
 	service.updatePerformance(tha)
 
 	//match technical strategies
-	service.matchTechnicalStrategies(tha)
+	t.Strategies = service.matchTechnicalStrategies(tha)
 
 	var utha []*TickerHistory
 	//Find history records that have not update inserted into repo
 	for _, th := range tha {
-		if tc.LastHistoryUpdated == nil || (tc.LastHistoryUpdated != nil && th.Date.After(*tc.LastHistoryUpdated)) {
+		if tc.HistoryUpdatedDate == nil || (tc.HistoryUpdatedDate != nil && th.Date.After(*tc.HistoryUpdatedDate)) {
 			utha = append(utha, th)
 		}
 	}
 
-	tc.LastUpdated = &date
-	tc.LastHistoryUpdated = t.PrDate
+	tc.UpdatedDate = &date
+	tc.HistoryUpdatedDate = tc.UpdatedDate
 
 	t.PrDiffPercSearch = utils.ConvertDecimalToFloat64(t.PrDiffPerc)
 
-	if strings.Compare(t.Symbol, "AAPL") == 0 {
-		t.Strategies = []string{"RSI_OVERSOLD", "MACD_CROSSOVER"}
-	} else if strings.Compare(t.Symbol, "NVDA") == 0 {
-		t.Strategies = []string{"RSI_OVERBOUGHT"}
-	}
-
-	return tc, utha
+	return t, tc, utha
 }
 
 // updatePrice updates the eod price and technicals for the ticket
@@ -142,9 +140,9 @@ func (service *TickerService) updatePerformance(tha []*TickerHistory) {
 	}
 }
 
-func (service *TickerService) updateTechnicals(tha []*TickerHistory, lastHistoryUpdatedDate *time.Time) {
+func (service *TickerService) updateTechnicals(tha []*TickerHistory, historyUpdatedDate *time.Time) {
 
-	slog.Debug("updateTechnicals", "Symbol", tha[0].Metadata.Symbol, "Count", len(tha))
+	slog.Debug("updateTechnicals", "HistoryUpdatedDate", historyUpdatedDate)
 	series := techan.NewTimeSeries()
 
 	for _, th := range tha {
@@ -159,12 +157,13 @@ func (service *TickerService) updateTechnicals(tha []*TickerHistory, lastHistory
 		series.AddCandle(candle)
 
 		//no need to calculate for already existing historical data
-		if lastHistoryUpdatedDate != nil && th.Date.Before(*lastHistoryUpdatedDate) {
+		if historyUpdatedDate != nil && th.Date.Before(*historyUpdatedDate) {
 			continue
 		}
 
 		closePrices := techan.NewClosePriceIndicator(series)
 		lastIndex := series.LastIndex()
+		// slog.Debug("updateTechnicals", "lastIndex", lastIndex, "Date", th.Date)
 
 		th.SMA = make(map[string]decimal.Decimal)
 		th.EMA = make(map[string]decimal.Decimal)
@@ -174,26 +173,28 @@ func (service *TickerService) updateTechnicals(tha []*TickerHistory, lastHistory
 			smaIndicator := techan.NewSimpleMovingAverage(closePrices, period)
 			sma := smaIndicator.Calculate(lastIndex)
 			th.SMA[strconv.Itoa(period)] = utils.ConvertFloatToDecimal(sma.Float())
-			slog.Debug("updateTechnicals", "SMA Period", period, "Value", sma)
+			// slog.Debug("updateTechnicals", "SMA Period", period, "Value", sma)
 		}
 		for _, period := range EMAPeriods {
 			emaIndicator := techan.NewEMAIndicator(closePrices, period)
 			ema := emaIndicator.Calculate(lastIndex)
 			th.EMA[strconv.Itoa(period)] = utils.ConvertFloatToDecimal(ema.Float())
-			slog.Debug("updateTechnicals", "EMA Period", period, "Value", ema)
+			// slog.Debug("updateTechnicals", "EMA Period", period, "Value", ema)
 		}
 		//RSI
 		for _, period := range RSIPeriods {
 			rsiIndicator := techan.NewRelativeStrengthIndexIndicator(closePrices, period)
 			rsi := rsiIndicator.Calculate(lastIndex)
-			th.EMA[strconv.Itoa(period)] = utils.ConvertFloatToDecimal(rsi.Float())
-			slog.Debug("updateTechnicals", "RSI Period", period, "Value", rsi)
+			th.RSI[strconv.Itoa(period)] = utils.ConvertFloatToDecimal(rsi.Float())
+			// slog.Debug("updateTechnicals", "RSI Period", period, "Value", rsi)
 		}
 	}
 }
 
 // matchTechnicalStrategies updates ticker strategies by running the techan strategy rules
-func (Service *TickerService) matchTechnicalStrategies(tha []*TickerHistory) {
+func (Service *TickerService) matchTechnicalStrategies(tha []*TickerHistory) []string {
+
+	strategies := []string{}
 
 	series := techan.NewTimeSeries()
 
@@ -210,15 +211,17 @@ func (Service *TickerService) matchTechnicalStrategies(tha []*TickerHistory) {
 	}
 
 	for strategy, buildFunc := range StrategyCatalog {
-		slog.Debug("updateStrategies", "Strategy", strategy)
+		slog.Debug("matchTechnicalStrategies", "Strategy", strategy)
 
 		record := techan.NewTradingRecord()
 
 		ruleStrategy := buildFunc(series)
 		if ruleStrategy.ShouldEnter(series.LastIndex(), record) {
-			slog.Debug("updateStrategies", "TradingRecord", record)
+			slog.Debug("matchTechnicalStrategies", "ShouldEnter", "Yes", "TradingRecord", record)
+			strategies = append(strategies, strategy)
 		}
 	}
+	return strategies
 }
 
 // updateTickerRealtime updates tickers with realtime data
@@ -267,20 +270,20 @@ func (service TickerService) updateTickerRealtime(ctm map[string][]*providers.TT
 	return nil
 }
 
-func (service *TickerService) loadTickerDetails() {
+func (service *TickerService) loadTickerDetails() *Ticker {
 
 	t := service.T
 
 	if !t.IsStock() {
-		return
+		return t
 	}
 
 	or, url, err := providers.GetTickerDetailsFromAlpha(t.Symbol)
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	if err != nil {
 		slog.Info("LoadTickerDetailsFromAlpha", "Error", fmt.Sprintf("%s - %v", url, err))
-		return
+		return t
 	}
 
 	var imcap, _ = strconv.Atoi(or.MktCap)
@@ -330,6 +333,7 @@ func (service *TickerService) loadTickerDetails() {
 
 	t.PayRatio = utils.ConvertStringToFloat64(or.PayRatio) * 100
 
+	return t
 }
 
 func (service *TickerService) loadTickerHistory() ([]*TickerHistory, error) {

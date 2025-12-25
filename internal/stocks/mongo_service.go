@@ -61,11 +61,6 @@ func (s StocksService) GetTickers(ctx context.Context, symbols []string) (Ticker
 // LoadTickers returns the tickers for the symbols
 func (s StocksService) LoadTickers(ctx context.Context, ts Tickers) error {
 
-	// LoadTickerDetailsFromAlpha(ts)
-	// for _, t := range ts {
-	// 	t.SetId()
-	// }
-
 	return s.updateTickersEOD(ctx, ts, true)
 }
 
@@ -155,6 +150,9 @@ func (s StocksService) SearchTicker(ctx context.Context, ts TickerSearch) (Ticke
 
 	}
 
+	//always add the active flag
+	criteria.BooleanFields = append(criteria.BooleanFields, FIELD_ACTIVE)
+
 	//sort
 	criteria.SortFields = append(criteria.SortFields, sortField)
 
@@ -242,28 +240,30 @@ func (s StocksService) updateTickersEOD(ctx context.Context, ts Tickers, load bo
 	var err error
 
 	var tca []*TickerControl
+	var ta []*Ticker
 	var utha []*TickerHistory
 
 	tcr := mongodb.NewMongoRepository[*TickerControl](*s.client)
-	tcm := make(map[string]*TickerControl)
 
-	for _, t := range ts {
+	for i, t := range ts {
+
+		//Set the Id
+		t.SetId()
 
 		//Find ticker control
 		tc, _ := tcr.FindByID(ctx, t.ID)
+		tu := &TickerService{T: t, Tc: tc}
+		t, tc, tha := tu.UpdateTickerEOD()
 		if tc != nil {
-			tcm[t.ID] = tc
+			tca = append(tca, tc)
 		}
 
-		tu := &TickerService{T: t, Tc: tc}
-		tu.UpdateTickerEOD()
-
+		ta = append(ta, t)
 		ids = append(ids, t.ID)
-
-		// if i%25 == 0 || (i == len(ts)-1) {
-		// 	slog.Info("LoadTickerDetailsFromAlpha", "Updated Tickers", fmt.Sprintf("%d/%d", i+1, len(ts)))
-		// }
-
+		utha = append(utha, tha...)
+		if i%25 == 0 || (i == len(ts)-1) {
+			slog.Info("updateTickersEOD", "Updating Tickers...", fmt.Sprintf("%d/%d", i+1, len(ts)))
+		}
 	}
 
 	slog.Info("updateTickersEOD", "Saving Ticker Control Data", len(tca))

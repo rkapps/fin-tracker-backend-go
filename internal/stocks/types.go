@@ -17,6 +17,7 @@ const (
 	FIELD_SECTOR             = "sector"
 	FIELD_INDUSTRY           = "industry"
 	FIELD_OVERVIEW           = "overview"
+	FIELD_ACTIVE             = "active"
 	FIELD_MARKETCAP          = "marketCap"
 	FIELD_YIELD              = "yield"
 	FIELD_PRDIFFPERC_SEARCH  = "prDiffPercSearch"
@@ -65,9 +66,10 @@ type TickerControl struct {
 	ID                 string     `json:"id" bson:"id"`
 	Symbol             string     `json:"symbol" bson:"symbol"`
 	Exchange           string     `json:"exchange" bson:"exchange"`
-	DateCreated        *time.Time `json:"date_created" bson:"date_created"`
-	LastUpdated        *time.Time `json:"last_updated" bson:"last_updated"`
-	LastHistoryUpdated *time.Time `json:"last_history_updated" bson:"last_history_updated"`
+	CreateDate         *time.Time `json:"create_date" bson:"create_date"`
+	InactiveDate       *time.Time `json:"inactive_date" bson:"inactive_date"`
+	UpdatedDate        *time.Time `json:"updated_date" bson:"updated_date"`
+	HistoryUpdatedDate *time.Time `json:"history_updated_date" bson:"history_updated_date"`
 }
 
 func (tc *TickerControl) Id() string {
@@ -92,6 +94,7 @@ type Ticker struct {
 	Sector      string                                `json:"sector" bson:"sector"`
 	Industry    string                                `json:"industry" bson:"industry"`
 	Overview    string                                `json:"overview" bson:"overview"`
+	Active      bool                                  `json:"active" bson:"active"`
 	AvgVolume   int                                   `json:"avgVolume" bson:"avgVolume"`
 	DivAmt      float64                               `json:"divAmt" bson:"divAmt"`
 	EPS         float64                               `json:"eps" bson:"eps"`

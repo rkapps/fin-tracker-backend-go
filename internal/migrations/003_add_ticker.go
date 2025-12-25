@@ -42,7 +42,14 @@ func init() {
 			autoCompleteFields := []string{stocks.FIELD_SYMBOL, stocks.FIELD_EXCHANGE, stocks.FIELD_NAME, stocks.FIELD_OVERVIEW}
 			tokenFields := []string{stocks.FIELD_SECTOR, stocks.FIELD_INDUSTRY, stocks.FIELD_STRATEGIES}
 			numberFields := []string{stocks.FIELD_MARKETCAP, stocks.FIELD_YIELD, stocks.FIELD_PRDIFFPERC_SEARCH}
+			booleanFields := []string{stocks.FIELD_ACTIVE}
+
 			fieldsValue := bson.D{}
+
+			for _, field := range booleanFields {
+				fieldValue := bson.E{Key: field, Value: bson.D{{Key: "type", Value: "boolean"}}}
+				fieldsValue = append(fieldsValue, fieldValue)
+			}
 
 			for _, field := range autoCompleteFields {
 				fieldValue := bson.E{Key: field, Value: bson.D{{Key: "type", Value: "autocomplete"}}}
