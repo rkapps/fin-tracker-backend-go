@@ -29,6 +29,36 @@ var StrategyCatalog = map[string]func(series *techan.TimeSeries) bool{
 	"RSI_OverBought": RsiStochasticOverboughtStrategy,
 }
 
+// RSIOverSoldStrategy returns a rule strategy for oversold stocks
+func RSIOverSoldStrategy(series *techan.TimeSeries) bool {
+
+	closePrices := techan.NewClosePriceIndicator(series)
+	rsi := techan.NewRelativeStrengthIndexIndicator(closePrices, 14)
+
+	emaFast := techan.NewEMAIndicator(closePrices, 10)
+
+	// Define Entry Rules
+	// Signal: RSI < 30 AND price crosses above 10-EMA (Confirmation)
+	rsiLevel := techan.NewConstantIndicator(30)
+	rsiCrossDown := techan.NewCrossDownIndicatorRule(rsi, rsiLevel)
+
+	entryRule := techan.And(
+		rsiCrossDown,
+		techan.And(
+			techan.NewCrossUpIndicatorRule(closePrices, emaFast), // Price > 10-EMA
+			techan.PositionNewRule{},                             // Only if no position open
+		),
+	)
+
+	exitRule := techan.PositionNewRule{}
+	rs := techan.RuleStrategy{
+		EntryRule: entryRule,
+		ExitRule:  exitRule,
+	}
+	record := techan.NewTradingRecord()
+	return rs.ShouldEnter(series.LastIndex(), record)
+}
+
 func RsiStochasticOverboughtStrategy(series *techan.TimeSeries) bool {
 	// 1. Initialize Indicators
 	closePrices := techan.NewClosePriceIndicator(series)
@@ -73,37 +103,6 @@ func RsiStochasticOverboughtStrategy(series *techan.TimeSeries) bool {
 	}
 	record := techan.NewTradingRecord()
 	return rs.ShouldExit(series.LastIndex(), record)
-}
-
-// RSIOverSoldStrategy returns a rule strategy for oversold stocks
-func RSIOverSoldStrategy(series *techan.TimeSeries) bool {
-
-	closePrices := techan.NewClosePriceIndicator(series)
-	rsi := techan.NewRelativeStrengthIndexIndicator(closePrices, 14)
-
-	emaFast := techan.NewEMAIndicator(closePrices, 10)
-
-	// Define Entry Rules
-	// Signal: RSI < 30 AND price crosses above 10-EMA (Confirmation)
-
-	rsiLevel := techan.NewConstantIndicator(30)
-	rsiCrossDown := techan.NewCrossDownIndicatorRule(rsi, rsiLevel)
-
-	entryRule := techan.And(
-		rsiCrossDown,
-		techan.And(
-			techan.NewCrossUpIndicatorRule(closePrices, emaFast), // Price > 10-EMA
-			techan.PositionNewRule{},                             // Only if no position open
-		),
-	)
-
-	exitRule := techan.PositionNewRule{}
-	rs := techan.RuleStrategy{
-		EntryRule: entryRule,
-		ExitRule:  exitRule,
-	}
-	record := techan.NewTradingRecord()
-	return rs.ShouldEnter(series.LastIndex(), record)
 }
 
 func examples(series *techan.TimeSeries) {
