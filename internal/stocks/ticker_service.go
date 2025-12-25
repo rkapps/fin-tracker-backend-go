@@ -16,8 +16,9 @@ import (
 )
 
 type TickerService struct {
-	T  *Ticker
-	Tc *TickerControl
+	T    *Ticker
+	Tc   *TickerControl
+	Load bool
 }
 
 func (service *TickerService) UpdateTickerEOD() (*Ticker, *TickerControl, []*TickerHistory) {
@@ -34,7 +35,11 @@ func (service *TickerService) UpdateTickerEOD() (*Ticker, *TickerControl, []*Tic
 		t.Active = true
 	}
 
-	service.loadTickerDetails()
+	//load ticket details
+	if service.Load {
+		service.loadTickerDetails()
+	}
+
 	tha, _ := service.loadTickerHistory()
 	//sort by ascending
 	sort.Slice(tha, func(i, j int) bool {
@@ -196,36 +201,15 @@ func (service *TickerService) updateTechnicals(tha []*TickerHistory, historyUpda
 func (Service *TickerService) matchTechnicalStrategies(tha []*TickerHistory) []string {
 
 	strategies := []string{}
-
-	series := techan.NewTimeSeries()
-
-	for _, th := range tha {
-
-		period := techan.NewTimePeriod(th.Date, time.Hour*24)
-		candle := techan.NewCandle(period)
-		candle.OpenPrice = big.NewFromString(th.Open.String())
-		candle.ClosePrice = big.NewFromString(th.Close.String())
-		candle.MaxPrice = big.NewFromString(th.High.String())
-		candle.MinPrice = big.NewFromString(th.Low.String())
-
-		series.AddCandle(candle)
-	}
+	series := createTechanTimeSeries(tha)
 
 	for strategy, buildFunc := range StrategyCatalog {
-		slog.Debug("matchTechnicalStrategies", "Strategy", strategy)
-
 		record := techan.NewTradingRecord()
 
-		ruleStrategy := buildFunc(series)
-		if ruleStrategy.ShouldEnter(series.LastIndex(), record) {
-			slog.Debug("matchTechnicalStrategies", "ShouldEnter", "Yes", "TradingRecord", record)
+		if buildFunc(series) {
+			slog.Debug("matchTechnicalStrategies", "Strategy", strategy, "TradingRecord", record)
 			strategies = append(strategies, strategy)
 		}
-		if ruleStrategy.ShouldExit(series.LastIndex(), record) {
-			slog.Debug("matchTechnicalStrategies", "ShouldExit", "Yes", "TradingRecord", record)
-			strategies = append(strategies, strategy)
-		}
-
 	}
 	return strategies
 }

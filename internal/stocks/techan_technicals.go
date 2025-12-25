@@ -2,16 +2,34 @@ package stocks
 
 import (
 	"log/slog"
+	"time"
 
+	"github.com/sdcoffey/big"
 	"github.com/sdcoffey/techan"
 )
 
-var StrategyCatalog = map[string]func(series *techan.TimeSeries) techan.RuleStrategy{
+func createTechanTimeSeries(tha []*TickerHistory) *techan.TimeSeries {
+
+	series := techan.NewTimeSeries()
+	for _, th := range tha {
+		period := techan.NewTimePeriod(th.Date, time.Hour*24)
+		candle := techan.NewCandle(period)
+		candle.OpenPrice = big.NewFromString(th.Open.String())
+		candle.ClosePrice = big.NewFromString(th.Close.String())
+		candle.MaxPrice = big.NewFromString(th.High.String())
+		candle.MinPrice = big.NewFromString(th.Low.String())
+
+		series.AddCandle(candle)
+	}
+	return series
+}
+
+var StrategyCatalog = map[string]func(series *techan.TimeSeries) bool{
 	"RSI_OverSold":   RSIOverSoldStrategy,
 	"RSI_OverBought": RsiStochasticOverboughtStrategy,
 }
 
-func RsiStochasticOverboughtStrategy(series *techan.TimeSeries) techan.RuleStrategy {
+func RsiStochasticOverboughtStrategy(series *techan.TimeSeries) bool {
 	// 1. Initialize Indicators
 	closePrices := techan.NewClosePriceIndicator(series)
 
@@ -48,18 +66,21 @@ func RsiStochasticOverboughtStrategy(series *techan.TimeSeries) techan.RuleStrat
 
 	entryRule := techan.PositionNewRule{} // Opens a position immediately at start
 
-	return techan.RuleStrategy{
+	rs := techan.RuleStrategy{
 		EntryRule:      entryRule,
 		ExitRule:       exitRule,
 		UnstablePeriod: 14, // Wait for enough data
 	}
+	record := techan.NewTradingRecord()
+	return rs.ShouldExit(series.LastIndex(), record)
 }
 
 // RSIOverSoldStrategy returns a rule strategy for oversold stocks
-func RSIOverSoldStrategy(series *techan.TimeSeries) techan.RuleStrategy {
+func RSIOverSoldStrategy(series *techan.TimeSeries) bool {
 
 	closePrices := techan.NewClosePriceIndicator(series)
 	rsi := techan.NewRelativeStrengthIndexIndicator(closePrices, 14)
+
 	emaFast := techan.NewEMAIndicator(closePrices, 10)
 
 	// Define Entry Rules
@@ -77,10 +98,12 @@ func RSIOverSoldStrategy(series *techan.TimeSeries) techan.RuleStrategy {
 	)
 
 	exitRule := techan.PositionNewRule{}
-	return techan.RuleStrategy{
+	rs := techan.RuleStrategy{
 		EntryRule: entryRule,
 		ExitRule:  exitRule,
 	}
+	record := techan.NewTradingRecord()
+	return rs.ShouldEnter(series.LastIndex(), record)
 }
 
 func examples(series *techan.TimeSeries) {
