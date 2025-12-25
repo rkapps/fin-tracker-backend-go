@@ -204,7 +204,7 @@ type TickerHistory struct {
 	Low         decimal.Decimal            `bson:"low"`
 	Close       decimal.Decimal            `bson:"close"`
 	Volume      decimal.Decimal            `bson:"volume"`
-	SplitFactor int                        `bson:"splitFactor"`
+	SplitFactor float64                    `bson:"splitFactor"`
 	SMA         map[string]decimal.Decimal `bson:"sma"`
 	EMA         map[string]decimal.Decimal `bson:"ema"`
 	RSI         map[string]decimal.Decimal `bson:"rsi"`
