@@ -147,7 +147,7 @@ func (s StocksService) SearchTicker(ctx context.Context, ts TickerSearch) (Ticke
 
 			slog.Debug("SearchTicker", "PerfPeriod", ts.PerfPeriod)
 
-			if strings.Compare(ts.PerfPeriod, "1D") == 0 {
+			if strings.Compare(ts.PerfPeriod, "1D") == 0 || strings.Compare(ts.PerfPeriod, "N") == 0 {
 
 				gte := mongodb.CreateSearchRangeField(FIELD_PRDIFFPERC_SEARCH, "gte", float64(ts.FromPerfPerc))
 				lte := mongodb.CreateSearchRangeField(FIELD_PRDIFFPERC_SEARCH, "lte", float64(ts.ToPerfPerc))
