@@ -1,7 +1,6 @@
 package stocks
 
 import (
-	"log/slog"
 	"time"
 
 	"github.com/sdcoffey/big"
@@ -25,222 +24,183 @@ func createTechanTimeSeries(tha []*TickerHistory) *techan.TimeSeries {
 }
 
 var StrategyCatalog = map[string]func(series *techan.TimeSeries) bool{
-	"RSI_OverBought":   RsiStochasticOverboughtStrategy,
-	"RSI_OverSold":     RSIOverSoldStrategy,
-	"MACD_GoldenCross": MACDGoldenCrossStrategy,
-	"MACD DeathCross":  MACDDeathCrossStrategy,
-	"BB_OverBought":    BollingBandsOverBoughtStrategy,
-	"BB_OverSold":      BollingBandsOverSoldStrategy,
+	"RSI_OverBought":           RSIOverBoughtStrategy,
+	"RSI_OverSold":             RSIOverSoldStrategy,
+	"RSI_StochasticOverBought": RSIOverSoldStrategy,
+	"RSI_StochasticOverSold":   RSIOverSoldStrategy,
+	"MACD_GoldenCross":         MACDGoldenCrossStrategy,
+	"MACD DeathCross":          MACDDeathCrossStrategy,
+	"BB_OverBought":            BollingBandsOverBoughtStrategy,
+	"BB_OverSold":              BollingBandsOverSoldStrategy,
+}
+
+// RSIOverBoughtStrategy returns true based on RSI and EMA
+func RSIOverBoughtStrategy(series *techan.TimeSeries) bool {
+
+	closePrices := techan.NewClosePriceIndicator(series)
+	lastIndex := series.LastIndex()
+	emaFast := techan.NewEMAIndicator(closePrices, 10)
+	emaFastValue := emaFast.Calculate(lastIndex)
+	closePrice := closePrices.Calculate(lastIndex)
+
+	rsiIndicator := techan.NewRelativeStrengthIndexIndicator(closePrices, 14)
+	rsiOBValue := techan.NewConstantIndicator(70).Calculate(0)
+	currentRSI := rsiIndicator.Calculate(lastIndex)
+
+	// Signal: RSI > 30 AND price crosses below 10-EMA (Confirmation)
+	if currentRSI.GT(rsiOBValue) && closePrice.LT(emaFastValue) {
+		return true
+	} else {
+		return false
+	}
+
 }
 
 // RSIOverSoldStrategy returns a rule strategy for oversold stocks
 func RSIOverSoldStrategy(series *techan.TimeSeries) bool {
-
 	closePrices := techan.NewClosePriceIndicator(series)
-	rsi := techan.NewRelativeStrengthIndexIndicator(closePrices, 14)
-
+	lastIndex := series.LastIndex()
 	emaFast := techan.NewEMAIndicator(closePrices, 10)
+	emaFastValue := emaFast.Calculate(lastIndex)
+	closePrice := closePrices.Calculate(lastIndex)
 
-	// Define Entry Rules
+	rsiIndicator := techan.NewRelativeStrengthIndexIndicator(closePrices, 14)
+	rsiOSValue := techan.NewConstantIndicator(30).Calculate(0)
+	currentRSI := rsiIndicator.Calculate(lastIndex)
+
 	// Signal: RSI < 30 AND price crosses above 10-EMA (Confirmation)
-	rsiLevel := techan.NewConstantIndicator(30)
-	rsiCrossDown := techan.NewCrossDownIndicatorRule(rsi, rsiLevel)
-
-	entryRule := techan.And(
-		rsiCrossDown,
-		techan.And(
-			techan.NewCrossUpIndicatorRule(closePrices, emaFast), // Price > 10-EMA
-			techan.PositionNewRule{},                             // Only if no position open
-		),
-	)
-
-	exitRule := techan.PositionNewRule{}
-	rs := techan.RuleStrategy{
-		EntryRule: entryRule,
-		ExitRule:  exitRule,
+	if currentRSI.LT(rsiOSValue) && closePrice.GT(emaFastValue) {
+		return true
+	} else {
+		return false
 	}
-	record := techan.NewTradingRecord()
-	return rs.ShouldEnter(series.LastIndex(), record)
+
 }
 
-// RsiStochasticOverboughtStrategy returns a rule strategy on overbought stocks based on rsi and stocashtic oscillator
+// RsiStochasticOverboughtStrategy returns true on overbought stocks based on rsi and stocashtic oscillator
 func RsiStochasticOverboughtStrategy(series *techan.TimeSeries) bool {
-	// 1. Initialize Indicators
+
 	closePrices := techan.NewClosePriceIndicator(series)
 
-	// RSI 14-period
-	rsi := techan.NewRelativeStrengthIndexIndicator(closePrices, 14)
+	lastIndex := series.LastIndex()
+	rsiIndicator := techan.NewRelativeStrengthIndexIndicator(closePrices, 14)
+	rsiValue := rsiIndicator.Calculate(lastIndex)
+	rsiOBValue := techan.NewConstantIndicator(70).Calculate(0)
 
-	// Stochastic 14-period %K and 3-period %D
-	// stochastic oscillator
 	kPeriod := 14
 	dPeriod := 3
 	kIndicator := techan.NewFastStochasticIndicator(series, kPeriod)
-	dIndicator := techan.NewSimpleMovingAverage(kIndicator, dPeriod)
+	dIndicator := techan.NewSlowStochasticIndicator(kIndicator, dPeriod)
 
-	rsiLevel := techan.NewConstantIndicator(70)
-	stochLevel := techan.NewConstantIndicator(80)
+	kValue := kIndicator.Calculate(lastIndex)
+	dValue := dIndicator.Calculate(lastIndex)
 
-	// 2. Define the Exit Rule (The Sell Signal)
-	// Must be positioned above 80/70 thresholds AND K must cross down D
+	stochOBValue := techan.NewConstantIndicator(80).Calculate(0)
 
-	// Condition A: K is above 80
-	kIsOverbought := techan.NewCrossUpIndicatorRule(kIndicator, stochLevel)
-
-	// Condition B: D is above 80 (ensures both are deep in OB territory)
-	dIsOverbought := techan.NewCrossUpIndicatorRule(dIndicator, stochLevel)
-	// Condition C: RSI is above 70
-	rsiCrossUp := techan.NewCrossUpIndicatorRule(rsi, rsiLevel)
-	// Condition D: K crosses down below D (The trigger event)
-	kCrossesDownD := techan.NewCrossDownIndicatorRule(kIndicator, dIndicator)
-
-	// Combine all conditions: Must be overbought on both metrics AND the K/D cross happened
-	exitRule := techan.And(techan.And(kIsOverbought, dIsOverbought), techan.And(rsiCrossUp,
-		kCrossesDownD),
-	)
-
-	entryRule := techan.PositionNewRule{} // Opens a position immediately at start
-
-	rs := techan.RuleStrategy{
-		EntryRule:      entryRule,
-		ExitRule:       exitRule,
-		UnstablePeriod: 14, // Wait for enough data
+	if rsiValue.GT(rsiOBValue) && kValue.GT(stochOBValue) && kValue.LT(dValue) {
+		return true
 	}
-	record := techan.NewTradingRecord()
-	return rs.ShouldExit(series.LastIndex(), record)
+	return false
+}
+
+// RsiStochasticOverSoldStrategy returns true on overold stocks based on rsi and stocashtic oscillator
+func RsiStochasticOverSoldStrategy(series *techan.TimeSeries) bool {
+
+	closePrices := techan.NewClosePriceIndicator(series)
+
+	lastIndex := series.LastIndex()
+	rsiIndicator := techan.NewRelativeStrengthIndexIndicator(closePrices, 14)
+	rsiValue := rsiIndicator.Calculate(lastIndex)
+	rsiOSValue := techan.NewConstantIndicator(30).Calculate(0)
+
+	kPeriod := 14
+	dPeriod := 3
+	kIndicator := techan.NewFastStochasticIndicator(series, kPeriod)
+	dIndicator := techan.NewSlowStochasticIndicator(kIndicator, dPeriod)
+
+	kValue := kIndicator.Calculate(lastIndex)
+	dValue := dIndicator.Calculate(lastIndex)
+
+	stochOSValue := techan.NewConstantIndicator(20).Calculate(0)
+
+	if rsiValue.LT(rsiOSValue) && kValue.LT(stochOSValue) && kValue.GT(dValue) {
+		return true
+	}
+	return false
 }
 
 // MACDGoldenCrossStrategy returns true if the stocks MACD line crosses over the SIGNAL line
 func MACDGoldenCrossStrategy(series *techan.TimeSeries) bool {
-	// 1. Initialize Indicators
+
 	closePrices := techan.NewClosePriceIndicator(series)
-
-	//macd
-	macdLine := techan.NewMACDIndicator(closePrices, 12, 26)
-	macdHistogram := techan.NewMACDHistogramIndicator(macdLine, 9)
-	signalLine := techan.NewEMAIndicator(macdHistogram, 9)
-
-	goldenCrossRule := techan.NewCrossUpIndicatorRule(macdLine, signalLine)
+	lastIndex := series.LastIndex()
 	record := techan.NewTradingRecord()
-	return goldenCrossRule.IsSatisfied(series.LastIndex(), record)
 
+	macdLine := techan.NewMACDIndicator(closePrices, 12, 26)
+	signalLine := techan.NewEMAIndicator(macdLine, 9)
+	goldenCrossRule := techan.NewCrossUpIndicatorRule(macdLine, signalLine)
+
+	if goldenCrossRule.IsSatisfied(lastIndex, record) {
+		return true
+	}
+	return false
 }
 
 // MACDDeathCrossStrategy returns true if the stocks MACD line crosses over the SIGNAL line
 func MACDDeathCrossStrategy(series *techan.TimeSeries) bool {
-	// 1. Initialize Indicators
+
 	closePrices := techan.NewClosePriceIndicator(series)
+	lastIndex := series.LastIndex()
+	record := techan.NewTradingRecord()
 
 	//macd
 	macdLine := techan.NewMACDIndicator(closePrices, 12, 26)
 	macdHistogram := techan.NewMACDHistogramIndicator(macdLine, 9)
 	signalLine := techan.NewEMAIndicator(macdHistogram, 9)
+	sma50 := techan.NewSimpleMovingAverage(closePrices, 50)
+	sma200 := techan.NewSimpleMovingAverage(closePrices, 200)
+	maDeathCross := techan.NewCrossDownIndicatorRule(sma50, sma200)
+	macdDeathCross := techan.NewCrossDownIndicatorRule(macdLine, signalLine)
 
-	goldenCrossRule := techan.NewCrossDownIndicatorRule(macdLine, signalLine)
-	record := techan.NewTradingRecord()
-	return goldenCrossRule.IsSatisfied(series.LastIndex(), record)
+	if maDeathCross.IsSatisfied(lastIndex, record) && macdDeathCross.IsSatisfied(lastIndex, record) {
+		return true
+	}
+	return false
 
-}
-
-// BollingBandsOverSoldStrategy returns true if the price is above middle and low band
-func BollingBandsOverSoldStrategy(series *techan.TimeSeries) bool {
-
-	closePrices := techan.NewClosePriceIndicator(series)
-
-	middleBand := techan.NewSimpleMovingAverage(closePrices, 20)
-	// upperBand := techan.NewBollingerUpperBandIndicator(closePrices, 20, 2.0)
-	lowerBand := techan.NewBollingerLowerBandIndicator(closePrices, 20, 2.0)
-
-	crossAboveMid := techan.NewCrossUpIndicatorRule(closePrices, middleBand)
-	currentPrice := closePrices.Calculate(series.LastIndex())
-	lowerVal := lowerBand.Calculate(series.LastIndex())
-
-	isAboveLower := currentPrice.GT(lowerVal)
-	record := techan.NewTradingRecord()
-
-	return isAboveLower && crossAboveMid.IsSatisfied(series.LastIndex(), record)
 }
 
 // BollingBandsOverBoughtStrategy returns true if the price is above the upper band
 func BollingBandsOverBoughtStrategy(series *techan.TimeSeries) bool {
 
-	closePrices := techan.NewClosePriceIndicator(series)
+	lastIndex := series.LastIndex()
+	typicalPrices := techan.NewTypicalPriceIndicator(series)
 
-	// middleBand := techan.NewSimpleMovingAverage(closePrices, 20)
-	upperBand := techan.NewBollingerUpperBandIndicator(closePrices, 20, 2.0)
-
-	// crossAboveMid := techan.NewCrossUpIndicatorRule(closePrices, middleBand)
-	currentPrice := closePrices.Calculate(series.LastIndex())
-	upperVal := upperBand.Calculate(series.LastIndex())
-
-	isOverbought := currentPrice.GT(upperVal)
-	// record := techan.NewTradingRecord()
-
-	return isOverbought
+	window := 20
+	sigma := 2.0
+	//Bollinger bands
+	upperBand := techan.NewBollingerUpperBandIndicator(typicalPrices, window, sigma)
+	upperValue := upperBand.Calculate(lastIndex)
+	typicalValue := typicalPrices.Calculate(lastIndex)
+	if typicalValue.GT(upperValue) {
+		return true
+	}
+	return false
 }
 
-func examples(series *techan.TimeSeries) {
+// BollingBandsOverSoldStrategy returns true if the price is above middle and low band
+func BollingBandsOverSoldStrategy(series *techan.TimeSeries) bool {
 
-	closePrices := techan.NewClosePriceIndicator(series)
 	lastIndex := series.LastIndex()
+	typicalPrices := techan.NewTypicalPriceIndicator(series)
 
-	//TREND INDICATORS
-	for _, period := range SMAPeriods {
-		smaIndicator := techan.NewSimpleMovingAverage(closePrices, period)
-		sma := smaIndicator.Calculate(lastIndex)
-		slog.Debug("updateTechnicals", "SMA Period", period, "Value", sma)
-	}
-	for _, period := range EMAPeriods {
-		emaIndicator := techan.NewEMAIndicator(closePrices, period)
-		ema := emaIndicator.Calculate(lastIndex)
-		slog.Debug("updateTechnicals", "EMA Period", period, "Value", ema)
-	}
-
-	//macd
-	macdLine := techan.NewMACDIndicator(closePrices, 12, 26)
-	signalLine := techan.NewEMAIndicator(macdLine, 9)
-	macdHistogram := techan.NewMACDHistogramIndicator(macdLine, 9)
-
-	macdValue := macdLine.Calculate(lastIndex)
-	signalValue := signalLine.Calculate(lastIndex)
-	histogramValue := macdHistogram.Calculate(lastIndex)
-	slog.Debug("updateTechnicals", "MACD", macdValue, "SIGNAL", signalValue, "HISTOGRAM", histogramValue)
-
-	//MOMENTUM INDICATORS
-
-	//RSI
-	for _, period := range RSIPeriods {
-		rsiIndicator := techan.NewRelativeStrengthIndexIndicator(closePrices, period)
-		rsi := rsiIndicator.Calculate(lastIndex)
-		slog.Debug("updateTechnicals", "RSI Period", period, "Value", rsi)
-	}
-
-	// stochastic oscillator
-	kPeriod := 14
-	dPeriod := 3
-	kIndicator := techan.NewFastStochasticIndicator(series, kPeriod)
-	dIndicator := techan.NewSimpleMovingAverage(kIndicator, dPeriod)
-
-	kValue := kIndicator.Calculate(lastIndex)
-	dValue := dIndicator.Calculate(lastIndex)
-	slog.Debug("updateTechnicals", "KVALUE", kValue, "DVALUE", dValue)
-
-	//VOLUME INDICATORS
-
-	//average true range
-	atrIndicator := techan.NewAverageTrueRangeIndicator(series, 14)
-	atrValue := atrIndicator.Calculate(lastIndex)
-	slog.Debug("updateTechnicals", "ATRVALUE", atrValue)
-
+	window := 20
+	sigma := 2.0
 	//Bollinger bands
-	middleBand := techan.NewSimpleMovingAverage(closePrices, 20)
-
-	upperBand := techan.NewBollingerUpperBandIndicator(closePrices, 20, 2.0)
-	lowerBand := techan.NewBollingerLowerBandIndicator(closePrices, 20, 2.0)
-
-	upperValue := upperBand.Calculate(lastIndex)
+	lowerBand := techan.NewBollingerLowerBandIndicator(typicalPrices, window, sigma)
 	lowerValue := lowerBand.Calculate(lastIndex)
-	middleValue := middleBand.Calculate(lastIndex)
-
-	slog.Debug("updateTechnicals", "UPPER BAND", upperValue, "MIDDLE BAND", middleValue, "LOWER BAND", lowerValue)
+	typicalValue := typicalPrices.Calculate(lastIndex)
+	if typicalValue.LT(lowerValue) {
+		return true
+	}
+	return false
 }
