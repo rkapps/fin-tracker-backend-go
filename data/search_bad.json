@@ -1,0 +1,30 @@
+{
+    "$search": {
+        "index": "idx_search",
+        "compound": {
+            "filter": [
+                {
+                    "range": {
+                        "path": "prDiffPerc",
+                        "gte": {
+                            "$numberDouble": "0.0"
+                        }
+                    }
+                },
+                {
+                    "range": {
+                        "path": "prDiffPerc",
+                        "lte": {
+                            "$numberDouble": "10.0"
+                        }
+                    }
+                }
+            ]
+        },
+        "sort": {
+            "marketCap": {
+                "$numberInt": "-1"
+            }
+        }
+    }
+}
