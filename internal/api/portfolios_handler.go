@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"rkapps/fin-tracker-backend-go/internal/portfolios"
 
 	"firebase.google.com/go/auth"
 	"github.com/gin-gonic/gin"
@@ -9,10 +10,11 @@ import (
 )
 
 type PortfoliosHandler struct {
-	client *mongodb.MongoClient
+	client  *mongodb.MongoClient
+	Service portfolios.PortfoliosService
 }
 
-func NewPortfoliosHandler(router *gin.Engine, client *mongodb.MongoClient) *PortfoliosHandler {
+func NewPortfoliosHandler(router *gin.Engine, client *mongodb.MongoClient, service portfolios.Service) *PortfoliosHandler {
 	return &PortfoliosHandler{client: client}
 }
 
