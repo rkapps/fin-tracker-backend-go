@@ -241,6 +241,16 @@ func (s StocksService) UpdateRealtime(ctx context.Context) error {
 	return s.updateTickersRealtime(ctx, ts)
 }
 
+// UpdateTickers returns the tickers for the symbols
+func (s StocksService) UpdateTickers(ctx context.Context, symbols []string) error {
+
+	ts, err := s.GetTickers(ctx, symbols)
+	if err != nil {
+		return err
+	}
+	return s.updateTickersEOD(ctx, ts, false)
+}
+
 // updateTickersRealtime updates tickers realtime
 func (s StocksService) updateTickersRealtime(ctx context.Context, ts Tickers) error {
 

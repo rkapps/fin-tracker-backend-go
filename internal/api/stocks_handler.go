@@ -30,6 +30,7 @@ func (h *StocksHandler) RegisterRoutes(router *gin.Engine) {
 
 	sGroup.POST("/load", h.LoadTickers)
 	sGroup.POST("/search", h.SearchTickers)
+	sGroup.GET("/update", h.UpdateTickers)
 	sGroup.GET("/updateEOD", h.UpdateEOD)
 	sGroup.GET("/updateRealtime", h.UpdateRealtime)
 }
@@ -117,4 +118,17 @@ func (h *StocksHandler) UpdateEOD(c *gin.Context) {
 // UpdateRealtime updates all stocks with realtime data
 func (h *StocksHandler) UpdateRealtime(c *gin.Context) {
 	h.Service.UpdateRealtime(c)
+}
+
+// UpdateTickers get multiple tickers by symbols
+func (h *StocksHandler) UpdateTickers(c *gin.Context) {
+
+	symbols := strings.Split(c.Query("symbols"), ",")
+	slog.Debug("GetTickers", "Symbols", symbols)
+	err := h.Service.UpdateTickers(c, symbols)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, nil)
 }
