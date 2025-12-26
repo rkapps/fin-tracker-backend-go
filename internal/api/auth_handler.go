@@ -27,7 +27,6 @@ func AuthHandler(fbAuthClient *auth.Client, f func(c *gin.Context)) func(c *gin.
 			c.IndentedJSON(http.StatusOK, "Authorization token not verified.")
 			return
 		}
-
 		c.Set("uid", authToken.UID)
 		f(c)
 	}

@@ -17,5 +17,9 @@ func RegisterHandlers(router *gin.Engine, client *mongodb.MongoClient, fbauthcli
 	stocksHandler := NewStocksHandler(router, stocksService)
 	stocksHandler.RegisterRoutes(router)
 
+	//Portfolios handler
+	portfoliosHandler := NewPortfoliosHandler(router, client)
+	portfoliosHandler.RegisterRoutes(router, fbauthclient)
+
 	return nil
 }
