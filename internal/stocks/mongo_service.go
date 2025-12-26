@@ -50,6 +50,34 @@ func (s StocksService) GetTicker(ctx context.Context, id string) (*Ticker, error
 	return tr.FindByID(ctx, id)
 }
 
+func (s StocksService) GetTickerGroups(ctx context.Context) (TickerGroups, error) {
+	tr := mongodb.NewMongoRepository[*Ticker](*s.client)
+
+	query := bson.M{
+		"_id": bson.M{
+			"sector":   "$sector",
+			"industry": "$industry",
+		},
+	}
+
+	queryStage := bson.D{{Key: "$group", Value: query}}
+	pipeline := bson.A{}
+	// matchStage := bson.E{Key: "$match", Value: bson.E{}}
+	pipeline = append(pipeline, queryStage)
+	// log.Println(pipeline)
+	tgs := TickerGroups{}
+	results := []TickerGroupsAggregateResult{}
+
+	err := tr.Aggregate(ctx, pipeline, &results)
+	for _, result := range results {
+		tgs = append(tgs, &result.ID)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return tgs, nil
+}
+
 // GetTickerHistory returns the ticker history for the exchange:symbol
 func (s StocksService) GetTickerHistory(ctx context.Context, id string) ([]*TickerHistory, error) {
 

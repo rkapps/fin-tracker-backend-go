@@ -192,6 +192,19 @@ type TickerSearch struct {
 	PrPeriod     string   `json:"prPeriod"`
 }
 
+// TickerGroup holds the sector and industry combination
+type TickerGroup struct {
+	Sector   string `json:"sector" bson:"sector"`
+	Industry string `json:"industry" bson:"industry"`
+}
+
+// TickerGroups holds a list of ticker groups.
+type TickerGroups []*TickerGroup
+
+type TickerGroupsAggregateResult struct {
+	ID TickerGroup `bson:"_id"`
+}
+
 // TickerHistory holds historical data for tickers
 type TickerHistory struct {
 	ID       string    `json:"id" bson:"id"`
