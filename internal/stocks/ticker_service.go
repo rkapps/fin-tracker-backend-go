@@ -61,10 +61,11 @@ func (service *TickerService) UpdateTickerEOD() (*Ticker, *TickerControl, []*Tic
 	}
 
 	//update technicals
-	service.updateTechnicals(tha, tc.HistoryUpdatedDate)
-
-	//update price
-	service.updatePrice(tha)
+	updated := service.updateTechnicals(tha, tc.HistoryUpdatedDate)
+	if updated {
+		//update price
+		service.updatePrice(tha)
+	}
 
 	//update performance
 	service.updatePerformance(tha)
@@ -112,6 +113,7 @@ func (service *TickerService) updatePrice(tha []*TickerHistory) {
 	if pth != nil {
 		t.PrPrev = pth.Close
 	}
+	slog.Debug("updatePrice", "RSI", t.Technicals[RSI])
 	t.SetPriceDiff()
 }
 
@@ -152,11 +154,12 @@ func (service *TickerService) updatePerformance(tha []*TickerHistory) {
 	}
 }
 
-func (service *TickerService) updateTechnicals(tha []*TickerHistory, historyUpdatedDate *time.Time) {
+func (service *TickerService) updateTechnicals(tha []*TickerHistory, historyUpdatedDate *time.Time) bool {
 
 	slog.Debug("updateTechnicals", "HistoryUpdatedDate", historyUpdatedDate)
 	series := techan.NewTimeSeries()
 
+	updated := false
 	for _, th := range tha {
 
 		period := techan.NewTimePeriod(th.Date, time.Hour*24)
@@ -173,6 +176,8 @@ func (service *TickerService) updateTechnicals(tha []*TickerHistory, historyUpda
 			continue
 		}
 
+		//set updated
+		updated = true
 		closePrices := techan.NewClosePriceIndicator(series)
 		lastIndex := series.LastIndex()
 		// slog.Debug("updateTechnicals", "lastIndex", lastIndex, "Date", th.Date)
@@ -201,7 +206,7 @@ func (service *TickerService) updateTechnicals(tha []*TickerHistory, historyUpda
 			// slog.Debug("updateTechnicals", "RSI Period", period, "Value", rsi)
 		}
 	}
-
+	return updated
 }
 
 // matchTechnicalStrategies updates ticker strategies by running the techan strategy rules
