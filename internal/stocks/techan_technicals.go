@@ -134,15 +134,22 @@ func MACDGoldenCrossStrategy(series *techan.TimeSeries) bool {
 
 	closePrices := techan.NewClosePriceIndicator(series)
 	lastIndex := series.LastIndex()
-	record := techan.NewTradingRecord()
+	// record := techan.NewTradingRecord()
 
 	macdLine := techan.NewMACDIndicator(closePrices, 12, 26)
-	signalLine := techan.NewEMAIndicator(macdLine, 9)
-	goldenCrossRule := techan.NewCrossUpIndicatorRule(macdLine, signalLine)
+	// signalLine := techan.NewEMAIndicator(macdLine, 9)
+	macdHistogram := techan.NewMACDHistogramIndicator(macdLine, 9)
 
-	if goldenCrossRule.IsSatisfied(lastIndex, record) {
+	prevHistogram := macdHistogram.Calculate(lastIndex - 1).Float()
+	currentHistogram := macdHistogram.Calculate(lastIndex).Float()
+	if prevHistogram < 0 && currentHistogram > 0 {
 		return true
 	}
+	// goldenCrossRule := techan.NewCrossUpIndicatorRule(macdLine, signalLine)
+
+	// if goldenCrossRule.IsSatisfied(lastIndex, record) {
+	// 	return true
+	// }
 	return false
 }
 
@@ -151,20 +158,27 @@ func MACDDeathCrossStrategy(series *techan.TimeSeries) bool {
 
 	closePrices := techan.NewClosePriceIndicator(series)
 	lastIndex := series.LastIndex()
-	record := techan.NewTradingRecord()
+	// record := techan.NewTradingRecord()
 
 	//macd
 	macdLine := techan.NewMACDIndicator(closePrices, 12, 26)
 	macdHistogram := techan.NewMACDHistogramIndicator(macdLine, 9)
-	signalLine := techan.NewEMAIndicator(macdHistogram, 9)
-	sma50 := techan.NewSimpleMovingAverage(closePrices, 50)
-	sma200 := techan.NewSimpleMovingAverage(closePrices, 200)
-	maDeathCross := techan.NewCrossDownIndicatorRule(sma50, sma200)
-	macdDeathCross := techan.NewCrossDownIndicatorRule(macdLine, signalLine)
 
-	if maDeathCross.IsSatisfied(lastIndex, record) && macdDeathCross.IsSatisfied(lastIndex, record) {
+	prevHistogram := macdHistogram.Calculate(lastIndex - 1).Float()
+	currentHistogram := macdHistogram.Calculate(lastIndex).Float()
+
+	if prevHistogram > 0 && currentHistogram < 0 {
 		return true
 	}
+	// signalLine := techan.NewEMAIndicator(macdHistogram, 9)
+	// sma50 := techan.NewSimpleMovingAverage(closePrices, 50)
+	// sma200 := techan.NewSimpleMovingAverage(closePrices, 200)
+	// maDeathCross := techan.NewCrossDownIndicatorRule(sma50, sma200)
+	// macdDeathCross := techan.NewCrossDownIndicatorRule(macdLine, signalLine)
+
+	// if maDeathCross.IsSatisfied(lastIndex, record) && macdDeathCross.IsSatisfied(lastIndex, record) {
+	// 	return true
+	// }
 	return false
 
 }

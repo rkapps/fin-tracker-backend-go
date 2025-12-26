@@ -29,7 +29,7 @@ func getHistoryData(id string) ([]*TickerHistory, error) {
 
 func TestTechan(t *testing.T) {
 
-	id := "NYSEARCA:GLD"
+	id := "NASDAQ:NVDA"
 	tha, err := getHistoryData(id)
 	log.Printf("Ticker ID: %s count: %d", id, len(tha))
 	if err != nil {
@@ -58,6 +58,14 @@ func TestTechan(t *testing.T) {
 		macdLine := techan.NewMACDIndicator(closePrices, 12, 26)
 		signalLine := techan.NewEMAIndicator(macdLine, 9)
 		macdHistogram := techan.NewMACDHistogramIndicator(macdLine, 9)
+
+		prevHistogram := macdHistogram.Calculate(lastIndex - 1).Float()
+		currentHistogram := macdHistogram.Calculate(lastIndex).Float()
+		if prevHistogram < 0 && currentHistogram > 0 {
+			log.Print("golden cross detected")
+		} else if prevHistogram > 0 && currentHistogram < 0 {
+			log.Printf("death cross")
+		}
 
 		macdValue := macdLine.Calculate(lastIndex)
 		signalValue := signalLine.Calculate(lastIndex)

@@ -216,10 +216,9 @@ func (Service *TickerService) matchTechnicalStrategies(tha []*TickerHistory) []s
 	series := createTechanTimeSeries(tha)
 
 	for strategy, buildFunc := range StrategyCatalog {
-		record := techan.NewTradingRecord()
-
+		// record := techan.NewTradingRecord()
 		if buildFunc(series) {
-			slog.Debug("matchTechnicalStrategies", "Strategy", strategy, "TradingRecord", record)
+			slog.Debug("matchTechnicalStrategies", "Strategy", strategy)
 			strategies = append(strategies, strategy)
 		}
 	}
