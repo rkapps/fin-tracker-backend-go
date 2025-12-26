@@ -3,7 +3,7 @@ package stocks
 import (
 	"fmt"
 	"log/slog"
-	"rkapps/fin-tracker-backend-go/internal/providers"
+	providers "rkapps/fin-providers-go"
 	"rkapps/fin-tracker-backend-go/internal/utils"
 	"strconv"
 
@@ -16,9 +16,16 @@ import (
 )
 
 type TickerService struct {
-	T    *Ticker
-	Tc   *TickerControl
-	Load bool
+	T          *Ticker
+	Tc         *TickerControl
+	Load       bool
+	alphaApi   providers.AlphaApi
+	tiingoApi  providers.TiingoApi
+	binanceApi providers.BinanceApi
+}
+
+func NewTickerService(t *Ticker, tc *TickerControl, load bool, alphaApi providers.AlphaApi, tiingoApi providers.TiingoApi, binanceApi providers.BinanceApi) TickerService {
+	return TickerService{t, tc, load, alphaApi, tiingoApi, binanceApi}
 }
 
 func (service *TickerService) UpdateTickerEOD() (*Ticker, *TickerControl, []*TickerHistory) {
@@ -222,7 +229,7 @@ func (service TickerService) updateTickerRealtime(ctm map[string][]*providers.TT
 
 	if t.IsStock() {
 
-		lp, date := providers.GetTickerRealTimeQuoteFromTiingo(t.Symbol)
+		lp, date := service.tiingoApi.GetTickerRealTime(t.Symbol)
 		// log.Printf("Ticker: %s lp: %v", t.Symbol, lp)
 
 		if date != nil && utils.DateEqual(today, *date) {
@@ -240,7 +247,7 @@ func (service TickerService) updateTickerRealtime(ctm map[string][]*providers.TT
 		tha := ctm[t.Symbol]
 		if len(tha) == 0 {
 
-			prLast, err := providers.GetTickerPriceFromBinance(t.Symbol)
+			prLast, err := service.binanceApi.GetTickerPrice(t.Symbol)
 			if err != nil {
 				return err
 			}
@@ -268,7 +275,7 @@ func (service *TickerService) loadTickerDetails() *Ticker {
 		return t
 	}
 
-	or, url, err := providers.GetTickerDetailsFromAlpha(t.Symbol)
+	or, url, err := service.alphaApi.GetTickerDetails(t.Symbol)
 	// time.Sleep(200 * time.Millisecond)
 
 	if err != nil {
@@ -339,9 +346,9 @@ func (service *TickerService) loadTickerHistory() ([]*TickerHistory, error) {
 	t := service.T
 
 	if t.IsCrypto() {
-		tthm = providers.GetCryptoHistoryEODFromTiingo([]string{t.Symbol}, st, et)
+		tthm = service.tiingoApi.GetCryptoHistoryEOD([]string{t.Symbol}, st, et)
 	} else {
-		tthm = providers.GetTickersHistory([]string{t.Symbol}, st, et)
+		tthm = service.tiingoApi.GetTickersHistory([]string{t.Symbol}, st, et)
 	}
 
 	ttha = tthm[t.Symbol]

@@ -4,13 +4,19 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"rkapps/fin-tracker-backend-go/internal/providers"
+	"os"
+	providers "rkapps/fin-providers-go"
 	"rkapps/fin-tracker-backend-go/internal/utils"
 	"strings"
 	"time"
 
 	mongodb "github.com/rkapps/storage-backend-go/mongodb"
 	"go.mongodb.org/mongo-driver/v2/bson"
+)
+
+var (
+	TIINGO_API_TOKEN = os.Getenv("TIINGO_API_TOKEN")
+	ALPHA_API_KEY    = os.Getenv("ALPHA_KEY")
 )
 
 type StocksService struct {
@@ -219,7 +225,8 @@ func (s StocksService) updateTickersRealtime(ctx context.Context, ts Tickers) er
 			symbols = append(symbols, t.Symbol)
 		}
 	}
-	ctm := providers.GetCryptoHistoryEODFromTiingo(symbols, today, tom)
+	tiingoApi := providers.NewTiingoApi(TIINGO_API_TOKEN)
+	ctm := tiingoApi.GetCryptoHistoryEOD(symbols, today, tom)
 
 	var ids []string
 	for _, t := range ts {
@@ -254,6 +261,10 @@ func (s StocksService) updateTickersEOD(ctx context.Context, ts Tickers, load bo
 	tcr := mongodb.NewMongoRepository[*TickerControl](*s.client)
 	thr := mongodb.NewMongoRepository[*TickerHistory](*s.client)
 
+	alphaApi := providers.NewAlphaAPI(ALPHA_API_KEY)
+	tiingoApi := providers.NewTiingoApi(TIINGO_API_TOKEN)
+	binanceApi := providers.NewBinanceApi()
+
 	for i, t := range ts {
 
 		//Set the Id
@@ -268,8 +279,8 @@ func (s StocksService) updateTickersEOD(ctx context.Context, ts Tickers, load bo
 
 		//Find ticker control
 		tc, _ := tcr.FindByID(ctx, t.ID)
-		tu := &TickerService{T: t, Tc: tc, Load: load}
-		t, tc, tha := tu.UpdateTickerEOD()
+		tservice := NewTickerService(t, tc, load, alphaApi, tiingoApi, binanceApi)
+		t, tc, tha := tservice.UpdateTickerEOD()
 
 		ta = append(ta, t)
 		ids = append(ids, t.ID)
