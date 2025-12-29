@@ -1,8 +1,9 @@
-package api
+package user
 
 type ctxToken int
 
 const (
+	USER_COL                = "user"
 	UserContextUID ctxToken = iota
 )
 
@@ -19,5 +20,5 @@ func (u *User) SetId() {
 }
 
 func (u *User) CollectionName() string {
-	return "user"
+	return USER_COL
 }

@@ -4,7 +4,7 @@ go 1.24.11
 
 require (
 	github.com/gin-gonic/gin v1.11.0
-	github.com/rkapps/storage-backend-go v1.0.2
+	github.com/rkapps/storage-backend-go v1.0.3
 	go.mongodb.org/mongo-driver/v2 v2.4.1
 )
 

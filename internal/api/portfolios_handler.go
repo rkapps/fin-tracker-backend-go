@@ -1,8 +1,13 @@
 package api
 
 import (
-	"context"
+	"encoding/json"
+	"io"
+	"log/slog"
+	"net/http"
 	"rkapps/fin-tracker-backend-go/internal/portfolios"
+	"rkapps/fin-tracker-backend-go/internal/portfolios/accounts"
+	"rkapps/fin-tracker-backend-go/internal/portfolios/user"
 
 	"firebase.google.com/go/auth"
 	"github.com/gin-gonic/gin"
@@ -11,11 +16,11 @@ import (
 
 type PortfoliosHandler struct {
 	client  *mongodb.MongoClient
-	Service portfolios.PortfoliosService
+	Service portfolios.Service
 }
 
 func NewPortfoliosHandler(router *gin.Engine, client *mongodb.MongoClient, service portfolios.Service) *PortfoliosHandler {
-	return &PortfoliosHandler{client: client}
+	return &PortfoliosHandler{client: client, Service: service}
 }
 
 func (h *PortfoliosHandler) RegisterRoutes(router *gin.Engine, fbauthclient *auth.Client) {
@@ -32,19 +37,40 @@ func (h *PortfoliosHandler) GetAccounts(c *gin.Context) {
 
 // LoadAccounts gets the accounts in the portfolio
 func (h *PortfoliosHandler) LoadAccounts(c *gin.Context) {
-	h.getUser(c)
-}
 
-func (h *PortfoliosHandler) getUser(c *gin.Context) context.Context {
-	value, _ := c.Get("uid")
-	uid := value.(string)
-	user := mongodb.NewMongoRepository[*User](*h.client)
-	u, _ := user.FindByID(c, uid)
-	if u == nil {
-		u := User{}
-		u.ID = uid
-		user.InsertOne(c, &u)
+	user := h.getUser(c)
+	var accts accounts.Accounts
+	err := json.NewDecoder(c.Request.Body).Decode(&accts)
+	if err != nil {
+		if err == io.EOF {
+			slog.Debug("LoadAccounts", "Request Body is empty", err)
+			c.JSON(http.StatusBadRequest, err)
+		} else {
+			slog.Debug("LoadAccounts", "Decode error", err)
+			c.JSON(http.StatusBadRequest, err)
+		}
+		return
+	}
+	slog.Debug("LoadAccounts", "Accounts", len(accts))
+
+	err = h.Service.LoadAccounts(c, *user, accts)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
 	}
 
-	return context.WithValue(c, UserContextUID, u)
+}
+
+func (h *PortfoliosHandler) getUser(c *gin.Context) *user.User {
+	value, _ := c.Get("uid")
+	uid := value.(string)
+	userColl := mongodb.NewMongoRepository[*user.User](*h.client)
+	u, _ := userColl.FindByID(c, uid)
+	if u == nil {
+		u := user.User{}
+		u.ID = uid
+		userColl.InsertOne(c, &u)
+	}
+
+	return u
 }
