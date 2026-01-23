@@ -35,7 +35,6 @@ func main() {
 	}
 
 	mongoConnStr := os.Getenv("MONGO_ATLAS_CONN_STR")
-	// mongoConnStr = "mongodb+srv://rkapps:rkapps000)@cluster0-bxuby.gcp.mongodb.net/test?retryWrites=true&w=majority"
 	mongoConnStr = "mongodb://localhost:33333/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.5.10"
 
 	reg := mongodb.GetBsonRegistryForDecimal()
