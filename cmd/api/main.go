@@ -35,7 +35,6 @@ func main() {
 	}
 
 	mongoConnStr := os.Getenv("MONGO_ATLAS_CONN_STR")
-	mongoConnStr = "mongodb://localhost:33333/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.5.10"
 
 	reg := mongodb.GetBsonRegistryForDecimal()
 	client, err := mongodb.NewMongoClientWithRegistry(mongoConnStr, FINANCE_DB_NAME, reg)
