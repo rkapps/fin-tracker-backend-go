@@ -1,4 +1,4 @@
-module rkapps/fin-tracker-backend-go
+module github.com/rkapps/fin-tracker-backend-go
 
 go 1.24.11
 

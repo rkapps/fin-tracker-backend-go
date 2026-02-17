@@ -12,10 +12,10 @@ import (
 )
 
 func init() {
-	migrations.Register(4, "Ticker History schema",
+	migrations.Register(5, "Ticker Indicator schema",
 		func(database *mongodb.MongoDatabase) error {
 
-			thColl := mongodb.GetMongoRepository[string, *domain.TickerHistory](database)
+			thColl := mongodb.GetMongoRepository[string, *domain.TickerIndicator](database)
 			// dur := 24 * time.Hour
 			// seconds := int64(dur.Seconds())
 			if err := thColl.CreateTimeSeriesCollection(context.Background(), "date", "metadata", "hours"); err != nil {

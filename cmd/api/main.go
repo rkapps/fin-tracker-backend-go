@@ -4,9 +4,13 @@ import (
 	"context"
 	"log"
 	"os"
-	"rkapps/fin-tracker-backend-go/internal/api"
-	"rkapps/fin-tracker-backend-go/internal/logger"
-	_ "rkapps/fin-tracker-backend-go/internal/migrations"
+
+	"github.com/rkapps/fin-tracker-backend-go/internal/handlers"
+	"github.com/rkapps/fin-tracker-backend-go/internal/storage"
+
+	"github.com/rkapps/fin-tracker-backend-go/internal/logger"
+	_ "github.com/rkapps/fin-tracker-backend-go/internal/migrations"
+	"github.com/rkapps/fin-tracker-backend-go/internal/services"
 
 	firebase "firebase.google.com/go"
 	"github.com/gin-contrib/cors"
@@ -35,14 +39,15 @@ func main() {
 	}
 
 	mongoConnStr := os.Getenv("MONGO_ATLAS_CONN_STR")
+	log.Printf("MongoConnectionStr: %s", mongoConnStr)
 
 	reg := mongodb.GetBsonRegistryForDecimal()
-	client, err := mongodb.NewMongoClientWithRegistry(mongoConnStr, FINANCE_DB_NAME, reg)
+	database, err := mongodb.NewMongoDatabaseWithRegistry(mongoConnStr, FINANCE_DB_NAME, reg)
 	if err != nil {
 		log.Fatalf("Error connecting to Mongo DB: %v", err)
 	}
 
-	err = migrations.RunMigrations(client)
+	err = migrations.RunMigrations(database)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,7 +57,18 @@ func main() {
 	router.SetTrustedProxies(nil)
 
 	// Register Handlers
-	api.RegisterHandlers(router, client, fbAuthClient)
+	//Mongo Service
+	storage := storage.NewMongoStorage(database)
+	stocksService := services.NewStocksService(storage)
+	portfoliosService := services.NewPortfoliosService(storage)
+
+	//Stocks handler
+	stocksHandler := handlers.NewStocksHandler(router, stocksService)
+	stocksHandler.RegisterRoutes(router)
+
+	//Portfolios handler
+	portfoliosHandler := handlers.NewPortfoliosHandler(router, portfoliosService)
+	portfoliosHandler.RegisterRoutes(router, fbAuthClient)
 
 	port := ":8080"
 	log.Printf("Listening on port %s", port)

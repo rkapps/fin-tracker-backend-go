@@ -12,16 +12,10 @@ import (
 )
 
 func init() {
-	migrations.Register(4, "Ticker History schema",
+	migrations.Register(7, "Ticker Embedding schema",
 		func(database *mongodb.MongoDatabase) error {
 
-			thColl := mongodb.GetMongoRepository[string, *domain.TickerHistory](database)
-			// dur := 24 * time.Hour
-			// seconds := int64(dur.Seconds())
-			if err := thColl.CreateTimeSeriesCollection(context.Background(), "date", "metadata", "hours"); err != nil {
-				return err
-			}
-
+			thColl := mongodb.GetMongoRepository[string, *domain.TickerEmbedding](database)
 			err := thColl.CreateIndexes(context.Background(), []mongo.IndexModel{
 				{
 					Keys:    bson.D{{Key: "id", Value: 1}},

@@ -1,26 +1,24 @@
-package api
+package handlers
 
 import (
 	"encoding/json"
 	"io"
 	"log/slog"
 	"net/http"
-	"rkapps/fin-tracker-backend-go/internal/portfolios"
-	"rkapps/fin-tracker-backend-go/internal/portfolios/accounts"
-	"rkapps/fin-tracker-backend-go/internal/portfolios/user"
 
 	"firebase.google.com/go/auth"
 	"github.com/gin-gonic/gin"
-	"github.com/rkapps/storage-backend-go/mongodb"
+	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
+	"github.com/rkapps/fin-tracker-backend-go/internal/portfolios/accounts"
+	"github.com/rkapps/fin-tracker-backend-go/internal/services"
 )
 
 type PortfoliosHandler struct {
-	client  *mongodb.MongoClient
-	Service portfolios.Service
+	Service services.PortfoliosService
 }
 
-func NewPortfoliosHandler(router *gin.Engine, client *mongodb.MongoClient, service portfolios.Service) *PortfoliosHandler {
-	return &PortfoliosHandler{client: client, Service: service}
+func NewPortfoliosHandler(router *gin.Engine, service services.PortfoliosService) *PortfoliosHandler {
+	return &PortfoliosHandler{service}
 }
 
 func (h *PortfoliosHandler) RegisterRoutes(router *gin.Engine, fbauthclient *auth.Client) {
@@ -61,16 +59,21 @@ func (h *PortfoliosHandler) LoadAccounts(c *gin.Context) {
 
 }
 
-func (h *PortfoliosHandler) getUser(c *gin.Context) *user.User {
+func (h *PortfoliosHandler) getUser(c *gin.Context) *domain.User {
 	value, _ := c.Get("uid")
 	uid := value.(string)
-	userColl := mongodb.NewMongoRepository[*user.User](*h.client)
-	u, _ := userColl.FindByID(c, uid)
-	if u == nil {
-		u := user.User{}
-		u.ID = uid
-		userColl.InsertOne(c, &u)
-	}
 
+	// userColl := mongodb.GetMongoRepository[string, *domain.User](h.database)
+	u, err := h.Service.GetUser(uid)
+	if err != nil {
+		// c.JSON(http.StatusBadRequest, err)
+		return nil
+	}
+	// u, _ := userColl.FindByID(c, uid)
+	// if u == nil {
+	// 	u := domain.User{}
+	// 	u.ID = uid
+	// 	userColl.InsertOne(c, &u)
+	// }
 	return u
 }

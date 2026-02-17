@@ -3,8 +3,8 @@ package migrations
 import (
 	"context"
 	"fmt"
-	"rkapps/fin-tracker-backend-go/internal/stocks"
 
+	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 	"github.com/rkapps/storage-backend-go/migrations"
 	"github.com/rkapps/storage-backend-go/mongodb"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -14,9 +14,9 @@ import (
 
 func init() {
 	migrations.Register(3, "Ticker schema",
-		func(client *mongodb.MongoClient) error {
+		func(database *mongodb.MongoDatabase) error {
 
-			tickerColl := mongodb.NewMongoRepository[*stocks.Ticker](*client)
+			tickerColl := mongodb.GetMongoRepository[string, *domain.Ticker](database)
 
 			err := tickerColl.CreateIndexes(context.Background(), []mongo.IndexModel{
 				{
@@ -39,10 +39,10 @@ func init() {
 			//Create search index
 			opts := options.SearchIndexes().SetName("idx_search").SetType("search")
 
-			autoCompleteFields := []string{stocks.FIELD_SYMBOL, stocks.FIELD_EXCHANGE, stocks.FIELD_NAME, stocks.FIELD_OVERVIEW}
-			tokenFields := []string{stocks.FIELD_SECTOR, stocks.FIELD_INDUSTRY, stocks.FIELD_STRATEGIES}
-			numberFields := []string{stocks.FIELD_MARKETCAP, stocks.FIELD_YIELD, stocks.FIELD_PRDIFFPERC_SEARCH}
-			booleanFields := []string{stocks.FIELD_ACTIVE}
+			autoCompleteFields := []string{domain.FIELD_SYMBOL, domain.FIELD_EXCHANGE, domain.FIELD_NAME, domain.FIELD_OVERVIEW}
+			tokenFields := []string{domain.FIELD_SECTOR, domain.FIELD_INDUSTRY, domain.FIELD_STRATEGIES}
+			numberFields := []string{domain.FIELD_MARKETCAP, domain.FIELD_YIELD, domain.FIELD_PRDIFFPERC_SEARCH}
+			booleanFields := []string{domain.FIELD_ACTIVE}
 
 			fieldsValue := bson.D{}
 
@@ -63,8 +63,8 @@ func init() {
 				fieldValue := bson.E{Key: field, Value: bson.D{{Key: "type", Value: "number"}}}
 				fieldsValue = append(fieldsValue, fieldValue)
 			}
-			for _, period := range stocks.PerfPeriods {
-				field := fmt.Sprintf("%s.%s.%s", stocks.FIELD_PERFORMANCE_SEARCH, period, stocks.FIELD_DIFF)
+			for _, period := range domain.PerfPeriods {
+				field := fmt.Sprintf("%s.%s.%s", domain.FIELD_PERFORMANCE_SEARCH, period, domain.FIELD_DIFF)
 				fieldValue := bson.E{Key: field, Value: bson.D{{Key: "type", Value: "number"}}}
 				fieldsValue = append(fieldsValue, fieldValue)
 			}
@@ -84,7 +84,7 @@ func init() {
 
 			return err
 		},
-		func(client *mongodb.MongoClient) error {
+		func(client *mongodb.MongoDatabase) error {
 			return nil
 		},
 	)

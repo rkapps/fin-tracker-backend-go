@@ -2,8 +2,8 @@ package migrations
 
 import (
 	"context"
-	"rkapps/fin-tracker-backend-go/internal/stocks"
 
+	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 	"github.com/rkapps/storage-backend-go/migrations"
 	"github.com/rkapps/storage-backend-go/mongodb"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -13,9 +13,9 @@ import (
 
 func init() {
 	migrations.Register(2, "Ticker Control schema",
-		func(client *mongodb.MongoClient) error {
+		func(database *mongodb.MongoDatabase) error {
 
-			tcColl := mongodb.NewMongoRepository[*stocks.TickerControl](*client)
+			tcColl := mongodb.GetMongoRepository[string, *domain.TickerControl](database)
 			err := tcColl.CreateIndexes(context.Background(), []mongo.IndexModel{
 				{
 					Keys:    bson.D{{Key: "id", Value: 1}},
@@ -24,7 +24,7 @@ func init() {
 			})
 			return err
 		},
-		func(client *mongodb.MongoClient) error {
+		func(client *mongodb.MongoDatabase) error {
 			return nil
 		},
 	)

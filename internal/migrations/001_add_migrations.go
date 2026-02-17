@@ -13,9 +13,9 @@ import (
 func init() {
 
 	migrations.Register(1, "Migrations schema",
-		func(client *mongodb.MongoClient) error {
+		func(database *mongodb.MongoDatabase) error {
 
-			migrationColl := mongodb.NewMongoRepository[*migrations.Migration](*client)
+			migrationColl := mongodb.GetMongoRepository[string, *migrations.Migration](database)
 			err := migrationColl.CreateIndexes(context.Background(), []mongo.IndexModel{
 				{
 					Keys:    bson.D{{Key: "id", Value: 1}},
@@ -28,7 +28,7 @@ func init() {
 			})
 			return err
 		},
-		func(client *mongodb.MongoClient) error {
+		func(client *mongodb.MongoDatabase) error {
 			return nil
 		},
 	)

@@ -1,4 +1,4 @@
-package user
+package domain
 
 type ctxToken int
 
@@ -13,10 +13,6 @@ type User struct {
 
 func (u *User) Id() string {
 	return u.ID
-}
-
-// SetId sets the unique id for the ticket
-func (u *User) SetId() {
 }
 
 func (u *User) CollectionName() string {
