@@ -27,12 +27,10 @@ func (h *StocksHandler) RegisterRoutes(router *gin.Engine) {
 	sGroup.GET("", h.GetTickers)
 	sGroup.GET("/:symbol", h.GetTicker)
 	sGroup.GET("/:symbol/history", h.GetTickerHistory)
+	sGroup.GET("/:symbol/sentiments", h.GetTickerSentiments)
+	sGroup.GET("/:symbol/embeddings", h.GetTickerEmbeddings)
 	sGroup.GET("/groups", h.GetTickerGroups)
-	sGroup.POST("/load", h.LoadTickers)
 	sGroup.POST("/search", h.SearchTickers)
-	// sGroup.GET("/update", h.UpdateTickers)
-	// sGroup.GET("/updateEOD", h.UpdateEOD)
-	// sGroup.GET("/updateRealtime", h.UpdateRealtime)
 }
 
 // GetTicker gets a single ticker based on the symbol
@@ -72,6 +70,34 @@ func (h *StocksHandler) GetTickerHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, tk)
 }
 
+// GetTickerEmbeddings gets a single ticker embeddings
+func (h *StocksHandler) GetTickerEmbeddings(c *gin.Context) {
+
+	symbol := c.Param("symbol")
+	slog.Info("GetTickerEmbeddings", "symbol", symbol)
+	tk, err := h.Service.GetTickerEmbeddings(c, symbol)
+	if err != nil {
+		slog.Error("GetTickerSentiments", "Error", err)
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+	c.JSON(http.StatusOK, tk)
+}
+
+// GetTickerSentiments gets a single ticker sentiments
+func (h *StocksHandler) GetTickerSentiments(c *gin.Context) {
+
+	symbol := c.Param("symbol")
+	slog.Info("GetTickerSentiments", "symbol", symbol)
+	tk, err := h.Service.GetTickerSentiments(c, symbol)
+	if err != nil {
+		slog.Error("GetTickerSentiments", "Error", err)
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+	c.JSON(http.StatusOK, tk)
+}
+
 // GetTickers get multiple tickers by symbols
 func (h *StocksHandler) GetTickers(c *gin.Context) {
 
@@ -86,25 +112,6 @@ func (h *StocksHandler) GetTickers(c *gin.Context) {
 	c.JSON(http.StatusOK, tks)
 }
 
-// LoadTickers get multiple tickers by symbols
-func (h *StocksHandler) LoadTickers(c *gin.Context) {
-
-	var ts domain.Tickers
-	if err := c.BindJSON(&ts); err != nil {
-		slog.Info("LoadTickers", "Error", err)
-		return
-	}
-
-	slog.Info("LoadTickers", "Loading", len(ts))
-	if err := h.Service.LoadTickers(c, ts); err != nil {
-		slog.Info("LoadTickers", "Error", err)
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-	slog.Info("LoadTickers", "Loaded", len(ts))
-	c.JSON(http.StatusOK, ts)
-}
-
 // SearchTickers get multiple tickers by symbols
 func (h *StocksHandler) SearchTickers(c *gin.Context) {
 	var ts domain.TickerSearch
@@ -117,26 +124,3 @@ func (h *StocksHandler) SearchTickers(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, tks)
 }
-
-// // UpdateEOD updates all stocks with EOD data
-// func (h *StocksHandler) UpdateEOD(c *gin.Context) {
-// 	h.Service.UpdateEOD(c)
-// }
-
-// // UpdateRealtime updates all stocks with realtime data
-// func (h *StocksHandler) UpdateRealtime(c *gin.Context) {
-// 	h.Service.UpdateRealtime(c)
-// }
-
-// // UpdateTickers get multiple tickers by symbols
-// func (h *StocksHandler) UpdateTickers(c *gin.Context) {
-
-// 	symbols := strings.Split(c.Query("symbols"), ",")
-// 	slog.Debug("GetTickers", "Symbols", symbols)
-// 	err := h.Service.UpdateTickers(c, symbols)
-// 	if err != nil {
-// 		c.Error(err)
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, nil)
-// }

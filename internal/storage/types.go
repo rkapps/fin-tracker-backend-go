@@ -14,8 +14,9 @@ type StorageService interface {
 	GetUser(id string) (*domain.User, error)
 	GetTicker(id string) (*domain.Ticker, error)
 	GetTickerGroups() (domain.TickerGroups, error)
+	GetTickerEmbeddings(symbol string) ([]*domain.TickerEmbedding, error)
 	GetTickerHistory(symbol string) ([]*domain.TickerHistory, error)
+	GetTickerSentiments(symbol string) ([]*domain.TickerSentiment, error)
 	GetTickers(symbols []string) (domain.Tickers, error)
-	SaveTicker(t *domain.Ticker) error
 	SearchTicker(ts domain.TickerSearch) (domain.Tickers, error)
 }

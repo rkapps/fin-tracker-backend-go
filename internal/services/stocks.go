@@ -6,7 +6,6 @@ import (
 
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 	"github.com/rkapps/fin-tracker-backend-go/internal/storage"
-	"github.com/shopspring/decimal"
 )
 
 var (
@@ -49,41 +48,22 @@ func (s StocksService) GetTickerHistory(ctx context.Context, symbol string) ([]*
 	return s.storage.GetTickerHistory(symbol)
 }
 
+// GetTickerSentiments returns the ticker sentiments for the symbol
+func (s StocksService) GetTickerSentiments(ctx context.Context, symbol string) ([]*domain.TickerSentiment, error) {
+	return s.storage.GetTickerSentiments(symbol)
+}
+
+// GetTickerEmbeddings returns the ticker embeddings for the symbol
+func (s StocksService) GetTickerEmbeddings(ctx context.Context, symbol string) ([]*domain.TickerEmbedding, error) {
+	return s.storage.GetTickerEmbeddings(symbol)
+}
+
 // GetTickers returns the tickers for the symbols
 func (s StocksService) GetTickers(ctx context.Context, symbols []string) (domain.Tickers, error) {
 	return s.storage.GetTickers(symbols)
 }
 
-// LoadTickers returns the tickers for the symbols
-func (s StocksService) LoadTickers(ctx context.Context, ts domain.Tickers) error {
-	zero := decimal.NewFromFloat(0.0)
-	for _, t := range ts {
-		t.Pr52WkHigh = zero
-		t.Pr52WkLow = zero
-		t.PrClose = zero
-		t.PrDiffAmt = zero
-		t.PrDiffPerc = zero
-		t.PrHigh = zero
-		t.PrLow = zero
-		t.PrOpen = zero
-		t.PrPrev = zero
-		t.Performance = make(map[string]map[string]decimal.Decimal)
-		t.Technicals = make(map[string]map[string]decimal.Decimal)
-		t.PerformanceSearch = make(map[string]map[string]float64)
-		t.TechnicalsSearch = make(map[string]map[string]float64)
-		s.storage.SaveTicker(t)
-		break
-	}
-	// return s.updateTickersEOD(ctx, ts, true)
-	return nil
-}
-
 // SearchTicker search tickers based on input fields
 func (s StocksService) SearchTicker(ctx context.Context, ts domain.TickerSearch) (domain.Tickers, error) {
 	return s.storage.SearchTicker(ts)
-}
-
-// SaveTicker saves ticker
-func (s StocksService) SaveTicker(ctx context.Context, t *domain.Ticker) error {
-	return s.storage.SaveTicker(t)
 }

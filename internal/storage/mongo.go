@@ -33,6 +33,14 @@ func (s MongoStorage) tickerHistory() core.Repository[string, *domain.TickerHist
 	return mongodb.GetMongoRepository[string, *domain.TickerHistory](s.database)
 }
 
+func (s MongoStorage) tickerSentiment() core.Repository[string, *domain.TickerSentiment] {
+	return mongodb.GetMongoRepository[string, *domain.TickerSentiment](s.database)
+}
+
+func (s MongoStorage) tickerEmbedding() core.Repository[string, *domain.TickerEmbedding] {
+	return mongodb.GetMongoRepository[string, *domain.TickerEmbedding](s.database)
+}
+
 // DeleteTicker returns the ticker for the exchange:symbol
 func (s MongoStorage) DeleteTicker(id string) error {
 	return s.tickers().DeleteByID(s.context(), id)
@@ -81,6 +89,16 @@ func (s MongoStorage) GetTickerHistory(symbol string) ([]*domain.TickerHistory, 
 	return s.tickerHistory().Find(s.context(), filter, bson.D{}, 0, 0)
 }
 
+func (s MongoStorage) GetTickerSentiments(symbol string) ([]*domain.TickerSentiment, error) {
+	filter := bson.D{{Key: domain.FIELD_SYMBOL, Value: symbol}}
+	return s.tickerSentiment().Find(s.context(), filter, bson.D{}, 0, 0)
+}
+
+func (s MongoStorage) GetTickerEmbeddings(symbol string) ([]*domain.TickerEmbedding, error) {
+	filter := bson.D{{Key: domain.FIELD_SYMBOL, Value: symbol}}
+	return s.tickerEmbedding().Find(s.context(), filter, bson.D{}, 0, 0)
+}
+
 func (s MongoStorage) GetTickers(symbols []string) (domain.Tickers, error) {
 	var qs []string
 	for _, symbol := range symbols {
@@ -103,17 +121,6 @@ func (s MongoStorage) GetTickers(symbols []string) (domain.Tickers, error) {
 
 }
 
-func (s MongoStorage) SaveTicker(t *domain.Ticker) error {
-	tk, _ := s.tickers().FindByID(s.context(), t.ID)
-	var err error
-	if tk == nil {
-		err = s.tickers().InsertOne(s.context(), t)
-	} else {
-		err = s.tickers().UpdateOne(s.context(), t)
-	}
-	return err
-}
-
 func (s MongoStorage) SearchTicker(ts domain.TickerSearch) (domain.Tickers, error) {
 
 	var tks domain.Tickers
@@ -125,7 +132,6 @@ func (s MongoStorage) SearchTicker(ts domain.TickerSearch) (domain.Tickers, erro
 
 	//default sort field
 	criteria.AddSortField(domain.FIELD_MARKETCAP, -1)
-	// sortField := core.CreateSortField(FIELD_MARKETCAP, -1)
 
 	if len(ts.Function) > 0 {
 
