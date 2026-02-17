@@ -44,9 +44,9 @@ func (s StocksService) GetTickerGroups(ctx context.Context) (domain.TickerGroups
 	return s.storage.GetTickerGroups()
 }
 
-// GetTickerHistory returns the ticker history for the exchange:symbol
-func (s StocksService) GetTickerHistory(ctx context.Context, id string) ([]*domain.TickerHistory, error) {
-	return s.storage.GetTickerHistory(id)
+// GetTickerHistory returns the ticker history for the symbol
+func (s StocksService) GetTickerHistory(ctx context.Context, symbol string) ([]*domain.TickerHistory, error) {
+	return s.storage.GetTickerHistory(symbol)
 }
 
 // GetTickers returns the tickers for the symbols
