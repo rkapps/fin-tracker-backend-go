@@ -27,6 +27,7 @@ const (
 	TICKER_INDICATOR_COLLECTION_NAME = "ticker_indicator"
 	TICKER_SENTIMENT_COLLECTION_NAME = "ticker_sentiment"
 	TICKER_EMBEDDING_COLLECTION_NAME = "ticker_embedding"
+	TICKER_ALPHA_COLLECTION_NAME     = "ticker_alpha"
 
 	//ExNasdaq defines the string NASDAQ
 	ExNasdaq string = "NASDAQ"

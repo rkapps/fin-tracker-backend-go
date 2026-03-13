@@ -12,20 +12,26 @@ import (
 )
 
 func init() {
-	migrations.Register(5, "Ticker Indicator schema",
+	migrations.Register(8, "Ticker Indicator schema",
 		func(database *mongodb.MongoDatabase) error {
 
 			thColl := mongodb.GetMongoRepository[string, *domain.TickerIndicator](database)
-			// dur := 24 * time.Hour
-			// seconds := int64(dur.Seconds())
-			if err := thColl.CreateTimeSeriesCollection(context.Background(), "date", "metadata", "hours"); err != nil {
-				return err
-			}
-
+			// // dur := 24 * time.Hour
+			// // seconds := int64(dur.Seconds())
+			// if err := thColl.CreateTimeSeriesCollection(context.Background(), "date", "metadata", "hours"); err != nil {
+			// 	return err
+			// }
 			err := thColl.CreateIndexes(context.Background(), []mongo.IndexModel{
 				{
 					Keys:    bson.D{{Key: "id", Value: 1}},
 					Options: options.Index().SetName("idx_id").SetUnique(false),
+				},
+			})
+
+			err = thColl.CreateIndexes(context.Background(), []mongo.IndexModel{
+				{
+					Keys:    bson.D{{Key: "symbol", Value: 1}, {Key: "date", Value: 1}},
+					Options: options.Index().SetName("idx_symbol_date").SetUnique(false),
 				},
 			})
 

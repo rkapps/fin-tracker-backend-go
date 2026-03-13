@@ -86,6 +86,7 @@ func (s MongoStorage) GetTickerGroups() (domain.TickerGroups, error) {
 
 func (s MongoStorage) GetTickerHistory(symbol string) ([]*domain.TickerHistory, error) {
 	filter := bson.D{{Key: domain.FIELD_HISTORY_SYMBOL, Value: symbol}}
+	slog.Debug("GetTickerHistory", "filter", filter)
 	return s.tickerHistory().Find(s.context(), filter, bson.D{}, 0, 0)
 }
 
