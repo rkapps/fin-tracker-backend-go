@@ -1,7 +1,6 @@
-package storage
+package mongo
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -9,45 +8,12 @@ import (
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 	"github.com/rkapps/fin-tracker-backend-go/internal/utils"
 	"github.com/rkapps/storage-backend-go/core"
-	"github.com/rkapps/storage-backend-go/mongodb"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
-
-func NewMongoStorage(database *mongodb.MongoDatabase) StorageService {
-	return MongoStorage{database}
-}
-
-func (s MongoStorage) context() context.Context {
-	return context.Background()
-}
-
-func (s MongoStorage) users() core.Repository[string, *domain.User] {
-	return mongodb.GetMongoRepository[string, *domain.User](s.database)
-}
-
-func (s MongoStorage) tickers() core.Repository[string, *domain.Ticker] {
-	return mongodb.GetMongoRepository[string, *domain.Ticker](s.database)
-}
-
-func (s MongoStorage) tickerHistory() core.Repository[string, *domain.TickerHistory] {
-	return mongodb.GetMongoRepository[string, *domain.TickerHistory](s.database)
-}
-
-func (s MongoStorage) tickerSentiment() core.Repository[string, *domain.TickerSentiment] {
-	return mongodb.GetMongoRepository[string, *domain.TickerSentiment](s.database)
-}
-
-func (s MongoStorage) tickerEmbedding() core.Repository[string, *domain.TickerEmbedding] {
-	return mongodb.GetMongoRepository[string, *domain.TickerEmbedding](s.database)
-}
 
 // DeleteTicker returns the ticker for the exchange:symbol
 func (s MongoStorage) DeleteTicker(id string) error {
 	return s.tickers().DeleteByID(s.context(), id)
-}
-
-func (s MongoStorage) GetUser(id string) (*domain.User, error) {
-	return s.users().FindByID(s.context(), id)
 }
 
 func (s MongoStorage) GetTicker(id string) (*domain.Ticker, error) {

@@ -1,5 +1,7 @@
 package domain
 
+import "context"
+
 type ctxToken int
 
 const (
@@ -8,7 +10,9 @@ const (
 )
 
 type User struct {
-	ID string
+	ID       string `json:"id" bson:"id"`
+	Currency string `json:"currency"`
+	Country  string `json:"country"`
 }
 
 func (u *User) Id() string {
@@ -17,4 +21,8 @@ func (u *User) Id() string {
 
 func (u *User) CollectionName() string {
 	return USER_COL
+}
+
+func UserFromCtx(ctx context.Context) User {
+	return ctx.Value(UserContextUID).(User)
 }

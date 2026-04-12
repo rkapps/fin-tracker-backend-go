@@ -2,6 +2,10 @@ package domain
 
 const (
 
+	// Common Fields
+	FIELD_UID  = "uid"
+	FIELD_DATE = "date"
+
 	//Fields
 	FIELD_ID                 = "id"
 	FIELD_SYMBOL             = "symbol"
@@ -20,6 +24,13 @@ const (
 	FIELD_STRATEGIES         = "strategies"
 	FIELD_HISTORY_SYMBOL     = "metadata.symbol"
 
+	// Fields for transaction
+	FIELD_TRANSACTION_GROUP       = "group"
+	FIELD_TRANSACTION_CATEGORY    = "category"
+	FIELD_TRANSACTION_ACCOUNT     = "account"
+	FIELD_TRANSACTION_DESCRIPTION = "description"
+	FIELD_TRANSACTION_TAG         = "tag"
+
 	//Collections
 	TICKER_CONTROL_COLLECTION_NAME   = "ticker_control"
 	TICKER_COLLECTION_NAME           = "ticker"
@@ -28,6 +39,7 @@ const (
 	TICKER_SENTIMENT_COLLECTION_NAME = "ticker_sentiment"
 	TICKER_EMBEDDING_COLLECTION_NAME = "ticker_embedding"
 	TICKER_ALPHA_COLLECTION_NAME     = "ticker_alpha"
+	TRANSACTION_COLLECTION_NAME      = "transaction"
 
 	//ExNasdaq defines the string NASDAQ
 	ExNasdaq string = "NASDAQ"

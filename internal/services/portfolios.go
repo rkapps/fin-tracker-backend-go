@@ -16,10 +16,6 @@ func NewPortfoliosService(storage storage.StorageService) PortfoliosService {
 	return PortfoliosService{storage: storage}
 }
 
-func (s PortfoliosService) GetUser(id string) (*domain.User, error) {
-	return s.storage.GetUser(id)
-}
-
 func (s PortfoliosService) LoadAccounts(ctx context.Context, user domain.User, accts accounts.Accounts) error {
 
 	ids := []string{}

@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/rkapps/fin-tracker-backend-go/internal/handlers"
-	"github.com/rkapps/fin-tracker-backend-go/internal/storage"
+	"github.com/rkapps/fin-tracker-backend-go/internal/storage/mongo"
 
 	"github.com/rkapps/fin-tracker-backend-go/internal/logger"
 	_ "github.com/rkapps/fin-tracker-backend-go/internal/migrations"
@@ -40,6 +40,8 @@ func main() {
 
 	mongoConnStr := os.Getenv("MONGO_ATLAS_CONN_STR")
 	log.Printf("MongoConnectionStr: %s", mongoConnStr)
+	// mongoConnStr = "mongodb://localhost:27017"
+	// log.Printf("MongoConnectionStr: %s", mongoConnStr)
 
 	reg := mongodb.GetBsonRegistryForDecimal()
 	database, err := mongodb.NewMongoDatabaseWithRegistry(mongoConnStr, FINANCE_DB_NAME, reg)
@@ -58,20 +60,38 @@ func main() {
 
 	// Register Handlers
 	//Mongo Service
-	storage := storage.NewMongoStorage(database)
+	storage := mongo.NewMongoStorage(database)
 	stocksService := services.NewStocksService(storage)
 	portfoliosService := services.NewPortfoliosService(storage)
+	transactionsService := services.NewTransactionsService(storage)
+	userService := services.NewUserService(storage)
 
 	//Stocks handler
 	stocksHandler := handlers.NewStocksHandler(router, stocksService)
 	stocksHandler.RegisterRoutes(router)
 
 	//Portfolios handler
-	portfoliosHandler := handlers.NewPortfoliosHandler(router, portfoliosService)
+	portfoliosHandler := handlers.NewPortfoliosHandler(router, portfoliosService, userService)
 	portfoliosHandler.RegisterRoutes(router, fbAuthClient)
 
-	port := ":3001"
+	transactionsPortfolio := handlers.NewTransactionsHandler(router, transactionsService, userService)
+	transactionsPortfolio.RegisterRoutes(router, fbAuthClient)
+
+	userHandler := handlers.NewUserHandler(router, services.UserService(userService))
+	userHandler.RegisterRoutes(router, fbAuthClient)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // fallback for local dev
+	}
 	log.Printf("Listening on port %s", port)
-	router.Run(port)
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:4200"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"*"}, // or list Authorization, Content-Type, etc.
+		AllowCredentials: true,
+	}))
+	router.Run(":" + port)
 
 }

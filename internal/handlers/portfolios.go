@@ -8,37 +8,41 @@ import (
 
 	"firebase.google.com/go/auth"
 	"github.com/gin-gonic/gin"
-	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 	"github.com/rkapps/fin-tracker-backend-go/internal/portfolios/accounts"
 	"github.com/rkapps/fin-tracker-backend-go/internal/services"
 )
 
 type PortfoliosHandler struct {
-	Service services.PortfoliosService
+	Service     services.PortfoliosService
+	UserService services.UserService
 }
 
-func NewPortfoliosHandler(router *gin.Engine, service services.PortfoliosService) *PortfoliosHandler {
-	return &PortfoliosHandler{service}
+func NewPortfoliosHandler(router *gin.Engine, service services.PortfoliosService, userService services.UserService) *PortfoliosHandler {
+	return &PortfoliosHandler{service, userService}
 }
 
 func (h *PortfoliosHandler) RegisterRoutes(router *gin.Engine, fbauthclient *auth.Client) {
 
 	sGroup := router.Group("/portfolios")
-	sGroup.GET("/accounts", AuthHandler(fbauthclient, h.GetAccounts))
-	sGroup.POST("/accounts/load", AuthHandler(fbauthclient, h.LoadAccounts))
+	sGroup.GET("/accounts", AuthHandler(fbauthclient, h.UserService, h.GetAccounts))
+	sGroup.POST("/accounts/load", AuthHandler(fbauthclient, h.UserService, h.LoadAccounts))
 }
 
 // GetAccounts gets the accounts in the portfolio
 func (h *PortfoliosHandler) GetAccounts(c *gin.Context) {
-	h.getUser(c)
+	// h.getUser(c)
 }
 
 // LoadAccounts gets the accounts in the portfolio
 func (h *PortfoliosHandler) LoadAccounts(c *gin.Context) {
 
-	user := h.getUser(c)
+	user, err := getUser(c, h.UserService)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
 	var accts accounts.Accounts
-	err := json.NewDecoder(c.Request.Body).Decode(&accts)
+	err = json.NewDecoder(c.Request.Body).Decode(&accts)
 	if err != nil {
 		if err == io.EOF {
 			slog.Debug("LoadAccounts", "Request Body is empty", err)
@@ -57,23 +61,4 @@ func (h *PortfoliosHandler) LoadAccounts(c *gin.Context) {
 		return
 	}
 
-}
-
-func (h *PortfoliosHandler) getUser(c *gin.Context) *domain.User {
-	value, _ := c.Get("uid")
-	uid := value.(string)
-
-	// userColl := mongodb.GetMongoRepository[string, *domain.User](h.database)
-	u, err := h.Service.GetUser(uid)
-	if err != nil {
-		// c.JSON(http.StatusBadRequest, err)
-		return nil
-	}
-	// u, _ := userColl.FindByID(c, uid)
-	// if u == nil {
-	// 	u := domain.User{}
-	// 	u.ID = uid
-	// 	userColl.InsertOne(c, &u)
-	// }
-	return u
 }
