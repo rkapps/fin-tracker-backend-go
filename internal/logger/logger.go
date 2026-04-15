@@ -9,15 +9,29 @@ func SetLogger() {
 
 	programLevel := new(slog.LevelVar)
 
-	// 2. Set it to Debug immediately
-	programLevel.Set(slog.LevelDebug)
+	switch os.Getenv("LOG_LEVEL") {
+	case "DEBUG":
+		programLevel.Set(slog.LevelDebug)
+	case "WARN":
+		programLevel.Set(slog.LevelWarn)
+	case "ERROR":
+		programLevel.Set(slog.LevelError)
+	default:
+		programLevel.Set(slog.LevelInfo)
+	}
 
-	// 3. IMPORTANT: Pass the LevelVar to the handler
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: programLevel,
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			if a.Key == slog.LevelKey {
+				a.Key = "severity"
+			}
+			if a.Key == slog.MessageKey {
+				a.Key = "message"
+			}
+			return a
+		},
 	})
 
-	// 4. IMPORTANT: Set this logger as the global default
-	logger := slog.New(handler)
-	slog.SetDefault(logger)
+	slog.SetDefault(slog.New(handler))
 }

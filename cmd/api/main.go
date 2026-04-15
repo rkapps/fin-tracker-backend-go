@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
 	"os"
 
 	"github.com/rkapps/fin-tracker-backend-go/internal/handlers"
@@ -20,14 +21,13 @@ import (
 )
 
 const (
-	FINANCE_DB_NAME = "test"
+	FINANCE_DB_NAME = "finTracker"
 )
 
 func main() {
 
 	//Set logger
 	logger.SetLogger()
-
 	fbApp, err := firebase.NewApp(context.Background(), nil)
 	if err != nil {
 		log.Fatalf("error initializing app: %v\n", err)
@@ -39,9 +39,9 @@ func main() {
 	}
 
 	mongoConnStr := os.Getenv("MONGO_ATLAS_CONN_STR")
-	log.Printf("MongoConnectionStr: %s", mongoConnStr)
-	// mongoConnStr = "mongodb://localhost:27017"
 	// log.Printf("MongoConnectionStr: %s", mongoConnStr)
+	// mongoConnStr = "mongodb://localhost:27017"
+	slog.Info("MongoDb connection string: " + mongoConnStr)
 
 	reg := mongodb.GetBsonRegistryForDecimal()
 	database, err := mongodb.NewMongoDatabaseWithRegistry(mongoConnStr, FINANCE_DB_NAME, reg)
@@ -84,7 +84,7 @@ func main() {
 	if port == "" {
 		port = "8080" // fallback for local dev
 	}
-	log.Printf("Listening on port %s", port)
+	slog.Info("Server listening on port: " + port)
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:4200"},

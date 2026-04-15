@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -53,7 +54,7 @@ func (h *PortfoliosHandler) LoadAccounts(c *gin.Context) {
 		}
 		return
 	}
-	slog.Debug("LoadAccounts", "Accounts", len(accts))
+	slog.Debug(fmt.Sprintf("LoadAccounts count: %d", len(accts)))
 
 	err = h.Service.LoadAccounts(c, *user, accts)
 	if err != nil {

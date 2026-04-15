@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -28,8 +29,9 @@ func (h *UserHandler) RegisterRoutes(router *gin.Engine, fbauthclient *auth.Clie
 
 func (h *UserHandler) GetUser(c *gin.Context) {
 	user, err := getUser(c, h.Service)
-	slog.Info("UserHandler", "GetUser", user, "Error", err)
+	slog.Info(fmt.Sprintf("GetUser: %v", user))
 	if err != nil {
+		slog.Debug("GetUser", "Error", err)
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": err.Error(),
 		})
@@ -54,7 +56,7 @@ func (h *UserHandler) SaveUser(c *gin.Context) {
 	user.ID = uid
 	err = h.Service.SaveUser(user)
 	if err != nil {
-		slog.Debug("UserHandler", "SaveUser", err)
+		slog.Debug("SaveUser", "Error", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
 		})

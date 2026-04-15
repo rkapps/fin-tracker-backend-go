@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -45,7 +46,7 @@ func (h *TransactionsHandler) SearchTransactions(c *gin.Context) {
 	sendDate := c.Query("endDate")
 	endDate := utils.DateFromString(sendDate)
 
-	slog.Info("SearchTransactions", "Startdate", startDate, "EndDate", endDate)
+	slog.Info("SearchTransactions started", "Startdate", startDate, "EndDate", endDate)
 
 	txns, err := h.Service.SearchTransactions(*user, startDate, endDate, searchText)
 	if err != nil {
@@ -61,7 +62,7 @@ func (h *TransactionsHandler) SearchTransactions(c *gin.Context) {
 			txn.DAmount += txn.Amount
 		}
 	}
-	slog.Info("SearchTransactions", "Transactions", len(txns))
+	slog.Info(fmt.Sprintf("SearchTransactions count: %d", len(txns)))
 
 	c.JSON(http.StatusOK, txns)
 }
@@ -79,7 +80,7 @@ func (h *TransactionsHandler) SummaryTransactions(c *gin.Context) {
 	sendDate := c.Query("endDate")
 	endDate := utils.DateFromString(sendDate)
 
-	slog.Info("SummaryTransactions", "Startdate", startDate, "EndDate", endDate)
+	slog.Info("SummaryTransactions started", "Startdate", startDate, "EndDate", endDate)
 
 	txns, err := h.Service.SummaryTransactions(*user, startDate, endDate)
 	if err != nil {
@@ -88,7 +89,7 @@ func (h *TransactionsHandler) SummaryTransactions(c *gin.Context) {
 		})
 	}
 
-	slog.Info("SummaryTransactions", "TransactionAgg", len(txns))
+	slog.Info(fmt.Sprintf("SummaryTransactions count: %d", len(txns)))
 	c.JSON(http.StatusOK, txns)
 }
 
@@ -114,8 +115,6 @@ func (h *TransactionsHandler) ImportTransactions(c *gin.Context) {
 		})
 	}
 
-	slog.Info("ImportTransactions", "Transactions", len(txns))
-
 	err = h.Service.ImportTransactions(*user, startDate, endDate, txns)
 	if err != nil {
 		slog.Debug("TransactionsHandler", "ImportTransactions", err)
@@ -123,7 +122,7 @@ func (h *TransactionsHandler) ImportTransactions(c *gin.Context) {
 			"message": err.Error(),
 		})
 	}
-
+	slog.Info(fmt.Sprintf("ImportTransactions count: %d", len(txns)))
 	c.JSON(http.StatusOK, "")
 
 }
