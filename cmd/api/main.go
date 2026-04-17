@@ -28,7 +28,10 @@ func main() {
 
 	//Set logger
 	logger.SetLogger()
-	fbApp, err := firebase.NewApp(context.Background(), nil)
+	config := &firebase.Config{
+		ProjectID: os.Getenv("FIREBASE_PROJECT_ID"),
+	}
+	fbApp, err := firebase.NewApp(context.Background(), config)
 	if err != nil {
 		log.Fatalf("error initializing app: %v\n", err)
 	}
@@ -86,12 +89,18 @@ func main() {
 	}
 	slog.Info("Server listening on port: " + port)
 
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:4200"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"*"}, // or list Authorization, Content-Type, etc.
-		AllowCredentials: true,
-	}))
+	router.Use(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "http://localhost:4200")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept")
+		c.Header("Access-Control-Allow-Credentials", "true")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+		c.Next()
+	})
 	router.Run(":" + port)
 
 }

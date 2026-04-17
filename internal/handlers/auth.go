@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -17,21 +18,23 @@ func AuthHandler(fbAuthClient *auth.Client, userService services.UserService, f 
 
 		var header = c.GetHeader("Authorization")
 		var token string
-		// slog.Debug("AuthHandler", "Token", token)
 		if len(header) == 0 {
-			c.JSON(http.StatusUnauthorized, "Authorization header not available.")
+			slog.Info("AuthHandler", "error", "Authorization header not available")
+			c.AbortWithStatusJSON(http.StatusUnauthorized, "Authorization header not available.")
 			return
 		}
 		if len(header) > 7 && strings.ToLower(header[0:6]) == "bearer" {
 			token = header[7:]
 		} else {
-			c.JSON(http.StatusUnauthorized, "Authorization token not available.")
+			slog.Info("AuthHandler", "error", "Authorization token not available")
+			c.AbortWithStatusJSON(http.StatusUnauthorized, "Authorization token not available.")
 			return
 		}
 
 		authToken, err := fbAuthClient.VerifyIDToken(c, token)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, "Authorization token not verified.")
+			slog.Info("AuthHandler", "error", "Authorization header not verified")
+			c.AbortWithStatusJSON(http.StatusUnauthorized, "Authorization token not verified.")
 			return
 		}
 		// slog.Debug("AuthHandler", "UID", authToken.UID)
