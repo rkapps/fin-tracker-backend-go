@@ -40,8 +40,8 @@ func init() {
 			opts := options.SearchIndexes().SetName("idx_search").SetType("search")
 
 			autoCompleteFields := []string{domain.FIELD_SYMBOL, domain.FIELD_EXCHANGE, domain.FIELD_NAME, domain.FIELD_OVERVIEW}
-			tokenFields := []string{domain.FIELD_SECTOR, domain.FIELD_INDUSTRY, domain.FIELD_STRATEGIES}
-			numberFields := []string{domain.FIELD_MARKETCAP, domain.FIELD_YIELD, domain.FIELD_PRDIFFPERC_SEARCH}
+			tokenFields := []string{domain.FIELD_SECTOR, domain.FIELD_INDUSTRY, domain.FIELD_STRATEGIES, domain.FIELD_ASSET_TYPE}
+			numberFields := []string{domain.FIELD_TOTAL_ASSETS, domain.FIELD_YIELD, domain.FIELD_PRDIFFPERC_SEARCH}
 			booleanFields := []string{domain.FIELD_ACTIVE}
 
 			fieldsValue := bson.D{}

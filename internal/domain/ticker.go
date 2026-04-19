@@ -20,7 +20,7 @@ type Ticker struct {
 	Overview          string                                `json:"overview" bson:"overview"`
 	Country           string                                `json:"country" bson:"country"`
 	Currency          string                                `json:"currency" bson:"currency"`
-	MarketCap         int64                                 `json:"market_cap" bson:"market_cap"`
+	TotalAssets       int64                                 `json:"total_assets" bson:"total_assets"`
 	EPS               float64                               `json:"eps" bson:"eps"`
 	PERatio           float64                               `json:"pe_ratio" bson:"pe_ratio"`
 	PEGRatio          float64                               `json:"peg_ratio" bson:"peg_ratio"`

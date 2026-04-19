@@ -98,7 +98,7 @@ func (s MongoStorage) SearchTicker(ts domain.TickerSearch) (domain.Tickers, erro
 	criteria.AutoCompleteFields = []string{domain.FIELD_SYMBOL, domain.FIELD_EXCHANGE, domain.FIELD_NAME, domain.FIELD_OVERVIEW}
 
 	//default sort field
-	criteria.AddSortField(domain.FIELD_MARKETCAP, -1)
+	criteria.AddSortField(domain.FIELD_TOTAL_ASSETS, -1)
 
 	if len(ts.Function) > 0 {
 
