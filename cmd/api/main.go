@@ -58,7 +58,16 @@ func main() {
 	}
 
 	router := gin.New()
-	router.Use(cors.Default())
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:4200",
+			"https://fin-tracker-backend-test.web.app",
+			"https://fin-tracker-backend-test.firebaseapp.com",
+		},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"},
+		AllowCredentials: true,
+	}))
 	router.SetTrustedProxies(nil)
 
 	// Register Handlers
@@ -88,22 +97,6 @@ func main() {
 		port = "8080" // fallback for local dev
 	}
 	slog.Info("Server listening on port: " + port)
-
-	// allowedOrigins := map[string]bool{
-	// 	"http://localhost:4200":                            true,
-	// 	"https://fin-tracker-backend-test.web.app":         true,
-	// 	"https://fin-tracker-backend-test.firebaseapp.com": true,
-	// }
-	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{
-			"http://localhost:4200",
-			"https://fin-tracker-backend-test.web.app",
-			"https://fin-tracker-backend-test.firebaseapp.com",
-		},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"},
-		AllowCredentials: true,
-	}))
 	router.Run(":" + port)
 
 }
