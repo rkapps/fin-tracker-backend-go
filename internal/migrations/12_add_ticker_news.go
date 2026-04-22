@@ -19,7 +19,7 @@ func init() {
 			err := thColl.CreateIndexes(context.Background(), []mongo.IndexModel{
 				{
 					Keys:    bson.D{{Key: "id", Value: 1}},
-					Options: options.Index().SetName("idx_id").SetUnique(false),
+					Options: options.Index().SetName("idx_id").SetUnique(true),
 				},
 			})
 
