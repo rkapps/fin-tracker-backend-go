@@ -100,7 +100,6 @@ func main() {
 		if allowedOrigins[origin] {
 			c.Header("Access-Control-Allow-Origin", origin)
 		}
-		c.Header("Access-Control-Allow-Origin", "https://fin-tracker-backend-test.web.app")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept")
 		c.Header("Access-Control-Allow-Credentials", "true")
