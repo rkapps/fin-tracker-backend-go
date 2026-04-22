@@ -89,8 +89,17 @@ func main() {
 	}
 	slog.Info("Server listening on port: " + port)
 
+	allowedOrigins := map[string]bool{
+		"http://localhost:4200":                            true,
+		"https://fin-tracker-backend-test.web.app":         true,
+		"https://fin-tracker-backend-test.firebaseapp.com": true,
+	}
+
 	router.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "http://localhost:4200")
+		origin := c.Request.Header.Get("Origin")
+		if allowedOrigins[origin] {
+			c.Header("Access-Control-Allow-Origin", origin)
+		}
 		c.Header("Access-Control-Allow-Origin", "https://fin-tracker-backend-test.web.app")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept")
