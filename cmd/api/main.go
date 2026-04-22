@@ -89,27 +89,21 @@ func main() {
 	}
 	slog.Info("Server listening on port: " + port)
 
-	allowedOrigins := map[string]bool{
-		"http://localhost:4200":                            true,
-		"https://fin-tracker-backend-test.web.app":         true,
-		"https://fin-tracker-backend-test.firebaseapp.com": true,
-	}
-
-	router.Use(func(c *gin.Context) {
-		origin := c.Request.Header.Get("Origin")
-		if allowedOrigins[origin] {
-			c.Header("Access-Control-Allow-Origin", origin)
-		}
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept")
-		c.Header("Access-Control-Allow-Credentials", "true")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-		c.Next()
-	})
+	// allowedOrigins := map[string]bool{
+	// 	"http://localhost:4200":                            true,
+	// 	"https://fin-tracker-backend-test.web.app":         true,
+	// 	"https://fin-tracker-backend-test.firebaseapp.com": true,
+	// }
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:4200",
+			"https://fin-tracker-backend-test.web.app",
+			"https://fin-tracker-backend-test.firebaseapp.com",
+		},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"},
+		AllowCredentials: true,
+	}))
 	router.Run(":" + port)
 
 }
