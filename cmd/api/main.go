@@ -64,21 +64,21 @@ func main() {
 	// Register Handlers
 	//Mongo Service
 	storage := mongo.NewMongoStorage(database)
-	stocksService := services.NewStocksService(storage)
+	// stocksService := services.NewStocksService(storage)
 	portfoliosService := services.NewPortfoliosService(storage)
-	transactionsService := services.NewTransactionsService(storage)
+	// transactionsService := services.NewTransactionsService(storage)
 	userService := services.NewUserService(storage)
 
 	//Stocks handler
-	stocksHandler := handlers.NewStocksHandler(router, stocksService)
-	stocksHandler.RegisterRoutes(router)
+	// stocksHandler := handlers.NewStocksHandler(router, stocksService)
+	// stocksHandler.RegisterRoutes(router)
 
 	//Portfolios handler
 	portfoliosHandler := handlers.NewPortfoliosHandler(router, portfoliosService, userService)
 	portfoliosHandler.RegisterRoutes(router, fbAuthClient)
 
-	transactionsPortfolio := handlers.NewTransactionsHandler(router, transactionsService, userService)
-	transactionsPortfolio.RegisterRoutes(router, fbAuthClient)
+	// transactionsPortfolio := handlers.NewTransactionsHandler(router, transactionsService, userService)
+	// transactionsPortfolio.RegisterRoutes(router, fbAuthClient)
 
 	userHandler := handlers.NewUserHandler(router, services.UserService(userService))
 	userHandler.RegisterRoutes(router, fbAuthClient)
@@ -91,6 +91,7 @@ func main() {
 
 	router.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "http://localhost:4200")
+		c.Header("Access-Control-Allow-Origin", "https://fin-tracker-backend-test.web.app")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept")
 		c.Header("Access-Control-Allow-Credentials", "true")
