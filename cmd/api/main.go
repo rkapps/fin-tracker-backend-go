@@ -44,7 +44,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	apiApp, err := common.GetApiApp(dbname, mlog)
+	apiApp, err := common.GetApiApp(dbname, logConfig)
 	if err != nil {
 		mlog.Error("GetApiApp", "error", err)
 		os.Exit(1)

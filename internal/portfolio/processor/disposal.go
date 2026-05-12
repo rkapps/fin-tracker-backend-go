@@ -11,9 +11,8 @@ type DisposalActivityProcessor struct {
 	logger *logger.Logger
 }
 
-func NewDisposalActivityProcessor() DisposalActivityProcessor {
-	logger := logger.New()
-	plog := logger.For("processor.disposal")
+func NewDisposalActivityProcessor(logConfig *logger.Config) DisposalActivityProcessor {
+	plog := logConfig.For("processor.disposal")
 	return DisposalActivityProcessor{logger: plog}
 }
 
@@ -24,18 +23,16 @@ func (p DisposalActivityProcessor) Process(ctx context.Context, actv *domain.Act
 
 	p.logger.Debug("Process")
 	newctx := logger.WithContext(ctx, p.logger)
-
-	// Create the lot of the asset
-	// lot := lm.CreateAssetLot(actv, actv.RcvSymbol, actv.RcvQuantity, actv.RcvAmount)
-	lm.ReduceLotQty(newctx, actv)
 	pr := NewProcessResult()
-	// pr.appendLot(lot)
 
-	// // update the cash lot
-	// clot, _ := lm.UpdateCashLot(actv, actv.AccountID, actv.SentSymbol)
-	// pr.appendLot(clot)
+	// Reduce the lot of the asset and get the costvalue for the gl
+	value, _ := lm.ReduceLotQty(newctx, actv)
+	// update the cash lot
+	lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount)
 
-	// pr.Value = actv.SentAmount
+	// set  the value
+	pr.Value = actv.RcvAmount
+	p.logger.Debug("Process", "CostValue", value, "RcvValue", actv.RcvAmount)
 
 	return pr, nil
 }

@@ -11,9 +11,8 @@ type CashActivityProcessor struct {
 	logger *logger.Logger
 }
 
-func NewCashActivityProcessor() CashActivityProcessor {
-	logger := logger.New()
-	plog := logger.For("processor.cash")
+func NewCashActivityProcessor(logConfig *logger.Config) CashActivityProcessor {
+	plog := logConfig.For("processor.cash")
 	return CashActivityProcessor{logger: plog}
 }
 
@@ -22,16 +21,17 @@ var _ ActivityProcessor = (*CashActivityProcessor)(nil)
 
 func (p CashActivityProcessor) Process(ctx context.Context, actv *domain.Activity, lm LotManager) (*ProcessorResult, error) {
 
-	ctx = logger.WithContext(ctx, p.logger)
 	p.logger.Debug("Process")
+	newctx := logger.WithContext(ctx, p.logger)
+	pr := NewProcessResult()
 
-	lot, err := lm.UpdateCashLot(ctx, actv, actv.AccountID, actv.RcvSymbol)
+	_, err := lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount)
 	if err != nil {
 		return nil, err
 	}
-	pr := NewProcessResult()
-	pr.appendLot(lot)
+
 	pr.Value = actv.RcvAmount
-	// p.logger.Trace("Process", len(pr.Lots))
+	p.logger.Debug("Process", "RcvValue", actv.RcvAmount)
+
 	return pr, nil
 }

@@ -25,7 +25,7 @@ type PipelineApp struct {
 	PortfolioService services.PortfolioService
 }
 
-func GetApiApp(dbname string, logger *logger.Logger) (ApiApp, error) {
+func GetApiApp(dbname string, logConfig *logger.Config) (ApiApp, error) {
 
 	database, err := getMongoDb(dbname)
 	if err != nil {
@@ -37,7 +37,7 @@ func GetApiApp(dbname string, logger *logger.Logger) (ApiApp, error) {
 	userService := services.NewUserService(storage)
 	transactionsService := services.NewTransactionsService(storage)
 	tickersService := services.NewStocksService(storage)
-	portfolioService := services.NewPortfolioService(tickersService, storage)
+	portfolioService := services.NewPortfolioService(logConfig, tickersService, storage)
 
 	return ApiApp{Database: database, UserService: userService,
 		AccountsService:     accountsService,
@@ -45,7 +45,7 @@ func GetApiApp(dbname string, logger *logger.Logger) (ApiApp, error) {
 	}, nil
 }
 
-func GetPipelineApp(logger *logger.Logger) (PipelineApp, error) {
+func GetPipelineApp(logConfig *logger.Config) (PipelineApp, error) {
 	database, err := getMongoDb(storage.FINTRACKER_DB_NAME)
 	if err != nil {
 		return PipelineApp{}, err
@@ -54,7 +54,7 @@ func GetPipelineApp(logger *logger.Logger) (PipelineApp, error) {
 	storage := mongo.NewMongoStorage(database)
 	userService := services.NewUserService(storage)
 	tickersService := services.NewStocksService(storage)
-	portfolioService := services.NewPortfolioService(tickersService, storage)
+	portfolioService := services.NewPortfolioService(logConfig, tickersService, storage)
 
 	return PipelineApp{Database: database, UserService: userService, PortfolioService: portfolioService}, nil
 }

@@ -11,9 +11,8 @@ type AquisitionActivityProcessor struct {
 	logger *logger.Logger
 }
 
-func NewAcquisitionActivityProcessor() AquisitionActivityProcessor {
-	logger := logger.New()
-	plog := logger.For("processor.acquisition")
+func NewAcquisitionActivityProcessor(logConfig *logger.Config) AquisitionActivityProcessor {
+	plog := logConfig.For("processor.acquisition")
 	return AquisitionActivityProcessor{logger: plog}
 }
 
@@ -22,19 +21,22 @@ var _ ActivityProcessor = (*AquisitionActivityProcessor)(nil)
 
 func (p AquisitionActivityProcessor) Process(ctx context.Context, actv *domain.Activity, lm LotManager) (*ProcessorResult, error) {
 
-	ctx = logger.WithContext(ctx, p.logger)
-
-	// Create the lot of the asset
-	lot := lm.CreateAssetLot(ctx, actv, actv.RcvSymbol, actv.RcvQuantity, actv.RcvAmount)
+	p.logger.Debug("Process")
+	newctx := logger.WithContext(ctx, p.logger)
 
 	pr := NewProcessResult()
-	pr.appendLot(lot)
+
+	// Create the lot of the asset
+	lm.CreateAssetLot(newctx, actv, actv.RcvSymbol, actv.RcvQuantity, actv.RcvAmount)
 
 	// update the cash lot
-	clot, _ := lm.UpdateCashLot(ctx, actv, actv.AccountID, actv.SentSymbol)
-	pr.appendLot(clot)
+	_, err := lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.SentSymbol, actv.SentAmount)
+	if err != nil {
+		return nil, err
+	}
 
 	pr.Value = actv.SentAmount
+	p.logger.Debug("Process", "RcvValue", actv.RcvAmount)
 
 	return pr, nil
 }

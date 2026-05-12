@@ -23,7 +23,7 @@ func main() {
 		log.Fatal("Usage: pipeline <command> [args]")
 	}
 
-	pipelineApp, err := common.GetPipelineApp(plog)
+	pipelineApp, err := common.GetPipelineApp(logConfig)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -14,10 +14,10 @@ type LotManager interface {
 	CreateGLEntry(ctx context.Context, lot *domain.ActivityLot, activity *domain.Activity, qty decimal.Decimal) domain.GLEntry
 	CreateAssetLot(ctx context.Context, actv *domain.Activity, symbol string, qty decimal.Decimal, value decimal.Decimal) *domain.ActivityLot
 
-	MatchLots(ctx context.Context, account domain.Account, symbol string, qty decimal.Decimal) []*domain.ActivityLot
+	MatchOpenLots(ctx context.Context, account domain.Account, symbol string) []*domain.ActivityLot
 	NextLotSeq(ctx context.Context, accountID string) int
-	ReduceLotQty(ctx context.Context, actv *domain.Activity) error
-	UpdateCashLot(ctx context.Context, activity *domain.Activity, acctId string, symbol string) (*domain.ActivityLot, error)
+	ReduceLotQty(ctx context.Context, actv *domain.Activity) (decimal.Decimal, error)
+	UpdateCashLot(ctx context.Context, activity *domain.Activity, acctId string, symbol string, amount decimal.Decimal) (*domain.ActivityLot, error)
 }
 
 type ActivityProcessor interface {

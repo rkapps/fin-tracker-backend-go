@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
@@ -14,13 +15,13 @@ import (
 type PortfolioService struct {
 	tickersService TickersService
 	storage        storage.StorageService
+	logConfig      *logger.Config
 	logger         *logger.Logger
 }
 
-func NewPortfolioService(tickersService TickersService, storage storage.StorageService) PortfolioService {
-	logger := logger.New()
-	plog := logger.For("portfolio")
-	return PortfolioService{storage: storage, logger: plog}
+func NewPortfolioService(logConfig *logger.Config, tickersService TickersService, storage storage.StorageService) PortfolioService {
+	plog := logConfig.For("portfolio")
+	return PortfolioService{storage: storage, logConfig: logConfig, logger: plog}
 }
 
 func (p PortfolioService) GetHoldings(uid string) ([]*dto.HoldingSummary, error) {
@@ -54,9 +55,11 @@ func (p PortfolioService) GetHoldings(uid string) ([]*dto.HoldingSummary, error)
 			// log.Println(lot)
 			continue
 		}
-		key := lot.Symbol
+		key := fmt.Sprintf("%s-%s-%s-%s-%s", acct.Category, acct.Type, acct.Name, lot.AccountID, lot.Symbol)
+		p.logger.Debug("GetHoldings", "Key", key, "Lot", lot.Qty)
+
 		h := hldgsm[key]
-		p.logger.Debug("GetHoldings", "Lot", lot.Qty)
+
 		zero := decimal.NewFromFloat(0.0)
 		if h == nil {
 			h = &dto.HoldingSummary{}
@@ -140,11 +143,11 @@ func (p PortfolioService) GetActivities(uid string) ([]dto.ActivityResponse, err
 
 func (p PortfolioService) RefreshUserAccounts(ctx context.Context, uid string, simulate bool) error {
 	p.logger.Info("RefreshAccounts", "UID", uid, "Simulate", simulate)
-	portfolio := portfolio.NewPortfolio(p.storage, p.logger)
+	portfolio := portfolio.NewPortfolio(p.storage, p.logConfig, p.logger)
 	return portfolio.RefreshUserAccounts(ctx, uid, simulate)
 }
 func (p PortfolioService) SyncUserAccounts(ctx context.Context, uid string) error {
 	p.logger.Trace("RefreshAccounts", "UID", uid)
-	portfolio := portfolio.NewPortfolio(p.storage, p.logger)
+	portfolio := portfolio.NewPortfolio(p.storage, p.logConfig, p.logger)
 	return portfolio.SyncUserAccounts(ctx, uid)
 }

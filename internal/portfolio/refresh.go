@@ -31,7 +31,7 @@ func (p Portfolio) RefreshUserAccounts(ctx context.Context, uid string, simulate
 	}
 
 	p.logger.Info("RefreshUserAccounts", "Activities", len(actvs))
-	gl := NewGainLoss(accts, user.LotMatchingMethod, simulate)
+	gl := NewGainLoss(accts, user.LotMatchingMethod, simulate, p.logConfig)
 
 	glResult, err := gl.Run(ctx, actvs)
 
