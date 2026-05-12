@@ -59,10 +59,10 @@ func (r ImportedAccountRefresher) Refresh(ctx context.Context, account domain.Ac
 		case string(domain.ActivityTypeSell):
 			actv.RcvQuantity = iactv.RcvAmount
 			actv.RcvSymbol = iactv.RcvCurrency
-			actv.RcvAmount = iactv.SentAmount
+			actv.RcvAmount = iactv.RcvAmount
 			actv.RcvPrice = actv.RcvAmount.Div(actv.RcvQuantity)
 
-			actv.SentAmount = iactv.SentAmount
+			actv.SentAmount = iactv.RcvAmount
 			actv.SentSymbol = iactv.SentCurrency
 			actv.SentQuantity = iactv.SentAmount
 			actv.SentPrice = decimal.NewFromFloat(1.0)
