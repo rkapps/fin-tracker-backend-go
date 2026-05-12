@@ -58,6 +58,11 @@ func (s MongoStorage) GetAccounts(uid string) (domain.Accounts, error) {
 
 }
 
+func (s MongoStorage) DeleteAccount(uid string, id string) error {
+	// filter := bson.M{domain.FIELD_UID: uid, domain.FIELD_ID: id}
+	return s.accounts().DeleteByID(s.context(), id)
+}
+
 func (s MongoStorage) SaveAccount(data *domain.Account) error {
 	return s.accounts().UpdateOne(s.context(), data)
 }

@@ -62,7 +62,23 @@ func (a AccountsService) CreateAccountCredential(ctx context.Context, uid string
 	return a.storage.SaveAccountCredential(acred)
 }
 
-func (a AccountsService) DeleteImportActivities(ctx context.Context, uid string, acctId string, startDate time.Time) error {
+func (a AccountsService) DeleteAccount(ctx context.Context, uid string, acctId string) error {
+
+	var err error
+	// Delete activities
+	if err = a.DeleteImportedActivities(ctx, uid, acctId, time.Time{}); err != nil {
+		return err
+	}
+	if err = a.DeleteActivities(ctx, uid, acctId, time.Time{}); err != nil {
+		return err
+	}
+	if err = a.DeleteActivityLots(ctx, uid, acctId, time.Time{}); err != nil {
+		return err
+	}
+	return a.storage.DeleteAccount(uid, acctId)
+}
+
+func (a AccountsService) DeleteImportedActivities(ctx context.Context, uid string, acctId string, startDate time.Time) error {
 
 	actvs, err := a.storage.GetImortedActivities(uid, acctId)
 	if err != nil {
@@ -75,9 +91,53 @@ func (a AccountsService) DeleteImportActivities(ctx context.Context, uid string,
 		}
 		ids = append(ids, actv.ID)
 	}
-	a.logger.Debug("DeleteImportActivities", "Ids", len(ids))
+	a.logger.Info("DeleteImportActivities", "Ids", len(ids))
 	// Delete activities
 	a.storage.DeleteImortedActivities(ids)
+	return nil
+}
+
+func (a AccountsService) DeleteActivities(ctx context.Context, uid string, acctId string, startDate time.Time) error {
+
+	actvs, err := a.storage.GetActivitiesForAccount(uid, acctId)
+	if err != nil {
+	}
+	ids := []string{}
+	if len(ids) == 0 {
+		return nil
+	}
+	// find ids to delete
+	for _, actv := range actvs {
+		if actv.Date.Before(startDate) {
+			continue
+		}
+		ids = append(ids, actv.ID)
+	}
+	a.logger.Info("DeleteActivities", "Ids", len(ids))
+	// Delete activities
+	a.storage.DeleteActivities(ids)
+	return nil
+}
+
+func (a AccountsService) DeleteActivityLots(ctx context.Context, uid string, acctId string, startDate time.Time) error {
+
+	actvs, err := a.storage.GetActivityLotsForAccount(uid, acctId)
+	if err != nil {
+	}
+	ids := []string{}
+	if len(ids) == 0 {
+		return nil
+	}
+	// find ids to delete
+	for _, actv := range actvs {
+		if actv.Date.Before(startDate) {
+			continue
+		}
+		ids = append(ids, actv.ID)
+	}
+	a.logger.Info("DeleteActivityLots", "Ids", len(ids))
+	// Delete activities
+	a.storage.DeleteActivityLots(ids)
 	return nil
 }
 
@@ -91,8 +151,10 @@ func (a AccountsService) GetAccount(uid string, id string) (*domain.Account, err
 
 func (a AccountsService) ImportActivities(ctx context.Context, uid string, acctId string, startDate time.Time, actvs []*domain.ActivityImport) error {
 
+	a.logger.Info("ImportActivities", "AccountId", acctId)
+
 	// first delete the activites from the startDate
-	a.DeleteImportActivities(ctx, uid, acctId, startDate)
+	a.DeleteImportedActivities(ctx, uid, acctId, startDate)
 
 	// Import activites
 	for _, actv := range actvs {

@@ -14,6 +14,7 @@ const (
 type StorageService interface {
 
 	//Accounts
+	DeleteAccount(uid string, id string) error
 	DeleteActivities(ids []string) error
 	DeleteActivityLots(ids []string) error
 	DeleteImortedActivities(ids []string) error
@@ -22,7 +23,9 @@ type StorageService interface {
 	GetAccountCredential(uid string, id string) (*domain.AccountCredential, error)
 	GetAccountSyncState(uid string, id string) (*domain.AccountSyncState, error)
 	GetActivities(uid string) ([]*domain.Activity, error)
+	GetActivitiesForAccount(uid string, acctId string) ([]*domain.Activity, error)
 	GetActivityLots(uid string) ([]*domain.ActivityLot, error)
+	GetActivityLotsForAccount(uid string, acctId string) ([]*domain.ActivityLot, error)
 	GetImortedActivities(uid string, acctId string) ([]*domain.ActivityImport, error)
 
 	SaveAccount(acct *domain.Account) error

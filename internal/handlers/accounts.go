@@ -43,6 +43,19 @@ func (a *AccountsHandler) RegisterRoutes(router *gin.Engine, fbAuthClient *auth.
 
 // DeleteAccount
 func (a *AccountsHandler) DeleteAccount(c *gin.Context) {
+
+	uid, err := getUID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+	id := c.Param("id")
+
+	err = a.Service.DeleteAccount(c, uid, id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
 }
 
 // GetAccounts gets the accounts in the portfolio
@@ -60,7 +73,7 @@ func (a *AccountsHandler) GetAccount(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, accts)
-
+	c.JSON(http.StatusOK, id)
 }
 
 // GetAccounts gets the accounts in the portfolio

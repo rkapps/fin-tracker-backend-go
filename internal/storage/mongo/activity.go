@@ -10,6 +10,9 @@ import (
 // DeleteImortedActivities implements Repo.
 func (s MongoStorage) DeleteImortedActivities(ids []string) error {
 
+	if len(ids) == 0 {
+		return nil
+	}
 	err := s.acitivyImports().DeleteMany(s.context(), ids)
 	if err != nil {
 		log.Printf("Delete Imported Activities error: %v", err)
@@ -62,9 +65,31 @@ func (s MongoStorage) GetActivities(uid string) ([]*domain.Activity, error) {
 	return actvs, err
 }
 
+// GetActivitiesforAccount
+func (s MongoStorage) GetActivitiesForAccount(uid string, acctId string) ([]*domain.Activity, error) {
+	filter := bson.M{"uid": uid, "accountId": acctId}
+	actvs, err := s.acitivities().Find(s.context(), filter, bson.D{}, 0, 0)
+	if err != nil {
+		log.Printf("Delete Imported Activities error: %v", err)
+		return nil, err
+	}
+	return actvs, err
+}
+
 // GetActivityLots
 func (s MongoStorage) GetActivityLots(uid string) ([]*domain.ActivityLot, error) {
 	filter := bson.M{"uid": uid}
+	lots, err := s.acitivityLots().Find(s.context(), filter, bson.D{}, 0, 0)
+	if err != nil {
+		log.Printf("Delete Imported Activities error: %v", err)
+		return nil, err
+	}
+	return lots, err
+}
+
+// GetActivityLots
+func (s MongoStorage) GetActivityLotsForAccount(uid string, acctId string) ([]*domain.ActivityLot, error) {
+	filter := bson.M{"uid": uid, "accountId": acctId}
 	lots, err := s.acitivityLots().Find(s.context(), filter, bson.D{}, 0, 0)
 	if err != nil {
 		log.Printf("Delete Imported Activities error: %v", err)
