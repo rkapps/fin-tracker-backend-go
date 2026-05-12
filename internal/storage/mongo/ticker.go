@@ -8,6 +8,7 @@ import (
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 	"github.com/rkapps/fin-tracker-backend-go/internal/utils"
 	"github.com/rkapps/storage-backend-go/core"
+	"github.com/shopspring/decimal"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -20,6 +21,15 @@ func (s MongoStorage) GetTicker(id string) (*domain.Ticker, error) {
 	// log.Println(s.tickers().Count(s.context()))
 	ticker, err := s.tickers().FindByID(s.context(), id)
 	return ticker, err
+}
+
+func (s MongoStorage) GetTickerPrice(symbol string) (decimal.Decimal, error) {
+	if strings.Compare(symbol, "USD") == 0 || strings.Compare(symbol, "USDC") == 0 || strings.Compare(symbol, "USDT") == 0 {
+		return decimal.NewFromFloat(1.0), nil
+	}
+	// log.Println(s.tickers().Count(s.context()))
+	ticker, err := s.tickers().FindByID(s.context(), symbol)
+	return ticker.PrLast, err
 }
 
 func (s MongoStorage) GetTickerGroups() (domain.TickerGroups, error) {

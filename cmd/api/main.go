@@ -2,67 +2,64 @@ package main
 
 import (
 	"context"
-	"log"
-	"log/slog"
 	"os"
 
+	"github.com/rkapps/fin-tracker-backend-go/cmd/common"
+	logger "github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/handlers"
-	"github.com/rkapps/fin-tracker-backend-go/internal/storage/mongo"
 
-	"github.com/rkapps/fin-tracker-backend-go/internal/logger"
 	_ "github.com/rkapps/fin-tracker-backend-go/internal/migrations"
-	"github.com/rkapps/fin-tracker-backend-go/internal/services"
 
 	firebase "firebase.google.com/go"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rkapps/storage-backend-go/migrations"
-	mongodb "github.com/rkapps/storage-backend-go/mongodb"
-)
-
-const (
-	FINANCE_DB_NAME = "finTracker"
 )
 
 func main() {
 
 	//Set logger
-	logger.SetLogger()
+
+	logConfig := logger.New()
+	mlog := logConfig.For("main")
+
 	config := &firebase.Config{
-		ProjectID: os.Getenv("FIREBASE_PROJECT_ID"),
+		ProjectID: os.Getenv("FINTRACKER_PROJECT_ID"),
 	}
+	dbname := os.Getenv("FINTRACKER_DB_NAME")
+	if len(dbname) == 0 {
+		mlog.Error("FINTRACKER_DB_NAME environment variable not set.")
+		os.Exit(1)
+	}
+
 	fbApp, err := firebase.NewApp(context.Background(), config)
 	if err != nil {
-		log.Fatalf("error initializing app: %v\n", err)
+		mlog.Error("Initializing app", "error", err)
+		os.Exit(1)
 	}
 
 	fbAuthClient, err := fbApp.Auth(context.Background())
 	if err != nil {
-		log.Fatalf("Firebase authorization error: %v\n", err)
+		mlog.Error("Firebase authorization", "error", err)
+		os.Exit(1)
 	}
 
-	mongoConnStr := os.Getenv("MONGO_ATLAS_CONN_STR")
-	// log.Printf("MongoConnectionStr: %s", mongoConnStr)
-	// mongoConnStr = "mongodb://localhost:27017"
-	slog.Info("MongoDb connection string: " + mongoConnStr)
-
-	reg := mongodb.GetBsonRegistryForDecimal()
-	database, err := mongodb.NewMongoDatabaseWithRegistry(mongoConnStr, FINANCE_DB_NAME, reg)
+	apiApp, err := common.GetApiApp(dbname, mlog)
 	if err != nil {
-		log.Fatalf("Error connecting to Mongo DB: %v", err)
+		mlog.Error("GetApiApp", "error", err)
+		os.Exit(1)
 	}
-
-	err = migrations.RunMigrations(database)
+	err = migrations.RunMigrations(apiApp.Database)
 	if err != nil {
-		log.Fatal(err)
+		mlog.Error("RunMigrations", "error", err)
+		os.Exit(1)
 	}
 
 	router := gin.New()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
 			"http://localhost:4200",
-			"https://fin-tracker-backend-test.web.app",
-			"https://fin-tracker-backend-test.firebaseapp.com",
+			"https://fin-tracker-rkapps.web.app",
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"},
@@ -70,33 +67,25 @@ func main() {
 	}))
 	router.SetTrustedProxies(nil)
 
-	// Register Handlers
-	//Mongo Service
-	storage := mongo.NewMongoStorage(database)
-	// stocksService := services.NewStocksService(storage)
-	portfoliosService := services.NewPortfoliosService(storage)
-	// transactionsService := services.NewTransactionsService(storage)
-	userService := services.NewUserService(storage)
+	//Portfolio handler
+	portfolioHanlder := handlers.NewPortfolioHandler(router, apiApp.PortfolioService)
+	portfolioHanlder.RegisterRoutes(router, fbAuthClient)
 
-	//Stocks handler
-	// stocksHandler := handlers.NewStocksHandler(router, stocksService)
-	// stocksHandler.RegisterRoutes(router)
+	// accounts handler
+	accountsHandler := handlers.NewAccountsHandler(router, apiApp.AccountsService)
+	accountsHandler.RegisterRoutes(router, fbAuthClient)
 
-	//Portfolios handler
-	portfoliosHandler := handlers.NewPortfoliosHandler(router, portfoliosService, userService)
-	portfoliosHandler.RegisterRoutes(router, fbAuthClient)
+	transactionsHandler := handlers.NewTransactionsHandler(router, apiApp.TransactionsService)
+	transactionsHandler.RegisterRoutes(router, fbAuthClient)
 
-	// transactionsPortfolio := handlers.NewTransactionsHandler(router, transactionsService, userService)
-	// transactionsPortfolio.RegisterRoutes(router, fbAuthClient)
-
-	userHandler := handlers.NewUserHandler(router, services.UserService(userService))
+	userHandler := handlers.NewUserHandler(router, apiApp.UserService)
 	userHandler.RegisterRoutes(router, fbAuthClient)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080" // fallback for local dev
 	}
-	slog.Info("Server listening on port: " + port)
+	mlog.Info("Server", "Listening on port", port)
 	router.Run(":" + port)
 
 }

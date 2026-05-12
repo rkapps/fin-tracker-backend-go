@@ -15,26 +15,25 @@ import (
 )
 
 type TransactionsHandler struct {
-	Service     services.TransactionsService
-	UserService services.UserService
+	Service services.TransactionsService
 }
 
-func NewTransactionsHandler(router *gin.Engine, service services.TransactionsService, userService services.UserService) *TransactionsHandler {
-	return &TransactionsHandler{service, userService}
+func NewTransactionsHandler(router *gin.Engine, service services.TransactionsService) *TransactionsHandler {
+	return &TransactionsHandler{service}
 }
 
 func (h *TransactionsHandler) RegisterRoutes(router *gin.Engine, fbAuthClient *auth.Client) {
 
 	sGroup := router.Group("/transactions")
-	sGroup.GET("/search", AuthHandler(fbAuthClient, h.UserService, h.SearchTransactions))
-	sGroup.GET("/summary", AuthHandler(fbAuthClient, h.UserService, h.SummaryTransactions))
-	sGroup.POST("/import", AuthHandler(fbAuthClient, h.UserService, h.ImportTransactions))
+	sGroup.GET("/search", AuthHandler(fbAuthClient, h.SearchTransactions))
+	sGroup.GET("/summary", AuthHandler(fbAuthClient, h.SummaryTransactions))
+	sGroup.POST("/import", AuthHandler(fbAuthClient, h.ImportTransactions))
 }
 
 // Search implements Service.
 func (h *TransactionsHandler) SearchTransactions(c *gin.Context) {
 
-	user, err := getUser(c, h.UserService)
+	uid, err := getUID(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
@@ -48,7 +47,7 @@ func (h *TransactionsHandler) SearchTransactions(c *gin.Context) {
 
 	slog.Info("SearchTransactions started", "Startdate", startDate, "EndDate", endDate)
 
-	txns, err := h.Service.SearchTransactions(*user, startDate, endDate, searchText)
+	txns, err := h.Service.SearchTransactions(uid, startDate, endDate, searchText)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
@@ -69,7 +68,7 @@ func (h *TransactionsHandler) SearchTransactions(c *gin.Context) {
 
 func (h *TransactionsHandler) SummaryTransactions(c *gin.Context) {
 
-	user, err := getUser(c, h.UserService)
+	uid, err := getUID(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
@@ -82,7 +81,7 @@ func (h *TransactionsHandler) SummaryTransactions(c *gin.Context) {
 
 	slog.Info("SummaryTransactions started", "Startdate", startDate, "EndDate", endDate)
 
-	txns, err := h.Service.SummaryTransactions(*user, startDate, endDate)
+	txns, err := h.Service.SummaryTransactions(uid, startDate, endDate)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
@@ -95,7 +94,7 @@ func (h *TransactionsHandler) SummaryTransactions(c *gin.Context) {
 
 func (h *TransactionsHandler) ImportTransactions(c *gin.Context) {
 
-	user, err := getUser(c, h.UserService)
+	uid, err := getUID(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
@@ -115,7 +114,7 @@ func (h *TransactionsHandler) ImportTransactions(c *gin.Context) {
 		})
 	}
 
-	err = h.Service.ImportTransactions(*user, startDate, endDate, txns)
+	err = h.Service.ImportTransactions(uid, startDate, endDate, txns)
 	if err != nil {
 		slog.Debug("TransactionsHandler", "ImportTransactions", err)
 		c.JSON(http.StatusBadRequest, gin.H{

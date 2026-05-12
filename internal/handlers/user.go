@@ -23,13 +23,13 @@ func NewUserHandler(router *gin.Engine, service services.UserService) *UserHandl
 func (h *UserHandler) RegisterRoutes(router *gin.Engine, fbauthclient *auth.Client) {
 
 	sGroup := router.Group("/user")
-	sGroup.GET("", AuthHandler(fbauthclient, h.Service, h.GetUser))
-	sGroup.PUT("", AuthHandler(fbauthclient, h.Service, h.SaveUser))
+	sGroup.GET("", AuthHandler(fbauthclient, h.GetUser))
+	sGroup.PUT("", AuthHandler(fbauthclient, h.SaveUser))
 }
 
 func (h *UserHandler) GetUser(c *gin.Context) {
-	user, err := getUser(c, h.Service)
-	slog.Info(fmt.Sprintf("GetUser: %v", user))
+	uid, err := getUID(c)
+	slog.Info(fmt.Sprintf("GetUID: %v", uid))
 	if err != nil {
 		slog.Debug("GetUser", "Error", err)
 		c.JSON(http.StatusNotFound, gin.H{
@@ -37,15 +37,20 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		})
 		return
 	}
-
+	user, err := h.Service.GetUser(uid)
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "User not found",
+		})
+		return
+	}
 	c.JSON(http.StatusOK, user)
 }
 
 func (h *UserHandler) SaveUser(c *gin.Context) {
-	value, _ := c.Get("id")
-	uid := value.(string)
+	uid, err := getUID(c)
 	var user *domain.User
-	err := json.NewDecoder(c.Request.Body).Decode(&user)
+	err = json.NewDecoder(c.Request.Body).Decode(&user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),

@@ -1,18 +1,15 @@
 package handlers
 
 import (
-	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
 
 	"firebase.google.com/go/auth"
 	"github.com/gin-gonic/gin"
-	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/services"
 )
 
-func AuthHandler(fbAuthClient *auth.Client, userService services.UserService, f func(c *gin.Context)) func(c *gin.Context) {
+func AuthHandler(fbAuthClient *auth.Client, f func(c *gin.Context)) func(c *gin.Context) {
 
 	return func(c *gin.Context) {
 
@@ -38,19 +35,13 @@ func AuthHandler(fbAuthClient *auth.Client, userService services.UserService, f 
 			return
 		}
 		// slog.Debug("AuthHandler", "UID", authToken.UID)
-		c.Set("id", authToken.UID)
+		c.Set("uid", authToken.UID)
 		f(c)
 	}
 }
 
-func getUser(c *gin.Context, userService services.UserService) (*domain.User, error) {
-	value, _ := c.Get("id")
+func getUID(c *gin.Context) (string, error) {
+	value, _ := c.Get("uid")
 	id := value.(string)
-
-	// slog.Debug("AuthHandler", "getUser", id)
-	user, _ := userService.GetUser(id)
-	if user == nil {
-		return nil, errors.New("User not setup")
-	}
-	return user, nil
+	return id, nil
 }

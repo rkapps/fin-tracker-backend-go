@@ -1,6 +1,8 @@
 package domain
 
-import "context"
+import (
+	"context"
+)
 
 type ctxToken int
 
@@ -10,9 +12,10 @@ const (
 )
 
 type User struct {
-	ID       string `json:"id" bson:"id"`
-	Currency string `json:"currency"`
-	Country  string `json:"country"`
+	ID                string            `json:"id" bson:"id"`
+	CurrencyCode      string            `json:"currency"`
+	Country           string            `json:"country"`
+	LotMatchingMethod LotMatchingMethod `json:"lotMatchingMethod" bson:"lotMatchingMethod"`
 }
 
 func (u *User) Id() string {

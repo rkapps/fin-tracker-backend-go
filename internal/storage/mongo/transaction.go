@@ -11,7 +11,7 @@ import (
 )
 
 // SearchTransactions implements Repo.
-func (s MongoStorage) SearchTransactions(userId string, startDate time.Time, endDate time.Time, searchText string) (domain.Transactions, error) {
+func (s MongoStorage) SearchTransactions(uid string, startDate time.Time, endDate time.Time, searchText string) (domain.Transactions, error) {
 
 	criteria := core.SearchCriteria{}
 	criteria.IndexName = "idx_search"
@@ -19,7 +19,7 @@ func (s MongoStorage) SearchTransactions(userId string, startDate time.Time, end
 	criteria.Query = searchText
 	criteria.AutoCompleteFields = []string{domain.FIELD_TRANSACTION_ACCOUNT, domain.FIELD_TRANSACTION_CATEGORY, domain.FIELD_TRANSACTION_GROUP, domain.FIELD_TRANSACTION_DESCRIPTION, domain.FIELD_TRANSACTION_TAG}
 
-	criteria.AddSearchExactField(domain.FIELD_UID, userId)
+	criteria.AddSearchExactField(domain.FIELD_UID, uid)
 	criteria.AddSearchDateRangeField(domain.FIELD_DATE, "gte", startDate)
 	criteria.AddSearchDateRangeField(domain.FIELD_DATE, "lte", endDate)
 
@@ -34,17 +34,17 @@ func (s MongoStorage) SearchTransactions(userId string, startDate time.Time, end
 	return txns, nil
 }
 
-func (s MongoStorage) ImportTransactions(userId string, startDate time.Time, endDate time.Time, txns []*domain.Transaction) error {
+func (s MongoStorage) ImportTransactions(uid string, startDate time.Time, endDate time.Time, txns []*domain.Transaction) error {
 
-	ctxns, _ := s.SearchTransactions(userId, startDate, endDate, "")
+	ctxns, _ := s.SearchTransactions(uid, startDate, endDate, "")
 	ids := []string{}
 	for _, txn := range ctxns {
 		ids = append(ids, txn.ID)
 	}
 	// assign the id
 	for _, txn := range txns {
-		// txn.ID = userId
-		txn.UID = userId
+		// txn.ID = uid
+		txn.UID = uid
 		txn.ID = primitive.NewObjectID().String()
 
 	}
@@ -56,13 +56,13 @@ func (s MongoStorage) ImportTransactions(userId string, startDate time.Time, end
 	return s.transaction().InsertMany(s.context(), txns)
 }
 
-func (s MongoStorage) SummaryTransactions(userId string, startDate time.Time, endDate time.Time) ([]domain.TransactionAgg, error) {
+func (s MongoStorage) SummaryTransactions(uid string, startDate time.Time, endDate time.Time) ([]domain.TransactionAgg, error) {
 
 	var pipeline []interface{}
 	var match map[string]interface{}
 	match = make(map[string]interface{})
 
-	match[domain.FIELD_UID] = bson.M{"$eq": userId}
+	match[domain.FIELD_UID] = bson.M{"$eq": uid}
 	match[domain.FIELD_TRANSACTION_CATEGORY] = bson.M{"$ne": "Paycheck"}
 	match[domain.FIELD_TRANSACTION_GROUP] = bson.M{"$ne": "Others"}
 	match[domain.FIELD_TRANSACTION_ACCOUNT] = bson.M{"$ne": "Interest Payment"}

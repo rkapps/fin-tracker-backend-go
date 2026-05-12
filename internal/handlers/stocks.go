@@ -12,10 +12,10 @@ import (
 )
 
 type StocksHandler struct {
-	Service services.StocksService
+	Service services.TickersService
 }
 
-func NewStocksHandler(router *gin.Engine, service services.StocksService) *StocksHandler {
+func NewStocksHandler(router *gin.Engine, service services.TickersService) *StocksHandler {
 	return &StocksHandler{
 		Service: service,
 	}

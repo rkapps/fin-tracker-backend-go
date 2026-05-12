@@ -4,9 +4,33 @@ import (
 	"time"
 
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
+	"github.com/shopspring/decimal"
+)
+
+const (
+	FINTRACKER_DB_NAME = "finTracker"
 )
 
 type StorageService interface {
+
+	//Accounts
+	DeleteActivities(ids []string) error
+	DeleteActivityLots(ids []string) error
+	DeleteImortedActivities(ids []string) error
+	GetAccount(uid string, id string) (*domain.Account, error)
+	GetAccounts(uid string) (domain.Accounts, error)
+	GetAccountCredential(uid string, id string) (*domain.AccountCredential, error)
+	GetAccountSyncState(uid string, id string) (*domain.AccountSyncState, error)
+	GetActivities(uid string) ([]*domain.Activity, error)
+	GetActivityLots(uid string) ([]*domain.ActivityLot, error)
+	GetImortedActivities(uid string, acctId string) ([]*domain.ActivityImport, error)
+
+	SaveAccount(acct *domain.Account) error
+	SaveAccountCredential(acct *domain.AccountCredential) error
+	SaveAccountSyncState(acct *domain.AccountSyncState) error
+	SaveImportedActivities(actvs []*domain.ActivityImport) error
+	SaveActivities(actvs []*domain.Activity) error
+	SaveActivityLots(lots []*domain.ActivityLot) error
 
 	// Ticker
 	DeleteTicker(id string) error
@@ -16,6 +40,7 @@ type StorageService interface {
 	GetTickerHistory(symbol string) ([]*domain.TickerHistory, error)
 	GetTickerSentiments(symbol string) ([]*domain.TickerSentiment, error)
 	GetTickers(symbols []string) (domain.Tickers, error)
+	GetTickerPrice(symbol string) (decimal.Decimal, error)
 	SearchTicker(ts domain.TickerSearch) (domain.Tickers, error)
 
 	//Transaction
@@ -24,6 +49,7 @@ type StorageService interface {
 	SummaryTransactions(userId string, startDate time.Time, endDate time.Time) ([]domain.TransactionAgg, error)
 
 	//User
+	GetUsers() []*domain.User
 	GetUser(id string) (*domain.User, error)
 	SaveUser(user *domain.User) error
 }

@@ -3,11 +3,12 @@ package domain
 const (
 
 	// Common Fields
-	FIELD_UID  = "uid"
-	FIELD_DATE = "date"
+	FIELD_UID        = "uid"
+	FIELD_ID         = "id"
+	FIELD_ACCOUNT_ID = "account_id"
+	FIELD_DATE       = "date"
 
 	//Fields
-	FIELD_ID                 = "id"
 	FIELD_SYMBOL             = "symbol"
 	FIELD_EXCHANGE           = "exchange"
 	FIELD_ASSET_TYPE         = "asset_type"
@@ -24,6 +25,7 @@ const (
 	FIELD_PRICE              = "price"
 	FIELD_STRATEGIES         = "strategies"
 	FIELD_HISTORY_SYMBOL     = "metadata.symbol"
+	FIELD_RELEVANCE_SCORE    = "relevance_score"
 
 	// Fields for transaction
 	FIELD_TRANSACTION_GROUP       = "group"
@@ -32,7 +34,16 @@ const (
 	FIELD_TRANSACTION_DESCRIPTION = "description"
 	FIELD_TRANSACTION_TAG         = "tag"
 
-	//Collections
+	// portfolio Collections
+	ACCOUNT_COLLECTION_NAME            = "account"
+	ACCOUNT_SYNC_STATE_COLLECTION_NAME = "account_sync_state"
+	ACCOUNT_CREDENTIAL_COLLECTION_NAME = "account_credential"
+	ACTIVITY_COLLECTION_NAME           = "activity"
+	ACTIVITY_IMPORT_COLLECTION_NAME    = "activity_import"
+	ACTIVITY_LOT_COLLECTION_NAME       = "activity_lot"
+	GL_ENTRY_COLLECTION                = "gl_entry"
+
+	// tickers collection
 	TICKER_CONTROL_COLLECTION_NAME   = "ticker_control"
 	TICKER_COLLECTION_NAME           = "ticker"
 	TICKER_HISTORY_COLLECTION_NAME   = "ticker_history"
