@@ -2,8 +2,10 @@ package refresher
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
+	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 	"github.com/rkapps/fin-tracker-backend-go/internal/storage"
 )
@@ -23,13 +25,13 @@ func (t TestBatchAccountRefresher) Refresh(ctx context.Context, provider string,
 	return actvs, nil
 }
 
-func ResolveRefresher(storage storage.StorageService, account domain.Account) (AccountRefresher, error) {
+func ResolveRefresher(storage storage.StorageService, account domain.Account, logConfig *logger.Config) (AccountRefresher, error) {
 	slog.Debug("ResolveRefresher", "Account Cateogory", account.Category)
 	switch account.Category {
 	case domain.CategoryBrokerage, domain.CategoryRetirement:
-		return ImportedAccountRefresher{storage}, nil
+		return NewImportAccountRefresher(storage, logConfig), nil
 	}
-	return TestAccountRefresher{}, nil
+	return nil, fmt.Errorf("refresher error: %s", account.Category)
 }
 
 func ResolveBatchRefresher(provider string) (BatchAccountRefresher, error) {

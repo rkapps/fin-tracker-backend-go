@@ -11,3 +11,9 @@ func CheckStringInArray(value string, values []string) bool {
 	}
 	return false
 }
+
+func TrimCommas(value string) string {
+	value = strings.TrimRight(value, ",")
+	value = strings.TrimLeft(value, ",")
+	return value
+}

@@ -27,8 +27,9 @@ func (p AquisitionActivityProcessor) Process(ctx context.Context, actv *domain.A
 	pr := NewProcessResult()
 
 	// Create the lot of the asset
-	lm.CreateAssetLot(newctx, actv, actv.RcvSymbol, actv.RcvQuantity, actv.RcvAmount)
+	lm.CreateAssetLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvQuantity, actv.RcvAmount)
 
+	p.logger.Debug("Process")
 	// update the cash lot
 	_, err := lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.SentSymbol, actv.SentAmount)
 	if err != nil {

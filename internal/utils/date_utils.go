@@ -89,3 +89,39 @@ func setYearDate(offset int) *time.Time {
 func IsWeekend(t time.Time) bool {
 	return t.Weekday() == time.Saturday || t.Weekday() == time.Sunday
 }
+
+func IsDateBetween(startDate time.Time, endDate time.Time, date time.Time) bool {
+
+	if !startDate.IsZero() && !endDate.IsZero() {
+		if date.Before(startDate) || date.After(endDate) {
+			return false
+		}
+	} else if !startDate.IsZero() {
+		if date.Before(startDate) {
+			return false
+		}
+	} else if !endDate.IsZero() {
+		if date.After(endDate) {
+			return false
+		}
+	}
+	return true
+}
+
+func TruncateToStartOfDay(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+}
+
+func TruncateToEndOfDay(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, t.Location())
+}
+
+func TruncateToStartOfYear(year int) time.Time {
+	t := time.Now()
+	return time.Date(year, 1, 1, 0, 0, 0, 0, t.Location())
+}
+
+func TruncateToEndOYear(year int) time.Time {
+	t := time.Now()
+	return time.Date(year, 12, 31, 23, 59, 59, 0, t.Location())
+}

@@ -35,7 +35,7 @@ func (p Portfolio) RefreshUserAccounts(ctx context.Context, uid string, simulate
 
 	glResult, err := gl.Run(ctx, actvs)
 
-	p.saveData(uid, actvs, glResult.Lots)
+	p.saveData(uid, glResult.Actvs, glResult.Lots)
 	// gain loss here
 	return nil
 }
@@ -71,12 +71,12 @@ func (p Portfolio) refreshUserActivities(ctx context.Context, accts []*domain.Ac
 	for _, account := range singleAccounts {
 		account := account
 		g.Go(func() error {
-			refresher, err := refresher.ResolveRefresher(p.storage, account)
+			refresher, err := refresher.ResolveRefresher(p.storage, account, p.logConfig)
 			if err != nil {
 				return err
 			}
 			slog.Debug("refreshUserActivities", "refresher", refresher, "error", err)
-			result, err := refresher.Refresh(ctx, account)
+			result, err := refresher.Refresh(ctx, account, p.logConfig)
 
 			if err != nil {
 				return err

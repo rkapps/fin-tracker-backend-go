@@ -24,8 +24,9 @@ type Activity struct {
 	// asset — what was transacted
 	RcvSymbol   string          `json:"rcvSymbol"   bson:"rcvSymbol"`
 	RcvQuantity decimal.Decimal `json:"rcvQuantity" bson:"rcvQuantity"`
-	RcvPrice    decimal.Decimal `json:"rcvPrice"    bson:"rcvPrice"`    // price per unit at time of txn
-	RcvAmount   decimal.Decimal `json:"rcvAmount"   bson:"rcvAmount"`   // quantity * price
+	RcvPrice    decimal.Decimal `json:"rcvPrice"    bson:"rcvPrice"`  // price per unit at time of txn
+	RcvAmount   decimal.Decimal `json:"rcvAmount"   bson:"rcvAmount"` // quantity * price
+	RcvAccount  string          `json:"rcvAccount,omitempty" bson:"rcvAccount,omitempty"`
 	RcvBalance  decimal.Decimal `json:"rcvBalance"   bson:"rcvBalance"` // quantity * price
 
 	// consideration — what was exchanged
@@ -35,6 +36,7 @@ type Activity struct {
 	SentPrice    decimal.Decimal `json:"sentPrice"    bson:"sentPrice"`
 	SentAmount   decimal.Decimal `json:"sentAmount"   bson:"sentAmount"`
 	SentBalance  decimal.Decimal `json:"sentBalance"   bson:"sentBalance"` // quantity * price
+	SentAccount  string          `json:"sentAccount,omitempty" bson:"sentAccount,omitempty"`
 
 	// Value
 	Value decimal.Decimal `json:"value"   bson:"value"` // actual value of the activity
@@ -47,8 +49,8 @@ type Activity struct {
 	TaxCurrency string          `json:"taxCurrency"    bson:"taxCurrency"`
 
 	// transfer routing — for internal account movements
-	FromAccountID string `json:"fromAccountId" bson:"fromAccountId"`
-	ToAccountID   string `json:"toAccountId"   bson:"toAccountId"`
+	RcvAccountID  string `json:"rcvAccountId" bson:"rcvAccountId"`
+	SentAccountID string `json:"sentAccountId"   bson:"sentAccountId"`
 
 	// type-specific detail
 	Detail ActivityDetail `json:"detail,omitempty"  bson:"detail,omitempty"`
@@ -107,3 +109,7 @@ const (
 	ActivityStatusSettled   ActivityStatus = "settled"
 	ActivityStatusCancelled ActivityStatus = "cancelled"
 )
+
+func (a Activity) IsIncome() bool {
+	return a.TxnType == ActivityTypeDividend || a.TxnType == ActivityTypeInterest
+}

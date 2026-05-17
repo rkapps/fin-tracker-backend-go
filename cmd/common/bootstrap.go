@@ -62,7 +62,7 @@ func GetPipelineApp(logConfig *logger.Config) (PipelineApp, error) {
 func getMongoDb(dbname string) (*mongodb.MongoDatabase, error) {
 	mongoConnStr := os.Getenv("MONGO_URI")
 	// log.Printf("MongoConnectionStr: %s", mongoConnStr)
-	mongoConnStr = "mongodb://localhost:33333/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.5.10"
+	// mongoConnStr = "mongodb://localhost:33333/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.5.10"
 	slog.Info("MongoDb connection string: " + mongoConnStr)
 
 	reg := mongodb.GetBsonRegistryForDecimal()

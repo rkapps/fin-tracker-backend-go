@@ -8,6 +8,31 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+func filterAccount(acctIdsm map[string]string, acct *domain.Account, group string, category string, acctIds []string) bool {
+
+	if len(acctIdsm) > 0 {
+		if _, ok := acctIdsm[acct.ID]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+func filterBankAccount(acctIdsm map[string]*domain.Account, acctId string) bool {
+
+	acct, ok := acctIdsm[acctId]
+	if !ok {
+		return false
+	}
+
+	if acct.Category == domain.CategoryCash {
+		return false
+	}
+
+	return true
+}
+
 func GetTickersMapforLots(storage storage.StorageService, lots []*domain.ActivityLot) map[string]domain.Ticker {
 	tm := make(map[string]domain.Ticker)
 

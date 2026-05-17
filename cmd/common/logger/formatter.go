@@ -29,8 +29,8 @@ func newFixedWidthHandler(inner slog.Handler, keyWidth, valWidth int) *fixedWidt
 		valWidth: valWidth,
 		posWidths: []fieldWidth{
 			{key: 20, val: 50}, // 1st arg — e.g. UID, AccountID (long values)
-			{key: 15, val: 15}, // 2nd arg — e.g. Symbol, Type (short values)
-			{key: 6, val: 10},  // 3rd arg — e.g. Qty, Amount
+			{key: 10, val: 20}, // 2nd arg — e.g. Symbol, Type (short values)
+			{key: 6, val: 20},  // 3rd arg — e.g. Qty, Amount
 			{key: 6, val: 10},  // 4th arg
 		},
 	}
@@ -41,10 +41,10 @@ func (h *fixedWidthHandler) Handle(ctx context.Context, r slog.Record) error {
 	caller := ""
 	if ok {
 		c := fmt.Sprintf("%s:%d", file, line)
-		if len(c) > 35 {
-			c = "..." + c[len(c)-32:]
+		if len(c) > 30 {
+			c = "..." + c[len(c)-27:]
 		}
-		caller = fmt.Sprintf("%-35s", c)
+		caller = fmt.Sprintf("%-30s", c)
 	}
 	// component is stored on the handler itself via With()
 	// access it from the pre-stored field

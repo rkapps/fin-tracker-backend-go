@@ -37,10 +37,7 @@ type GainLoss struct {
 type GainLossResult struct {
 	Lots      []*domain.ActivityLot
 	GLEntries []domain.GLEntry
-}
-
-func (gr *GainLossResult) appendLots(lots []*domain.ActivityLot) {
-	gr.Lots = append(gr.Lots, lots...)
+	Actvs     []*domain.Activity
 }
 
 // NewGainLoss creates a fresh GainLoss for one run.
@@ -69,26 +66,33 @@ func (gl *GainLoss) Run(ctx context.Context, actvs []*domain.Activity) (GainLoss
 
 	newctx := logger.WithContext(context.Background(), gl.logger)
 
-	gl.logger.Info("gainLossRun", "LotMatchingMethod", gl.lotMatchingMethod)
+	gl.logger.Info("---Run---", "LotMatchingMethod", gl.lotMatchingMethod)
 	// TODO: sort activities chronologically before processing
 	// TODO: range over activities
 	//       resolve processor by activity type
 	//       call processor.Process(ctx, activity, gl)
 	//       accumulate lots and GL entries
 	gr := &GainLossResult{}
+	uactvs := []*domain.Activity{}
+	sort.Slice(actvs, func(i, j int) bool {
+		return actvs[i].Date.Before(actvs[j].Date)
+	})
 
-	for _, actv := range actvs {
-		gl.logger.Debug("")
-		gl.logger.Debug("---gainLossRun---", "Activity", actv.Debug())
+	for i, actv := range actvs {
+		if i > 10 {
+			// break
+		}
+
+		gl.logger.Debug("---Run---", "Activity", actv.Debug())
 
 		processor, err := processor.ResolveProcessor(*actv, gl, gl.logConfig)
 		if err != nil {
-			gl.logger.Error("gainLossRun", "Error", err)
+			gl.logger.Error("Run", "Error", err)
 			continue
 		}
 		pr, err := processor.Process(newctx, actv, gl)
 		if err != nil {
-			gl.logger.Error("gainLossRun", "Error", err)
+			gl.logger.Error("Run", "Error", err)
 			continue
 		}
 
@@ -96,26 +100,32 @@ func (gl *GainLoss) Run(ctx context.Context, actvs []*domain.Activity) (GainLoss
 		// gr.appendLots(pr.Lots)
 		// update activity
 		actv.Value = pr.Value
-		actv.RcvBalance = gl.getOpenBalance(actv.AccountID, actv.RcvSymbol)
-		actv.SentBalance = gl.getOpenBalance(actv.AccountID, actv.SentSymbol)
-		gl.logger.Trace("gainLossRun", "RcvBalance", fmt.Sprintf("%s %v", actv.RcvSymbol, actv.RcvBalance))
-		gl.logger.Trace("gainLossRun", "SentBalance", fmt.Sprintf("%s  %v", actv.SentSymbol, actv.SentBalance))
-		gl.logger.Trace("gainLossRun", "Result", len(pr.Lots))
+		gl.logger.Trace("RUn", "Lots", len(gl.lotsMap))
+		actv.RcvBalance = gl.getOpenBalance(actv.RcvAccountID, actv.RcvSymbol)
+		gl.logger.Trace("Run", "RcvBalance", fmt.Sprintf("%s %v", actv.RcvSymbol, actv.RcvBalance))
+		actv.SentBalance = gl.getOpenBalance(actv.SentAccountID, actv.SentSymbol)
+		gl.logger.Trace("Run", "SentBalance", fmt.Sprintf("%s  %v", actv.SentSymbol, actv.SentBalance))
+		gl.logger.Trace("Run", "Result", len(pr.Lots))
+
+		uactvs = append(uactvs, actv)
 	}
 
 	gr.Lots = utils.FlattenMap(gl.lotsMap)
+	gr.Actvs = uactvs
+	gl.logger.Info("Run", "UpdatedActivities", len(gr.Actvs))
 
 	return *gr, nil
 }
 
 // lot creation
-func (gl *GainLoss) CreateAssetLot(ctx context.Context, actv *domain.Activity, symbol string, qty decimal.Decimal, value decimal.Decimal) *domain.ActivityLot {
+func (gl *GainLoss) CreateAssetLot(ctx context.Context, actv *domain.Activity, acctId string, symbol string, qty decimal.Decimal, value decimal.Decimal) *domain.ActivityLot {
 
 	logger := logger.FromContext(ctx) // ← gets processor's logger
 
 	nlot := domain.NewLotFromActivity(*actv)
-	nlot.LotSeq = gl.NextLotSeq(ctx, actv.AccountID)
-	nlot.ID = fmt.Sprintf("%s-%d", actv.AccountID, nlot.LotSeq)
+	nlot.AccountID = acctId
+	nlot.LotSeq = gl.NextLotSeq(ctx, nlot.AccountID)
+	nlot.ID = fmt.Sprintf("%s-%d", nlot.AccountID, nlot.LotSeq)
 	nlot.Symbol = symbol
 	nlot.OrigQty = qty
 	nlot.Qty = qty
@@ -124,7 +134,7 @@ func (gl *GainLoss) CreateAssetLot(ctx context.Context, actv *domain.Activity, s
 		nlot.Cost = nlot.CostValue.Div(nlot.Qty)
 	}
 
-	key := getAccountSymbolKey(actv.AccountID, symbol)
+	key := getAccountSymbolKey(nlot.AccountID, symbol)
 	lots := gl.lotsMap[key]
 	if len(lots) == 0 {
 		lots = []*domain.ActivityLot{}
@@ -158,9 +168,12 @@ func (gl *GainLoss) ReduceLotQty(ctx context.Context, actv *domain.Activity) (de
 		logger.Debug("ReduceLotQty", "lot", lot.Debug())
 		cqty := lot.Qty
 		if tqty.Add(cqty).GreaterThan(aqty) {
-			cqty = cqty.Sub(aqty)
+			dtqty := tqty
+			dtqty = dtqty.Add(cqty).Sub(aqty)
+			cqty = cqty.Sub(dtqty)
 		}
 
+		logger.Trace("ConsumeQty", "cqty", cqty)
 		// reduce lot qty
 		lot.Qty = lot.Qty.Sub(cqty)
 		lot.CostValue = lot.Qty.Mul(lot.Cost)
@@ -175,6 +188,7 @@ func (gl *GainLoss) ReduceLotQty(ctx context.Context, actv *domain.Activity) (de
 		tvalue = tvalue.Add(lot.CostValue)
 		logger.Debug("ReduceLotQty", "lot", lot.Debug())
 
+		logger.Trace("ConsumeQty", "tqty", tqty)
 		if tqty.GreaterThanOrEqual(aqty) {
 			break
 		}
@@ -240,17 +254,19 @@ func (gl GainLoss) UpdateCashLot(ctx context.Context, actv *domain.Activity, acc
 	key := getAccountSymbolKey(acctId, symbol)
 	lots := gl.lotsMap[key]
 	if len(lots) == 0 {
-		lot = gl.CreateAssetLot(ctx, actv, symbol, decimal.Zero, decimal.Zero)
+		lot = gl.CreateAssetLot(ctx, actv, acctId, symbol, decimal.Zero, decimal.Zero)
 		lots = []*domain.ActivityLot{}
 		lots = append(lots, lot)
 		gl.lotsMap[key] = lots
 	}
 
 	lot = lots[0]
-	logger.Debug("UpdateCashLot", "Cash", fmt.Sprintf("%s  Qty: %v-%v", lot.Symbol, lot.Qty, lot.CostValue))
+	logger.Debug("UpdateCashLot", "Key", key)
+	logger.Debug("UpdateCashLot", "Deposit Qty", fmt.Sprintf("%s-%v", symbol, amount))
+	logger.Debug("UpdateCashLot", "Prev Qty", fmt.Sprintf("%v", lot.CostValue))
 
 	switch actv.TxnType {
-	case domain.ActivityTypeBuy:
+	case domain.ActivityTypeBuy, domain.ActivityTypeWithdraw:
 		lot.Qty = lot.Qty.Sub(amount)
 		lot.CostValue = lot.CostValue.Sub(amount)
 	default:
@@ -258,7 +274,64 @@ func (gl GainLoss) UpdateCashLot(ctx context.Context, actv *domain.Activity, acc
 		lot.CostValue = lot.CostValue.Add(amount)
 	}
 
-	logger.Debug("UpdateCashLot", "Cash", fmt.Sprintf("%s  Qty: %v-%v", lot.Symbol, lot.Qty, lot.CostValue))
+	logger.Debug("UpdateCashLot", "Updated Qty", fmt.Sprintf("%v", lot.CostValue))
+	lot.Cost = lot.CostValue.Div(lot.Qty)
+
+	return lot, nil
+}
+
+func (gl GainLoss) UpdateBankLot(ctx context.Context, actv *domain.Activity) (*domain.ActivityLot, error) {
+
+	logger := logger.FromContext(ctx) // ← gets processor's logger
+
+	acctId := ""
+	symbol := ""
+	amount := decimal.Zero
+	switch actv.TxnType {
+	case domain.ActivityTypeDeposit:
+		acctId = actv.SentAccountID
+		symbol = actv.RcvSymbol
+		amount = actv.RcvAmount
+	case domain.ActivityTypeWithdraw:
+		acctId = actv.RcvAccountID
+		symbol = actv.SentSymbol
+		amount = actv.SentAmount
+	}
+
+	if len(acctId) == 0 {
+		return nil, fmt.Errorf("Id: %s", actv.ID)
+	}
+	if len(symbol) == 0 {
+		return nil, fmt.Errorf("symbol: %s-%s", symbol, actv.ID)
+	}
+
+	var lot *domain.ActivityLot
+	key := getAccountSymbolKey(acctId, symbol)
+
+	logger.Debug("UpdateBankLot", "Key", key)
+	logger.Debug("UpdateBankLot", "Actv Qty", fmt.Sprintf("%s-%v", symbol, amount))
+
+	lots := gl.lotsMap[key]
+	if len(lots) == 0 {
+		lot = gl.CreateAssetLot(ctx, actv, acctId, symbol, decimal.Zero, decimal.Zero)
+		lots = []*domain.ActivityLot{}
+		lots = append(lots, lot)
+		gl.lotsMap[key] = lots
+	}
+
+	lot = lots[0]
+	logger.Debug("UpdateBankLot", "Prev Qty", fmt.Sprintf("%v", lot.CostValue))
+
+	switch actv.TxnType {
+	case domain.ActivityTypeDeposit:
+		lot.Qty = lot.Qty.Sub(amount)
+		lot.CostValue = lot.CostValue.Sub(amount)
+	case domain.ActivityTypeWithdraw:
+		lot.Qty = lot.Qty.Add(amount)
+		lot.CostValue = lot.CostValue.Add(amount)
+	}
+
+	logger.Debug("UpdateBankLot", "Updated Qty", fmt.Sprintf("%v", lot.CostValue))
 	lot.Cost = lot.CostValue.Div(lot.Qty)
 
 	return lot, nil
@@ -286,8 +359,10 @@ func (gl *GainLoss) getOpenBalance(acctId string, symbol string) decimal.Decimal
 	balance := decimal.Zero
 	key := getAccountSymbolKey(acctId, symbol)
 	lots := gl.lotsMap[key]
+	gl.logger.Trace("getOpenBalance", "Key", key, "Lots", len(lots))
+
 	for _, lot := range lots {
-		gl.logger.Trace("getOpenBalance", "qty", lot.Qty, "costvalue", lot.CostValue)
+		gl.logger.Trace("getOpenBalance", "lot", lot.ID, "Symol", fmt.Sprintf("%s-%v", lot.Symbol, lot.Qty))
 		if lot.Status == domain.LotStatusOpen {
 			balance = balance.Add(lot.Qty)
 		}

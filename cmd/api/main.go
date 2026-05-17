@@ -23,6 +23,7 @@ func main() {
 	logConfig := logger.New()
 	mlog := logConfig.For("main")
 
+	mlog.Logger.Info("main", "Lotgevel", logConfig)
 	config := &firebase.Config{
 		ProjectID: os.Getenv("FINTRACKER_PROJECT_ID"),
 	}
@@ -68,7 +69,7 @@ func main() {
 	router.SetTrustedProxies(nil)
 
 	//Portfolio handler
-	portfolioHanlder := handlers.NewPortfolioHandler(router, apiApp.PortfolioService)
+	portfolioHanlder := handlers.NewPortfolioHandler(router, logConfig, apiApp.PortfolioService)
 	portfolioHanlder.RegisterRoutes(router, fbAuthClient)
 
 	// accounts handler

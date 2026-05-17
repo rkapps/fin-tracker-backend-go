@@ -25,6 +25,7 @@ func (p DisposalActivityProcessor) Process(ctx context.Context, actv *domain.Act
 	newctx := logger.WithContext(ctx, p.logger)
 	pr := NewProcessResult()
 
+	p.logger.Debug("Process")
 	// Reduce the lot of the asset and get the costvalue for the gl
 	value, _ := lm.ReduceLotQty(newctx, actv)
 	// update the cash lot

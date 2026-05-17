@@ -17,6 +17,8 @@ func main() {
 
 	logConfig := logger.New()
 	plog := logConfig.For("pipeline")
+	plog.Logger.Info("pipeline", "LogLevel", logConfig)
+
 	flag.Parse()
 
 	if len(os.Args) < 2 {

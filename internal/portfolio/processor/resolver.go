@@ -10,7 +10,7 @@ import (
 func ResolveProcessor(actv domain.Activity, lm LotManager, logConfig *logger.Config) (ActivityProcessor, error) {
 
 	switch actv.TxnType {
-	case domain.ActivityTypeDividend, domain.ActivityTypeInterest, domain.ActivityTypeRollover:
+	case domain.ActivityTypeDividend, domain.ActivityTypeInterest, domain.ActivityTypeRollover, domain.ActivityTypeDeposit, domain.ActivityTypeWithdraw:
 		return NewCashActivityProcessor(logConfig), nil
 	case domain.ActivityTypeBuy:
 		return NewAcquisitionActivityProcessor(logConfig), nil
