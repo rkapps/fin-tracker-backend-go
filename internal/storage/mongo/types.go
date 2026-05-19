@@ -25,12 +25,16 @@ func (s MongoStorage) accounts() core.Repository[string, *domain.Account] {
 	return mongodb.GetMongoRepository[string, *domain.Account](s.database)
 }
 
-func (s MongoStorage) account_credentials() core.Repository[string, *domain.AccountCredential] {
+func (s MongoStorage) accountCredentials() core.Repository[string, *domain.AccountCredential] {
 	return mongodb.GetMongoRepository[string, *domain.AccountCredential](s.database)
 }
 
-func (s MongoStorage) account_sync_states() core.Repository[string, *domain.AccountSyncState] {
+func (s MongoStorage) accountSyncStates() core.Repository[string, *domain.AccountSyncState] {
 	return mongodb.GetMongoRepository[string, *domain.AccountSyncState](s.database)
+}
+
+func (s MongoStorage) accountSummaries() core.Repository[string, *domain.AccountSummary] {
+	return mongodb.GetMongoRepository[string, *domain.AccountSummary](s.database)
 }
 
 func (s MongoStorage) acitivyImports() core.Repository[string, *domain.ActivityImport] {

@@ -26,23 +26,17 @@ func NewPortfolioService(logConfig *logger.Config, tickersService TickersService
 	return PortfolioService{storage: storage, logConfig: logConfig, logger: plog}
 }
 
-func (p PortfolioService) GetHoldings(uid string, category string, atype string, acctIds []string) ([]*dto.HoldingSummary, error) {
+func (p PortfolioService) GetSummary(uid string) ([]*domain.AccountSummary, error) {
+	return p.storage.GetAccountSummaries(uid)
+}
 
-	hldgs := []*dto.HoldingSummary{}
-	hldgsm := make(map[string]*dto.HoldingSummary)
+func (p PortfolioService) GetHoldings(uid string, category string, atype string, acctIds []string) ([]*domain.HoldingSummary, error) {
 
-	acctIdsm := make(map[string]string)
-	for _, acctId := range acctIds {
-		acctIdsm[acctId] = acctId
-	}
-
+	hldgs := []*domain.HoldingSummary{}
+	var err error
 	accts, err := p.storage.GetAccounts(uid)
 	if err != nil {
 		return hldgs, nil
-	}
-	acctsm := make(map[string]*domain.Account)
-	for _, acct := range accts {
-		acctsm[acct.ID] = acct
 	}
 
 	lots, err := p.storage.GetActivityLots(uid)
@@ -50,79 +44,105 @@ func (p PortfolioService) GetHoldings(uid string, category string, atype string,
 		return hldgs, nil
 	}
 
-	// get tickermap
-	tm := GetTickersMapforLots(p.storage, lots)
+	return portfolio.GetHoldings(p.storage, p.logger, false, accts, acctIds, lots)
 
-	for _, lot := range lots {
-		if lot.Status != domain.LotStatusOpen {
-			continue
-		}
-		acct := acctsm[lot.AccountID]
-		if acct == nil {
-			p.logger.Error("GetHoldings - Account not found", "AccountId", lot.AccountID, "LotId", lot.ID)
-			// log.Println(lot)
-			continue
-		}
+	// portfolio := portfolio.NewPortfolio(p.storage, p.logConfig, p.logger)
 
-		filter := filterBankAccount(acctsm, lot.AccountID)
-		if !filter {
-			continue
-		}
-		filter = filterAccount(acctIdsm, acct, category, atype, acctIds)
-		if !filter {
-			continue
-		}
+	// hldgs := []*dto.HoldingSummary{}
+	// hldgsm := make(map[string]*dto.HoldingSummary)
 
-		key := fmt.Sprintf("%s-%s-%s-%s-%s", acct.Category, acct.Type, acct.Name, lot.AccountID, lot.Symbol)
-		p.logger.Debug("GetHoldings", "Key", key, "Lot", lot.Qty)
+	// acctIdsm := make(map[string]string)
+	// for _, acctId := range acctIds {
+	// 	acctIdsm[acctId] = acctId
+	// }
 
-		h := hldgsm[key]
+	// accts, err := p.storage.GetAccounts(uid)
+	// if err != nil {
+	// 	return hldgs, nil
+	// }
+	// acctsm := make(map[string]*domain.Account)
+	// for _, acct := range accts {
+	// 	acctsm[acct.ID] = acct
+	// }
 
-		zero := decimal.NewFromFloat(0.0)
-		if h == nil {
-			h = &dto.HoldingSummary{}
-			h.Category = string(acct.Category)
-			h.Type = string(acct.Type)
-			h.AccountName = acct.Name
-			h.Acct_ID = lot.AccountID
-			h.Symbol = lot.Symbol
-			h.Qty = zero
-			h.Cost = zero
-			h.CostValue = zero
-			h.MktValue = zero
-			hldgs = append(hldgs, h)
-			hldgsm[key] = h
-		}
-		h.Cost = lot.Cost
-		h.Qty = h.Qty.Add(lot.Qty)
-		h.CostValue = h.CostValue.Add(lot.CostValue)
-		if !h.Qty.IsZero() {
-			h.Cost = h.CostValue.Div(h.Qty)
-		}
+	// lots, err := p.storage.GetActivityLots(uid)
+	// if err != nil {
+	// 	return hldgs, nil
+	// }
 
-		ticker := tm[lot.Symbol]
-		if len(ticker.Symbol) == 0 {
-			ticker = GetTickerPriceDiff(tm, lot.Symbol)
-			tm[lot.Symbol] = ticker
-		}
+	// // get tickermap
+	// tm := GetTickersMapforLots(p.storage, lots)
 
-		h.PrLast = ticker.PrLast
-		h.PrDiffAmt = ticker.PrDiffAmt
-		h.PrDiffPerc = ticker.PrDiffPerc
-		h.MktValue = h.MktValue.Add(lot.Qty.Mul(ticker.PrLast))
-		h.Dglamount = h.Dglamount.Add(lot.Qty.Mul(ticker.PrDiffAmt))
-		h.Glamount = h.MktValue.Sub(h.CostValue)
-		if !h.CostValue.IsZero() {
-			h.Glperc = h.Glamount.Mul(decimal.NewFromFloat(100.0)).Div(h.CostValue)
-		}
+	// for _, lot := range lots {
+	// 	if lot.Status != domain.LotStatusOpen {
+	// 		continue
+	// 	}
+	// 	acct := acctsm[lot.AccountID]
+	// 	if acct == nil {
+	// 		p.logger.Error("GetHoldings - Account not found", "AccountId", lot.AccountID, "LotId", lot.ID)
+	// 		// log.Println(lot)
+	// 		continue
+	// 	}
 
-		p.logger.Trace("GetHoldings", "Holding", h.Qty)
+	// 	filter := filterBankAccount(acctsm, lot.AccountID)
+	// 	if !filter {
+	// 		continue
+	// 	}
+	// 	filter = filterAccount(acctIdsm, acct, category, atype, acctIds)
+	// 	if !filter {
+	// 		continue
+	// 	}
 
-	}
+	// 	key := fmt.Sprintf("%s-%s-%s-%s-%s", acct.Category, acct.Type, acct.Name, lot.AccountID, lot.Symbol)
+	// 	p.logger.Debug("GetHoldings", "Key", key, "Lot", lot.Qty)
 
-	p.logger.Info("GetHoldings", "Holdings", len(hldgs))
+	// 	h := hldgsm[key]
 
-	return hldgs, nil
+	// 	zero := decimal.NewFromFloat(0.0)
+	// 	if h == nil {
+	// 		h = &dto.HoldingSummary{}
+	// 		h.Category = string(acct.Category)
+	// 		h.Type = string(acct.Type)
+	// 		h.AccountName = acct.Name
+	// 		h.Acct_ID = lot.AccountID
+	// 		h.Symbol = lot.Symbol
+	// 		h.Qty = zero
+	// 		h.Cost = zero
+	// 		h.CostValue = zero
+	// 		h.MktValue = zero
+	// 		hldgs = append(hldgs, h)
+	// 		hldgsm[key] = h
+	// 	}
+	// 	h.Cost = lot.Cost
+	// 	h.Qty = h.Qty.Add(lot.Qty)
+	// 	h.CostValue = h.CostValue.Add(lot.CostValue)
+	// 	if !h.Qty.IsZero() {
+	// 		h.Cost = h.CostValue.Div(h.Qty)
+	// 	}
+
+	// 	ticker := tm[lot.Symbol]
+	// 	if len(ticker.Symbol) == 0 {
+	// 		ticker = GetTickerPriceDiff(tm, lot.Symbol)
+	// 		tm[lot.Symbol] = ticker
+	// 	}
+
+	// 	h.PrLast = ticker.PrLast
+	// 	h.PrDiffAmt = ticker.PrDiffAmt
+	// 	h.PrDiffPerc = ticker.PrDiffPerc
+	// 	h.MktValue = h.MktValue.Add(lot.Qty.Mul(ticker.PrLast))
+	// 	h.Dglamount = h.Dglamount.Add(lot.Qty.Mul(ticker.PrDiffAmt))
+	// 	h.Glamount = h.MktValue.Sub(h.CostValue)
+	// 	if !h.CostValue.IsZero() {
+	// 		h.Glperc = h.Glamount.Mul(decimal.NewFromFloat(100.0)).Div(h.CostValue)
+	// 	}
+
+	// 	p.logger.Trace("GetHoldings", "Holding", h.Qty)
+
+	// }
+
+	// p.logger.Info("GetHoldings", "Holdings", len(hldgs))
+
+	// return hldgs, nil
 }
 
 func (p PortfolioService) GetActivities(uid string, category string, atype string,

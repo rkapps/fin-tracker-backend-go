@@ -38,6 +38,7 @@ const (
 	ACCOUNT_COLLECTION_NAME            = "account"
 	ACCOUNT_SYNC_STATE_COLLECTION_NAME = "account_sync_state"
 	ACCOUNT_CREDENTIAL_COLLECTION_NAME = "account_credential"
+	ACCOUNT_SUMMARY_COLLECTION_NAME    = "account_summary"
 	ACTIVITY_COLLECTION_NAME           = "activity"
 	ACTIVITY_IMPORT_COLLECTION_NAME    = "activity_import"
 	ACTIVITY_LOT_COLLECTION_NAME       = "activity_lot"

@@ -15,11 +15,13 @@ type StorageService interface {
 
 	//Accounts
 	DeleteAccount(uid string, id string) error
+	DeleteAccountSummaries(ids []string) error
 	DeleteActivities(ids []string) error
 	DeleteActivityLots(ids []string) error
 	DeleteImortedActivities(ids []string) error
 	GetAccount(uid string, id string) (*domain.Account, error)
 	GetAccounts(uid string) (domain.Accounts, error)
+	GetAccountSummaries(uid string) ([]*domain.AccountSummary, error)
 	GetAccountCredential(uid string, id string) (*domain.AccountCredential, error)
 	GetAccountSyncState(uid string, id string) (*domain.AccountSyncState, error)
 	GetActivities(uid string) ([]*domain.Activity, error)
@@ -31,6 +33,7 @@ type StorageService interface {
 	SaveAccount(acct *domain.Account) error
 	SaveAccountCredential(acct *domain.AccountCredential) error
 	SaveAccountSyncState(acct *domain.AccountSyncState) error
+	SaveAccountSummaries(asumys []*domain.AccountSummary) error
 	SaveImportedActivities(actvs []*domain.ActivityImport) error
 	SaveActivities(actvs []*domain.Activity) error
 	SaveActivityLots(lots []*domain.ActivityLot) error

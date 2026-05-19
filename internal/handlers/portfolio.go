@@ -28,10 +28,28 @@ func NewPortfolioHandler(router *gin.Engine, logConfig *logger.Config, service s
 func (p *PortfolioHandler) RegisterRoutes(router *gin.Engine, fbAuthClient *auth.Client) {
 
 	sGroup := router.Group("/portfolio")
+	sGroup.GET("/summary", AuthHandler(fbAuthClient, p.GetSummary))
 	sGroup.GET("/holdings", AuthHandler(fbAuthClient, p.GetHoldings))
 	sGroup.GET("/income", AuthHandler(fbAuthClient, p.GetIncome))
 	sGroup.GET("/gainloss", AuthHandler(fbAuthClient, p.GetGainLoss))
 	sGroup.GET("/activities", AuthHandler(fbAuthClient, p.GetActivities))
+
+}
+
+// GetSummary gets the accounts in the portfolio
+func (p *PortfolioHandler) GetSummary(c *gin.Context) {
+	uid, err := getUID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	asumys, err := p.Service.GetSummary(uid)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+	c.JSON(http.StatusOK, asumys)
 
 }
 

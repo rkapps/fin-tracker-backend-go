@@ -113,3 +113,11 @@ const (
 func (a Activity) IsIncome() bool {
 	return a.TxnType == ActivityTypeDividend || a.TxnType == ActivityTypeInterest
 }
+
+func (a Activity) IsDeposit() bool {
+	return a.TxnType == ActivityTypeDeposit
+}
+
+func (a Activity) IsWithdrawal() bool {
+	return a.TxnType == ActivityTypeWithdraw
+}

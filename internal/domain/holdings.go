@@ -1,4 +1,4 @@
-package dto
+package domain
 
 import (
 	"time"
@@ -10,9 +10,12 @@ import (
 type HoldingSummary struct {
 	Category          string          `json:"category"`
 	Type              string          `json:"type"`
-	Acct_ID           string          `json:"acctId"`
+	AcctountID        string          `json:"accountId"`
 	ParentAccountName string          `json:"parentAccountName"`
 	AccountName       string          `json:"accountName"`
+	AssetType         string          `json:"asset_type" bson:"asset_type"`
+	Sector            string          `json:"sector"`
+	Industry          string          `json:"industry"`
 	Symbol            string          `json:"symbol"`
 	Date              *time.Time      `json:"date"`
 	Qty               decimal.Decimal `json:"qty"`
