@@ -26,7 +26,8 @@ type PipelineApp struct {
 
 func GetApiApp(trackerDbName string, financeDbName string, logConfig *logger.Config) (ApiApp, error) {
 
-	database, err := getMongoDb(trackerDbName)
+	uri := os.Getenv("FINTRACKER_MONGO_URI")
+	database, err := getMongoDb(uri, trackerDbName)
 	if err != nil {
 		return ApiApp{}, err
 	}
@@ -36,7 +37,8 @@ func GetApiApp(trackerDbName string, financeDbName string, logConfig *logger.Con
 	userService := services.NewUserService(storage)
 	transactionsService := services.NewTransactionsService(storage)
 
-	database, err = getMongoDb(financeDbName)
+	uri = os.Getenv("FINANCE_MONGO_URI")
+	database, err = getMongoDb(uri, financeDbName)
 	if err != nil {
 		return ApiApp{}, err
 	}
@@ -52,7 +54,9 @@ func GetApiApp(trackerDbName string, financeDbName string, logConfig *logger.Con
 }
 
 func GetPipelineApp(trackerDbName string, financeDbName string, logConfig *logger.Config) (PipelineApp, error) {
-	database, err := getMongoDb(trackerDbName)
+
+	uri := os.Getenv("FINTRACKER_MONGO_URI")
+	database, err := getMongoDb(uri, trackerDbName)
 	if err != nil {
 		return PipelineApp{}, err
 	}
@@ -60,7 +64,8 @@ func GetPipelineApp(trackerDbName string, financeDbName string, logConfig *logge
 	storage := mongo.NewFinTrackerMongoStorage(database)
 	userService := services.NewUserService(storage)
 
-	database, err = getMongoDb(financeDbName)
+	uri = os.Getenv("FINANCE_MONGO_URI")
+	database, err = getMongoDb(uri, financeDbName)
 	if err != nil {
 		return PipelineApp{}, err
 	}
@@ -72,12 +77,8 @@ func GetPipelineApp(trackerDbName string, financeDbName string, logConfig *logge
 	return PipelineApp{Database: database, UserService: userService, PortfolioService: portfolioService}, nil
 }
 
-func getMongoDb(dbname string) (*mongodb.MongoDatabase, error) {
-	mongoConnStr := os.Getenv("MONGO_URI")
-	// log.Printf("MongoConnectionStr: %s", mongoConnStr)
-	// mongoConnStr = "mongodb://localhost:33333/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.5.10"
-	slog.Info("MongoDb connection string: " + mongoConnStr)
-
+func getMongoDb(uri string, dbname string) (*mongodb.MongoDatabase, error) {
+	slog.Info("MongoDb connection string: " + uri)
 	reg := mongodb.GetBsonRegistryForDecimal()
-	return mongodb.NewMongoDatabaseWithRegistry(mongoConnStr, dbname, reg)
+	return mongodb.NewMongoDatabaseWithRegistry(uri, dbname, reg)
 }
