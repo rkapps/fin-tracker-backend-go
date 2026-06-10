@@ -8,7 +8,7 @@ import (
 )
 
 // DeleteImortedActivities implements Repo.
-func (s MongoStorage) DeleteImortedActivities(ids []string) error {
+func (s FinTrackerMongoStorage) DeleteImortedActivities(ids []string) error {
 
 	if len(ids) == 0 {
 		return nil
@@ -22,7 +22,7 @@ func (s MongoStorage) DeleteImortedActivities(ids []string) error {
 }
 
 // DeleteActivities implements Repo.
-func (s MongoStorage) DeleteActivities(ids []string) error {
+func (s FinTrackerMongoStorage) DeleteActivities(ids []string) error {
 
 	err := s.acitivities().DeleteMany(s.context(), ids)
 	if err != nil {
@@ -33,7 +33,7 @@ func (s MongoStorage) DeleteActivities(ids []string) error {
 }
 
 // DeleteActivityLots implements Repo.
-func (s MongoStorage) DeleteActivityLots(ids []string) error {
+func (s FinTrackerMongoStorage) DeleteActivityLots(ids []string) error {
 
 	err := s.acitivityLots().DeleteMany(s.context(), ids)
 	if err != nil {
@@ -44,7 +44,7 @@ func (s MongoStorage) DeleteActivityLots(ids []string) error {
 }
 
 // GetImortedActivities
-func (s MongoStorage) GetImortedActivities(uid string, acctId string) ([]*domain.ActivityImport, error) {
+func (s FinTrackerMongoStorage) GetImortedActivities(uid string, acctId string) ([]*domain.ActivityImport, error) {
 	filter := bson.M{"uid": uid, "accountId": acctId}
 	actvs, err := s.acitivyImports().Find(s.context(), filter, bson.D{}, 0, 0)
 	if err != nil {
@@ -55,7 +55,7 @@ func (s MongoStorage) GetImortedActivities(uid string, acctId string) ([]*domain
 }
 
 // GetActivities
-func (s MongoStorage) GetActivities(uid string) ([]*domain.Activity, error) {
+func (s FinTrackerMongoStorage) GetActivities(uid string) ([]*domain.Activity, error) {
 	filter := bson.M{"uid": uid}
 	actvs, err := s.acitivities().Find(s.context(), filter, bson.D{}, 0, 0)
 	if err != nil {
@@ -66,7 +66,7 @@ func (s MongoStorage) GetActivities(uid string) ([]*domain.Activity, error) {
 }
 
 // GetActivitiesforAccount
-func (s MongoStorage) GetActivitiesForAccount(uid string, acctId string) ([]*domain.Activity, error) {
+func (s FinTrackerMongoStorage) GetActivitiesForAccount(uid string, acctId string) ([]*domain.Activity, error) {
 	filter := bson.M{"uid": uid, "accountId": acctId}
 	actvs, err := s.acitivities().Find(s.context(), filter, bson.D{}, 0, 0)
 	if err != nil {
@@ -77,7 +77,7 @@ func (s MongoStorage) GetActivitiesForAccount(uid string, acctId string) ([]*dom
 }
 
 // GetActivityLots
-func (s MongoStorage) GetActivityLots(uid string) ([]*domain.ActivityLot, error) {
+func (s FinTrackerMongoStorage) GetActivityLots(uid string) ([]*domain.ActivityLot, error) {
 	filter := bson.M{"uid": uid}
 	lots, err := s.acitivityLots().Find(s.context(), filter, bson.D{}, 0, 0)
 	if err != nil {
@@ -88,7 +88,7 @@ func (s MongoStorage) GetActivityLots(uid string) ([]*domain.ActivityLot, error)
 }
 
 // GetActivityLots
-func (s MongoStorage) GetActivityLotsForAccount(uid string, acctId string) ([]*domain.ActivityLot, error) {
+func (s FinTrackerMongoStorage) GetActivityLotsForAccount(uid string, acctId string) ([]*domain.ActivityLot, error) {
 	filter := bson.M{"uid": uid, "accountId": acctId}
 	lots, err := s.acitivityLots().Find(s.context(), filter, bson.D{}, 0, 0)
 	if err != nil {
@@ -99,7 +99,7 @@ func (s MongoStorage) GetActivityLotsForAccount(uid string, acctId string) ([]*d
 }
 
 // Save imported activities
-func (s MongoStorage) SaveImportedActivities(actvs []*domain.ActivityImport) error {
+func (s FinTrackerMongoStorage) SaveImportedActivities(actvs []*domain.ActivityImport) error {
 	ids := []string{}
 	for _, actv := range actvs {
 		ids = append(ids, actv.ID)
@@ -109,7 +109,7 @@ func (s MongoStorage) SaveImportedActivities(actvs []*domain.ActivityImport) err
 }
 
 // Save activities
-func (s MongoStorage) SaveActivities(actvs []*domain.Activity) error {
+func (s FinTrackerMongoStorage) SaveActivities(actvs []*domain.Activity) error {
 	ids := []string{}
 	for _, actv := range actvs {
 		ids = append(ids, actv.ID)
@@ -119,7 +119,7 @@ func (s MongoStorage) SaveActivities(actvs []*domain.Activity) error {
 }
 
 // Save activity lots
-func (s MongoStorage) SaveActivityLots(lots []*domain.ActivityLot) error {
+func (s FinTrackerMongoStorage) SaveActivityLots(lots []*domain.ActivityLot) error {
 	ids := []string{}
 	for _, lot := range lots {
 		ids = append(ids, lot.ID)

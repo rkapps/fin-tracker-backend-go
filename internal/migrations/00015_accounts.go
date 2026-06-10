@@ -2,9 +2,9 @@ package migrations
 
 import (
 	"context"
+	"os"
 
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/storage"
 	"github.com/rkapps/storage-backend-go/migrations"
 	"github.com/rkapps/storage-backend-go/mongodb"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -14,7 +14,7 @@ import (
 
 func init() {
 
-	migrations.Register(storage.FINTRACKER_DB_NAME, 15, "Accounts Schema",
+	migrations.Register(os.Getenv("FINTRACKER_DB_NAME"), 15, "Accounts Schema",
 		func(database *mongodb.MongoDatabase) error {
 			var err error
 			if err = createAccountIndex(database); err != nil {

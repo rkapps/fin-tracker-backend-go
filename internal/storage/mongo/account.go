@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func (s MongoStorage) GetAccount(uid string, id string) (*domain.Account, error) {
+func (s FinTrackerMongoStorage) GetAccount(uid string, id string) (*domain.Account, error) {
 	// filter := bson.M{domain.FIELD_UID: uid, domain.FIELD_ID: id}
 	acct, err := s.accounts().FindByID(s.context(), id)
 	if err != nil {
@@ -22,7 +22,7 @@ func (s MongoStorage) GetAccount(uid string, id string) (*domain.Account, error)
 
 }
 
-func (s MongoStorage) GetAccountSyncState(uid string, id string) (*domain.AccountSyncState, error) {
+func (s FinTrackerMongoStorage) GetAccountSyncState(uid string, id string) (*domain.AccountSyncState, error) {
 	// filter := bson.M{domain.FIELD_UID: uid, domain.FIELD_ID: id}
 	acct, err := s.accountSyncStates().FindByID(s.context(), id)
 	if err != nil {
@@ -35,7 +35,7 @@ func (s MongoStorage) GetAccountSyncState(uid string, id string) (*domain.Accoun
 
 }
 
-func (s MongoStorage) GetAccountCredential(uid string, id string) (*domain.AccountCredential, error) {
+func (s FinTrackerMongoStorage) GetAccountCredential(uid string, id string) (*domain.AccountCredential, error) {
 	// filter := bson.M{domain.FIELD_UID: uid, domain.FIELD_ID: id}
 	acct, err := s.accountCredentials().FindByID(s.context(), id)
 	if err != nil {
@@ -48,7 +48,7 @@ func (s MongoStorage) GetAccountCredential(uid string, id string) (*domain.Accou
 
 }
 
-func (s MongoStorage) GetAccounts(uid string) (domain.Accounts, error) {
+func (s FinTrackerMongoStorage) GetAccounts(uid string) (domain.Accounts, error) {
 	filter := bson.M{domain.FIELD_UID: uid}
 	accts, err := s.accounts().Find(s.context(), filter, bson.D{}, 0, 0)
 	if err != nil {
@@ -59,7 +59,7 @@ func (s MongoStorage) GetAccounts(uid string) (domain.Accounts, error) {
 
 }
 
-func (s MongoStorage) GetAccountSummaries(uid string) ([]*domain.AccountSummary, error) {
+func (s FinTrackerMongoStorage) GetAccountSummaries(uid string) ([]*domain.AccountSummary, error) {
 	filter := bson.M{domain.FIELD_UID: uid}
 	accts, err := s.accountSummaries().Find(s.context(), filter, bson.D{}, 0, 0)
 	if err != nil {
@@ -70,13 +70,13 @@ func (s MongoStorage) GetAccountSummaries(uid string) ([]*domain.AccountSummary,
 
 }
 
-func (s MongoStorage) DeleteAccount(uid string, id string) error {
+func (s FinTrackerMongoStorage) DeleteAccount(uid string, id string) error {
 	// filter := bson.M{domain.FIELD_UID: uid, domain.FIELD_ID: id}
 	return s.accounts().DeleteByID(s.context(), id)
 }
 
 // DeleteAccountSummary
-func (s MongoStorage) DeleteAccountSummaries(ids []string) error {
+func (s FinTrackerMongoStorage) DeleteAccountSummaries(ids []string) error {
 
 	err := s.accountSummaries().DeleteMany(s.context(), ids)
 	if err != nil {
@@ -86,20 +86,20 @@ func (s MongoStorage) DeleteAccountSummaries(ids []string) error {
 	return err
 }
 
-func (s MongoStorage) SaveAccount(data *domain.Account) error {
+func (s FinTrackerMongoStorage) SaveAccount(data *domain.Account) error {
 	return s.accounts().UpdateOne(s.context(), data)
 }
 
-func (s MongoStorage) SaveAccountSyncState(data *domain.AccountSyncState) error {
+func (s FinTrackerMongoStorage) SaveAccountSyncState(data *domain.AccountSyncState) error {
 	return s.accountSyncStates().UpdateOne(s.context(), data)
 }
 
-func (s MongoStorage) SaveAccountCredential(data *domain.AccountCredential) error {
+func (s FinTrackerMongoStorage) SaveAccountCredential(data *domain.AccountCredential) error {
 	return s.accountCredentials().UpdateOne(s.context(), data)
 }
 
 // Save AccountSummaries
-func (s MongoStorage) SaveAccountSummaries(asumys []*domain.AccountSummary) error {
+func (s FinTrackerMongoStorage) SaveAccountSummaries(asumys []*domain.AccountSummary) error {
 	ids := []string{}
 	for _, asum := range asumys {
 		ids = append(ids, asum.ID)

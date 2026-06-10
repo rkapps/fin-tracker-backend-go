@@ -6,7 +6,6 @@ import (
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/services"
-	"github.com/rkapps/fin-tracker-backend-go/internal/storage"
 	"github.com/rkapps/fin-tracker-backend-go/internal/storage/mongo"
 	"github.com/rkapps/storage-backend-go/mongodb"
 )
@@ -25,18 +24,25 @@ type PipelineApp struct {
 	PortfolioService services.PortfolioService
 }
 
-func GetApiApp(dbname string, logConfig *logger.Config) (ApiApp, error) {
+func GetApiApp(trackerDbName string, financeDbName string, logConfig *logger.Config) (ApiApp, error) {
 
-	database, err := getMongoDb(dbname)
+	database, err := getMongoDb(trackerDbName)
 	if err != nil {
 		return ApiApp{}, err
 	}
 	// Create storeage
-	storage := mongo.NewMongoStorage(database)
+	storage := mongo.NewFinTrackerMongoStorage(database)
 	accountsService := services.NewAccountsService(storage)
 	userService := services.NewUserService(storage)
 	transactionsService := services.NewTransactionsService(storage)
-	tickersService := services.NewStocksService(storage)
+
+	database, err = getMongoDb(financeDbName)
+	if err != nil {
+		return ApiApp{}, err
+	}
+	// create ticker storage
+	tstorage := mongo.NewTickerMongoStorage(database)
+	tickersService := services.NewStocksService(tstorage)
 	portfolioService := services.NewPortfolioService(logConfig, tickersService, storage)
 
 	return ApiApp{Database: database, UserService: userService,
@@ -45,15 +51,22 @@ func GetApiApp(dbname string, logConfig *logger.Config) (ApiApp, error) {
 	}, nil
 }
 
-func GetPipelineApp(logConfig *logger.Config) (PipelineApp, error) {
-	database, err := getMongoDb(storage.FINTRACKER_DB_NAME)
+func GetPipelineApp(trackerDbName string, financeDbName string, logConfig *logger.Config) (PipelineApp, error) {
+	database, err := getMongoDb(trackerDbName)
 	if err != nil {
 		return PipelineApp{}, err
 	}
 	// Create storeage
-	storage := mongo.NewMongoStorage(database)
+	storage := mongo.NewFinTrackerMongoStorage(database)
 	userService := services.NewUserService(storage)
-	tickersService := services.NewStocksService(storage)
+
+	database, err = getMongoDb(financeDbName)
+	if err != nil {
+		return PipelineApp{}, err
+	}
+	// create ticker storage
+	tstorage := mongo.NewTickerMongoStorage(database)
+	tickersService := services.NewStocksService(tstorage)
 	portfolioService := services.NewPortfolioService(logConfig, tickersService, storage)
 
 	return PipelineApp{Database: database, UserService: userService, PortfolioService: portfolioService}, nil

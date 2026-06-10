@@ -14,11 +14,11 @@ import (
 )
 
 type AccountsService struct {
-	storage storage.StorageService
+	storage storage.FinTrackerStorageService
 	logger  *logger.Logger
 }
 
-func NewAccountsService(storage storage.StorageService) AccountsService {
+func NewAccountsService(storage storage.FinTrackerStorageService) AccountsService {
 	logger := logger.New()
 	alog := logger.For("accounts")
 	return AccountsService{storage: storage, logger: alog}

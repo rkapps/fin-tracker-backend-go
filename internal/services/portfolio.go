@@ -16,12 +16,12 @@ import (
 
 type PortfolioService struct {
 	tickersService TickersService
-	storage        storage.StorageService
+	storage        storage.FinTrackerStorageService
 	logConfig      *logger.Config
 	logger         *logger.Logger
 }
 
-func NewPortfolioService(logConfig *logger.Config, tickersService TickersService, storage storage.StorageService) PortfolioService {
+func NewPortfolioService(logConfig *logger.Config, tickersService TickersService, storage storage.FinTrackerStorageService) PortfolioService {
 	plog := logConfig.For("portfolio.service")
 	return PortfolioService{storage: storage, logConfig: logConfig, logger: plog}
 }
@@ -44,7 +44,7 @@ func (p PortfolioService) GetHoldings(uid string, category string, atype string,
 		return hldgs, nil
 	}
 
-	return portfolio.GetHoldings(p.storage, p.logger, false, accts, acctIds, lots)
+	return portfolio.GetHoldings(p.tickersService.storage, p.logger, false, accts, acctIds, lots)
 
 	// portfolio := portfolio.NewPortfolio(p.storage, p.logConfig, p.logger)
 
@@ -288,11 +288,11 @@ func (p PortfolioService) GetIncome(uid string, category string, atype string,
 
 func (p PortfolioService) RefreshUserAccounts(ctx context.Context, uid string, simulate bool) error {
 	p.logger.Info("RefreshAccounts", "UID", uid, "Simulate", simulate)
-	portfolio := portfolio.NewPortfolio(p.storage, p.logConfig, p.logger)
+	portfolio := portfolio.NewPortfolio(p.storage, p.tickersService.storage, p.logConfig, p.logger)
 	return portfolio.RefreshUserAccounts(ctx, uid, simulate)
 }
 func (p PortfolioService) SyncUserAccounts(ctx context.Context, uid string) error {
 	p.logger.Trace("RefreshAccounts", "UID", uid)
-	portfolio := portfolio.NewPortfolio(p.storage, p.logConfig, p.logger)
+	portfolio := portfolio.NewPortfolio(p.storage, p.tickersService.storage, p.logConfig, p.logger)
 	return portfolio.SyncUserAccounts(ctx, uid)
 }

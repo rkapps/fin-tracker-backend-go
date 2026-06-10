@@ -27,9 +27,15 @@ func main() {
 	config := &firebase.Config{
 		ProjectID: os.Getenv("FINTRACKER_PROJECT_ID"),
 	}
-	dbname := os.Getenv("FINTRACKER_DB_NAME")
-	if len(dbname) == 0 {
+	finTrackerDbName := os.Getenv("FINTRACKER_DB_NAME")
+	financeDbName := os.Getenv("RUSTIC_FINANCE_DB_NAME")
+
+	if len(finTrackerDbName) == 0 {
 		mlog.Error("FINTRACKER_DB_NAME environment variable not set.")
+		os.Exit(1)
+	}
+	if len(financeDbName) == 0 {
+		mlog.Error("RUSTIC_FINANCE_DB_NAME environment variable not set.")
 		os.Exit(1)
 	}
 
@@ -45,7 +51,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	apiApp, err := common.GetApiApp(dbname, logConfig)
+	apiApp, err := common.GetApiApp(finTrackerDbName, financeDbName, logConfig)
 	if err != nil {
 		mlog.Error("GetApiApp", "error", err)
 		os.Exit(1)

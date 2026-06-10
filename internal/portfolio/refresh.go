@@ -181,7 +181,7 @@ func (p Portfolio) summarizeData(uid string, accts []*domain.Account, actvs []*d
 	}
 
 	// get holding with symbol to get cash
-	hldgs, err := GetHoldings(p.storage, p.logger, false, accts, []string{}, lots)
+	hldgs, err := GetHoldings(p.tstorage, p.logger, false, accts, []string{}, lots)
 	if err != nil {
 		return asumys, fmt.Errorf("getholdings error: %v", err)
 	}

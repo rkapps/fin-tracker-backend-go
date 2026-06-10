@@ -8,10 +8,10 @@ import (
 )
 
 type TickersService struct {
-	storage storage.StorageService
+	storage storage.TickerStorageService
 }
 
-func NewStocksService(storage storage.StorageService) TickersService {
+func NewStocksService(storage storage.TickerStorageService) TickersService {
 	return TickersService{
 		storage: storage,
 	}

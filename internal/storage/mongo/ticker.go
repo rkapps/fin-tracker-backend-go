@@ -13,17 +13,17 @@ import (
 )
 
 // DeleteTicker returns the ticker for the exchange:symbol
-func (s MongoStorage) DeleteTicker(id string) error {
+func (s TickerMongoStorage) DeleteTicker(id string) error {
 	return s.tickers().DeleteByID(s.context(), id)
 }
 
-func (s MongoStorage) GetTicker(id string) (*domain.Ticker, error) {
+func (s TickerMongoStorage) GetTicker(id string) (*domain.Ticker, error) {
 	// log.Println(s.tickers().Count(s.context()))
 	ticker, err := s.tickers().FindByID(s.context(), id)
 	return ticker, err
 }
 
-func (s MongoStorage) GetTickerPrice(symbol string) (decimal.Decimal, error) {
+func (s TickerMongoStorage) GetTickerPrice(symbol string) (decimal.Decimal, error) {
 	if strings.Compare(symbol, "USD") == 0 || strings.Compare(symbol, "USDC") == 0 || strings.Compare(symbol, "USDT") == 0 {
 		return decimal.NewFromFloat(1.0), nil
 	}
@@ -32,7 +32,7 @@ func (s MongoStorage) GetTickerPrice(symbol string) (decimal.Decimal, error) {
 	return ticker.PrLast, err
 }
 
-func (s MongoStorage) GetTickerGroups() (domain.TickerGroups, error) {
+func (s TickerMongoStorage) GetTickerGroups() (domain.TickerGroups, error) {
 
 	query := bson.M{
 		"_id": bson.M{
@@ -60,23 +60,23 @@ func (s MongoStorage) GetTickerGroups() (domain.TickerGroups, error) {
 	// return s.tickers().Find(s.context(), id)
 }
 
-func (s MongoStorage) GetTickerHistory(symbol string) ([]*domain.TickerHistory, error) {
+func (s TickerMongoStorage) GetTickerHistory(symbol string) ([]*domain.TickerHistory, error) {
 	filter := bson.D{{Key: domain.FIELD_HISTORY_SYMBOL, Value: symbol}}
 	slog.Debug("GetTickerHistory", "filter", filter)
 	return s.tickerHistory().Find(s.context(), filter, bson.D{}, 0, 0)
 }
 
-func (s MongoStorage) GetTickerSentiments(symbol string) ([]*domain.TickerSentiment, error) {
+func (s TickerMongoStorage) GetTickerSentiments(symbol string) ([]*domain.TickerSentiment, error) {
 	filter := bson.D{{Key: domain.FIELD_SYMBOL, Value: symbol}}
 	return s.tickerSentiment().Find(s.context(), filter, bson.D{}, 0, 0)
 }
 
-func (s MongoStorage) GetTickerEmbeddings(symbol string) ([]*domain.TickerEmbedding, error) {
+func (s TickerMongoStorage) GetTickerEmbeddings(symbol string) ([]*domain.TickerEmbedding, error) {
 	filter := bson.D{{Key: domain.FIELD_SYMBOL, Value: symbol}}
 	return s.tickerEmbedding().Find(s.context(), filter, bson.D{}, 0, 0)
 }
 
-func (s MongoStorage) GetTickers(symbols []string) (domain.Tickers, error) {
+func (s TickerMongoStorage) GetTickers(symbols []string) (domain.Tickers, error) {
 	var qs []string
 	for _, symbol := range symbols {
 		if len(symbol) == 0 {
@@ -98,7 +98,7 @@ func (s MongoStorage) GetTickers(symbols []string) (domain.Tickers, error) {
 
 }
 
-func (s MongoStorage) SearchTicker(ts domain.TickerSearch) (domain.Tickers, error) {
+func (s TickerMongoStorage) SearchTicker(ts domain.TickerSearch) (domain.Tickers, error) {
 
 	var tks domain.Tickers
 	criteria := core.SearchCriteria{}

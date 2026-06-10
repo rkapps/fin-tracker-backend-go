@@ -70,7 +70,7 @@ func filterBankAccount(acctIdsm map[string]*domain.Account, acctId string) bool 
 	return true
 }
 
-func GetHoldings(storage storage.StorageService, logger *logger.Logger, byAccount bool,
+func GetHoldings(storage storage.TickerStorageService, logger *logger.Logger, byAccount bool,
 	accts []*domain.Account, acctIds []string, lots []*domain.ActivityLot) ([]*domain.HoldingSummary, error) {
 
 	hldgs := []*domain.HoldingSummary{}
@@ -171,7 +171,7 @@ func GetHoldings(storage storage.StorageService, logger *logger.Logger, byAccoun
 
 }
 
-func GetTickersMapforLots(storage storage.StorageService, lots []*domain.ActivityLot) map[string]domain.Ticker {
+func GetTickersMapforLots(storage storage.TickerStorageService, lots []*domain.ActivityLot) map[string]domain.Ticker {
 	tm := make(map[string]domain.Ticker)
 
 	tsymbols := []string{}

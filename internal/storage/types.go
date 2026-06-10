@@ -7,11 +7,11 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-const (
-	FINTRACKER_DB_NAME = "finTracker"
-)
+// const (
+// 	FINTRACKER_DB_NAME = "rustic_finance"
+// )
 
-type StorageService interface {
+type FinTrackerStorageService interface {
 
 	//Accounts
 	DeleteAccount(uid string, id string) error
@@ -38,6 +38,19 @@ type StorageService interface {
 	SaveActivities(actvs []*domain.Activity) error
 	SaveActivityLots(lots []*domain.ActivityLot) error
 
+	//Transaction
+	ImportTransactions(userId string, startDate time.Time, endDate time.Time, transactions []*domain.Transaction) error
+	SearchTransactions(userId string, startDate time.Time, endDate time.Time, searchText string) (domain.Transactions, error)
+	SummaryTransactions(userId string, startDate time.Time, endDate time.Time) ([]domain.TransactionAgg, error)
+
+	//User
+	GetUsers() []*domain.User
+	GetUser(id string) (*domain.User, error)
+	SaveUser(user *domain.User) error
+}
+
+type TickerStorageService interface {
+
 	// Ticker
 	DeleteTicker(id string) error
 	GetTicker(id string) (*domain.Ticker, error)
@@ -48,14 +61,4 @@ type StorageService interface {
 	GetTickers(symbols []string) (domain.Tickers, error)
 	GetTickerPrice(symbol string) (decimal.Decimal, error)
 	SearchTicker(ts domain.TickerSearch) (domain.Tickers, error)
-
-	//Transaction
-	ImportTransactions(userId string, startDate time.Time, endDate time.Time, transactions []*domain.Transaction) error
-	SearchTransactions(userId string, startDate time.Time, endDate time.Time, searchText string) (domain.Transactions, error)
-	SummaryTransactions(userId string, startDate time.Time, endDate time.Time) ([]domain.TransactionAgg, error)
-
-	//User
-	GetUsers() []*domain.User
-	GetUser(id string) (*domain.User, error)
-	SaveUser(user *domain.User) error
 }

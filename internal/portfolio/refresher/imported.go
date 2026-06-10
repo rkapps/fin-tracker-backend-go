@@ -12,11 +12,11 @@ import (
 )
 
 type ImportedAccountRefresher struct {
-	storage storage.StorageService
+	storage storage.FinTrackerStorageService
 	logger  *logger.Logger
 }
 
-func NewImportAccountRefresher(storage storage.StorageService, logConfig *logger.Config) ImportedAccountRefresher {
+func NewImportAccountRefresher(storage storage.FinTrackerStorageService, logConfig *logger.Config) ImportedAccountRefresher {
 	plog := logConfig.For("refresher.imported")
 	return ImportedAccountRefresher{storage, plog}
 }

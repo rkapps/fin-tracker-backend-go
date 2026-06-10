@@ -25,7 +25,19 @@ func main() {
 		log.Fatal("Usage: pipeline <command> [args]")
 	}
 
-	pipelineApp, err := common.GetPipelineApp(logConfig)
+	finTrackerDbName := os.Getenv("FINTRACKER_DB_NAME")
+	financeDbName := os.Getenv("RUSTIC_FINANCE_DB_NAME")
+
+	if len(finTrackerDbName) == 0 {
+		plog.Error("FINTRACKER_DB_NAME environment variable not set.")
+		os.Exit(1)
+	}
+	if len(financeDbName) == 0 {
+		plog.Error("RUSTIC_FINANCE_DB_NAME environment variable not set.")
+		os.Exit(1)
+	}
+
+	pipelineApp, err := common.GetPipelineApp(finTrackerDbName, financeDbName, logConfig)
 	if err != nil {
 		log.Fatal(err)
 	}

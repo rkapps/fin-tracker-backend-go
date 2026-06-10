@@ -6,14 +6,15 @@ import (
 )
 
 type Portfolio struct {
-	storage       storage.StorageService
+	storage       storage.FinTrackerStorageService
+	tstorage      storage.TickerStorageService
 	logger        *logger.Logger
 	logConfig     *logger.Config
 	acctLotSeqMap map[string]int // scoped to one GL run
 
 }
 
-func NewPortfolio(storage storage.StorageService, logConfig *logger.Config, logger *logger.Logger) Portfolio {
+func NewPortfolio(storage storage.FinTrackerStorageService, tstorage storage.TickerStorageService, logConfig *logger.Config, logger *logger.Logger) Portfolio {
 	acctLotSeqm := make(map[string]int)
 	return Portfolio{storage: storage, logConfig: logConfig, logger: logger, acctLotSeqMap: acctLotSeqm}
 }

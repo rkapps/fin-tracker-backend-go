@@ -11,7 +11,7 @@ import (
 )
 
 // SearchTransactions implements Repo.
-func (s MongoStorage) SearchTransactions(uid string, startDate time.Time, endDate time.Time, searchText string) (domain.Transactions, error) {
+func (s FinTrackerMongoStorage) SearchTransactions(uid string, startDate time.Time, endDate time.Time, searchText string) (domain.Transactions, error) {
 
 	criteria := core.SearchCriteria{}
 	criteria.IndexName = "idx_search"
@@ -34,7 +34,7 @@ func (s MongoStorage) SearchTransactions(uid string, startDate time.Time, endDat
 	return txns, nil
 }
 
-func (s MongoStorage) ImportTransactions(uid string, startDate time.Time, endDate time.Time, txns []*domain.Transaction) error {
+func (s FinTrackerMongoStorage) ImportTransactions(uid string, startDate time.Time, endDate time.Time, txns []*domain.Transaction) error {
 
 	ctxns, _ := s.SearchTransactions(uid, startDate, endDate, "")
 	ids := []string{}
@@ -56,7 +56,7 @@ func (s MongoStorage) ImportTransactions(uid string, startDate time.Time, endDat
 	return s.transaction().InsertMany(s.context(), txns)
 }
 
-func (s MongoStorage) SummaryTransactions(uid string, startDate time.Time, endDate time.Time) ([]domain.TransactionAgg, error) {
+func (s FinTrackerMongoStorage) SummaryTransactions(uid string, startDate time.Time, endDate time.Time) ([]domain.TransactionAgg, error) {
 
 	var pipeline []interface{}
 	var match map[string]interface{}
