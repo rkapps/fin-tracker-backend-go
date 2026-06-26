@@ -23,7 +23,7 @@ type PortfolioService struct {
 
 func NewPortfolioService(logConfig *logger.Config, tickersService TickersService, storage storage.FinTrackerStorageService) PortfolioService {
 	plog := logConfig.For("portfolio.service")
-	return PortfolioService{storage: storage, logConfig: logConfig, logger: plog}
+	return PortfolioService{tickersService: tickersService, storage: storage, logConfig: logConfig, logger: plog}
 }
 
 func (p PortfolioService) GetSummary(uid string) ([]*domain.AccountSummary, error) {
@@ -43,7 +43,7 @@ func (p PortfolioService) GetHoldings(uid string, category string, atype string,
 	if err != nil {
 		return hldgs, nil
 	}
-
+	p.logger.Info("GetHoldings", "lots", len(lots), "ticker storage", p.tickersService.storage)
 	return portfolio.GetHoldings(p.tickersService.storage, p.logger, false, accts, acctIds, lots)
 
 	// portfolio := portfolio.NewPortfolio(p.storage, p.logConfig, p.logger)
