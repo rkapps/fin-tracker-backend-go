@@ -142,7 +142,7 @@ func (a *AccountsHandler) UpdateAccount(c *gin.Context) {
 		return
 	}
 
-	err = a.Service.UpdateAccount(c, uid, id, data)
+	acct, err := a.Service.UpdateAccount(c, uid, id, data)
 	if err != nil {
 		slog.Debug("UpdateAccount", "Error", err)
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -150,6 +150,7 @@ func (a *AccountsHandler) UpdateAccount(c *gin.Context) {
 		})
 		return
 	}
+	c.JSON(http.StatusOK, acct)
 
 }
 

@@ -45,7 +45,7 @@ func (r ImportedAccountRefresher) Refresh(ctx context.Context, account domain.Ac
 	}
 	for _, iactv := range iactvs {
 
-		r.logger.Debug("Refresh", "Activity", iactv.ID)
+		r.logger.Debug("Refresh", "Activity", iactv.ID, "SentAccount", iactv.SentAccount, "RcvAccount", iactv.RcvAccount)
 
 		actv := &domain.Activity{}
 		actv.UID = iactv.UID
@@ -152,6 +152,11 @@ func resolveAccount(acctsm map[string]*domain.Account, acctId string, account st
 	for _, acct := range acctsm {
 		if acct.ID == acctId {
 			return acctId
+		}
+		// log.Printf("account Id: %s account: %s", acct.ID, account)
+		// match the exact account id
+		if acct.ID == account {
+			return acct.ID
 		}
 		for _, name := range acct.AlternateNames {
 			if strings.Compare(strings.ToLower(name), strings.ToLower(account)) == 0 {

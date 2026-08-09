@@ -38,12 +38,12 @@ func GetApiApp(trackerDbName string, financeDbName string, logConfig *logger.Con
 	transactionsService := services.NewTransactionsService(storage)
 
 	uri = os.Getenv("RUSTIC_FINANCE_MONGO_URI")
-	database, err = getMongoDb(uri, financeDbName)
+	rdatabase, err := getMongoDb(uri, financeDbName)
 	if err != nil {
 		return ApiApp{}, err
 	}
 	// create ticker storage
-	tstorage := mongo.NewTickerMongoStorage(database)
+	tstorage := mongo.NewTickerMongoStorage(rdatabase)
 	tickersService := services.NewStocksService(tstorage)
 	portfolioService := services.NewPortfolioService(logConfig, tickersService, storage)
 
@@ -65,14 +65,17 @@ func GetPipelineApp(trackerDbName string, financeDbName string, logConfig *logge
 	userService := services.NewUserService(storage)
 
 	uri = os.Getenv("RUSTIC_FINANCE_MONGO_URI")
-	database, err = getMongoDb(uri, financeDbName)
+	rdatabase, err := getMongoDb(uri, financeDbName)
 	if err != nil {
 		return PipelineApp{}, err
 	}
-	// create ticker storage
-	tstorage := mongo.NewTickerMongoStorage(database)
+	slog.Info("GetPipelineApp", "Database", rdatabase)
 
+	// create ticker storage
+	tstorage := mongo.NewTickerMongoStorage(rdatabase)
 	tickersService := services.NewStocksService(tstorage)
+	slog.Info("GetPipelineApp", "tstorage", storage)
+
 	portfolioService := services.NewPortfolioService(logConfig, tickersService, storage)
 
 	return PipelineApp{Database: database, UserService: userService, PortfolioService: portfolioService}, nil

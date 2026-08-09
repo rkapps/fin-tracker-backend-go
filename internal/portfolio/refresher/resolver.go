@@ -28,7 +28,7 @@ func (t TestBatchAccountRefresher) Refresh(ctx context.Context, provider string,
 func ResolveRefresher(storage storage.FinTrackerStorageService, account domain.Account, logConfig *logger.Config) (AccountRefresher, error) {
 	slog.Debug("ResolveRefresher", "Account Cateogory", account.Category)
 	switch account.Category {
-	case domain.CategoryBrokerage, domain.CategoryRetirement:
+	case domain.CategoryBrokerage, domain.CategoryRetirement, domain.CategoryHSA:
 		return NewImportAccountRefresher(storage, logConfig), nil
 	}
 	return nil, fmt.Errorf("refresher error: %s", account.Category)

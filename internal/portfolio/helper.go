@@ -6,6 +6,7 @@ import (
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
+	"github.com/rkapps/fin-tracker-backend-go/internal/dto"
 	"github.com/rkapps/fin-tracker-backend-go/internal/storage"
 	"github.com/shopspring/decimal"
 )
@@ -71,10 +72,10 @@ func filterBankAccount(acctIdsm map[string]*domain.Account, acctId string) bool 
 }
 
 func GetHoldings(storage storage.TickerStorageService, logger *logger.Logger, byAccount bool,
-	accts []*domain.Account, acctIds []string, lots []*domain.ActivityLot) ([]*domain.HoldingSummary, error) {
+	accts []*domain.Account, acctIds []string, lots []*domain.ActivityLot) ([]*dto.HoldingSummary, error) {
 
-	hldgs := []*domain.HoldingSummary{}
-	hldgsm := make(map[string]*domain.HoldingSummary)
+	hldgs := []*dto.HoldingSummary{}
+	hldgsm := make(map[string]*dto.HoldingSummary)
 
 	acctIdsm := make(map[string]string)
 	for _, acctId := range acctIds {
@@ -128,10 +129,11 @@ func GetHoldings(storage storage.TickerStorageService, logger *logger.Logger, by
 
 		zero := decimal.NewFromFloat(0.0)
 		if h == nil {
-			h = &domain.HoldingSummary{}
+			h = &dto.HoldingSummary{}
 			h.Category = string(acct.Category)
 			h.Type = string(acct.Type)
 			h.AccountName = acct.Name
+			h.AccountDisplayName = acct.ID
 			h.AcctountID = lot.AccountID
 			h.Symbol = lot.Symbol
 			h.AssetType = ticker.AssetType

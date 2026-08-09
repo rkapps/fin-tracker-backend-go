@@ -16,5 +16,5 @@ type Portfolio struct {
 
 func NewPortfolio(storage storage.FinTrackerStorageService, tstorage storage.TickerStorageService, logConfig *logger.Config, logger *logger.Logger) Portfolio {
 	acctLotSeqm := make(map[string]int)
-	return Portfolio{storage: storage, logConfig: logConfig, logger: logger, acctLotSeqMap: acctLotSeqm}
+	return Portfolio{storage: storage, tstorage: tstorage, logConfig: logConfig, logger: logger, acctLotSeqMap: acctLotSeqm}
 }

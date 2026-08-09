@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 	"github.com/rkapps/fin-tracker-backend-go/internal/storage"
@@ -26,12 +25,19 @@ func NewAccountsService(storage storage.FinTrackerStorageService) AccountsServic
 
 func (a AccountsService) CreateAccount(ctx context.Context, uid string, acct *domain.Account) (*domain.Account, error) {
 	acct.UID = uid
-	acct.ID = uuid.New().String()
+	// acct.ID = uuid.New().String()
 	acct.CreatedAt = time.Now()
 	a.logger.Info("CreateAccount", "Account", acct)
+	if len(acct.ID) == 0 {
+		return nil, fmt.Errorf("account id cannot be blank")
+	}
+	nacct, err := a.GetAccount(uid, acct.ID)
+	if nacct != nil {
+		return nil, fmt.Errorf("account with id '%s' already exists", nacct.ID)
+	}
 
 	// create account state
-	err := a.CreateAccountState(ctx, uid, acct.ID)
+	err = a.CreateAccountState(ctx, uid, acct.ID)
 	if err != nil {
 		return nil, fmt.Errorf("CreateAccountState error: %v", err)
 	}
@@ -39,7 +45,7 @@ func (a AccountsService) CreateAccount(ctx context.Context, uid string, acct *do
 	// // create account credential
 	// a.CreateAccountCredential(ctx, uid, acct.ID)
 
-	err = a.UpdateAccount(ctx, uid, acct.ID, acct)
+	_, err = a.UpdateAccount(ctx, uid, acct.ID, acct)
 	if err != nil {
 		return nil, fmt.Errorf("CreateAccount error: %v", err)
 	}
@@ -159,6 +165,8 @@ func (a AccountsService) ImportActivities(ctx context.Context, uid string, acctI
 	// Import activites
 	for _, actv := range actvs {
 
+		a.logger.Debug("ImportActivities", "rcvSymol", actv.RcvCurrency, "sentsymbol", actv.SentCurrency)
+
 		id := fmt.Sprintf("%s-%s-%s-%s-%s-%s-%.8v-%s-%s-%s-%.8v-%.8v-%s-%s",
 			acctId,
 			actv.Date.Format("2006-01-02T15:04:05"), // Full timestamp if available
@@ -193,9 +201,9 @@ func (a AccountsService) LoadAccounts(ctx context.Context, user domain.User, acc
 	return nil
 }
 
-func (a AccountsService) UpdateAccount(ctx context.Context, uid string, id string, acct *domain.Account) error {
+func (a AccountsService) UpdateAccount(ctx context.Context, uid string, id string, acct *domain.Account) (*domain.Account, error) {
 	acct.UID = uid
 	acct.ID = id
 	acct.UpdatedAt = time.Now()
-	return a.storage.SaveAccount(acct)
+	return acct, a.storage.SaveAccount(acct)
 }

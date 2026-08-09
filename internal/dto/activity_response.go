@@ -37,7 +37,7 @@ func NewActivityResponseFromActivity(acct domain.Account, actv domain.Activity) 
 	ractv.Notes = actv.Notes
 	ractv.FeeAmount = actv.Fee
 	ractv.FeeSymbol = actv.FeeCurrency
-	ractv.RcvAccount = acct.Name
+	ractv.RcvAccount = acct.ID
 	ractv.RcvSymbol = actv.RcvSymbol
 	ractv.RcvAmount = actv.RcvQuantity
 	ractv.RcvBalance = actv.RcvBalance

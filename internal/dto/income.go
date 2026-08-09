@@ -7,14 +7,15 @@ import (
 )
 
 type Income struct {
-	Category          string          `json:"category"`
-	Type              string          `json:"type"`
-	Acct_ID           string          `json:"acctId"`
-	ParentAccountName string          `json:"parentAccountName"`
-	AccountName       string          `json:"accountName"`
-	Symbol            string          `json:"symbol"`
-	Date              time.Time       `json:"date"`
-	Qty               decimal.Decimal `json:"qty"`
-	Cost              decimal.Decimal `json:"cost"`
-	CostValue         decimal.Decimal `json:"costValue"`
+	Category   string `json:"category"`
+	Type       string `json:"type"`
+	AcctountID string `json:"accountId"`
+	// ParentAccountName  string          `json:"parentAccountName"`
+	AccountName        string          `json:"accountName"`
+	AccountDisplayName string          `json:"accountDisplayName"`
+	Symbol             string          `json:"symbol"`
+	Date               time.Time       `json:"date"`
+	Qty                decimal.Decimal `json:"qty"`
+	Cost               decimal.Decimal `json:"cost"`
+	CostValue          decimal.Decimal `json:"costValue"`
 }

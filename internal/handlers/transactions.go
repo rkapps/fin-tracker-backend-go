@@ -39,6 +39,7 @@ func (h *TransactionsHandler) SearchTransactions(c *gin.Context) {
 		return
 	}
 
+	slog.Info("SearchTransactions started", "UID", uid)
 	searchText := c.Query("searchText")
 	sstartDate := c.Query("startDate")
 	startDate := utils.DateFromString(sstartDate)

@@ -21,6 +21,7 @@ func (p Portfolio) RefreshUserAccounts(ctx context.Context, uid string, simulate
 		return fmt.Errorf("User record does not exist")
 	}
 
+	p.logger.Info("RefreshUserAccounts", "storage", p.tstorage)
 	p.logger.Info("RefreshUserAccounts", "UID", uid, "CurrencyCode", user.CurrencyCode)
 	p.logger.Trace("RefreshUserAccounts", "UID", uid, "Simulate", simulate)
 	accts, err := p.storage.GetAccounts(uid)
@@ -161,6 +162,7 @@ func (p Portfolio) summarizeData(uid string, accts []*domain.Account, actvs []*d
 			asummary = &domain.AccountSummary{}
 			asummary.AccountID = actv.AccountID
 			asummary.AccountName = acct.Name
+			asummary.AccountDisplayName = acct.ID
 			asummary.UID = uid
 			asummary.Date = time.Now()
 			asummary.ID = uuid.New().String()
@@ -201,14 +203,13 @@ func (p Portfolio) summarizeData(uid string, accts []*domain.Account, actvs []*d
 		asummary.Category = string(acct.Category)
 		asummary.Type = string(acct.Type)
 		asummary.AccountID = hldg.AcctountID
-		asummary.ParentAccountName = hldg.ParentAccountName
+		asummary.AccountDisplayName = hldg.AccountDisplayName
+		// asummary.ParentAccountName = hldg.ParentAccountName
 
 		if hldg.Symbol == user.CurrencyCode {
 			p.logger.Info("Cash", "account", hldg.AccountName)
 			asummary.Cash = asummary.Cash.Add(hldg.CostValue)
 		} else {
-			asummary.CostValue = asummary.CostValue.Add(hldg.CostValue)
-			asummary.MarketValue = asummary.MarketValue.Add(hldg.MktValue)
 
 			// add sector map
 			sectorSummary, ok := asummary.SectorHldgs[hldg.Sector]
@@ -230,6 +231,9 @@ func (p Portfolio) summarizeData(uid string, accts []*domain.Account, actvs []*d
 		}
 		assetSummary.CostValue = assetSummary.CostValue.Add(hldg.CostValue)
 		assetSummary.MktValue = assetSummary.MktValue.Add(hldg.MktValue)
+
+		asummary.CostValue = asummary.CostValue.Add(hldg.CostValue)
+		asummary.MarketValue = asummary.MarketValue.Add(hldg.MktValue)
 
 	}
 

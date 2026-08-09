@@ -7,24 +7,25 @@ import (
 )
 
 type AccountSummary struct {
-	ID                string
-	UID               string
-	AccountID         string `json:"accountId"`
-	Date              time.Time
-	AccountName       string `json:"accountName"`
-	Category          string `json:"category"`
-	Type              string `json:"type"`
-	ParentAccountName string `json:"parentAccountName"`
-	Deposits          decimal.Decimal
-	Withdrawals       decimal.Decimal
-	NetDeposits       decimal.Decimal
-	Income            decimal.Decimal
-	Realizedgl        decimal.Decimal
-	Cash              decimal.Decimal
-	SectorHldgs       map[string]*AccountSummaryValue
-	AssetTypeHlgds    map[string]*AccountSummaryValue
-	CostValue         decimal.Decimal
-	MarketValue       decimal.Decimal
+	ID                 string
+	UID                string
+	AccountID          string `json:"accountId"`
+	Date               time.Time
+	AccountName        string `json:"accountName"`
+	AccountDisplayName string `json:"accountDisplayName"`
+	Category           string `json:"category"`
+	Type               string `json:"type"`
+	ParentAccountName  string `json:"parentAccountName"`
+	Deposits           decimal.Decimal
+	Withdrawals        decimal.Decimal
+	NetDeposits        decimal.Decimal
+	Income             decimal.Decimal
+	Realizedgl         decimal.Decimal
+	Cash               decimal.Decimal
+	SectorHldgs        map[string]*AccountSummaryValue
+	AssetTypeHlgds     map[string]*AccountSummaryValue
+	CostValue          decimal.Decimal
+	MarketValue        decimal.Decimal
 }
 
 type AccountSummaryValue struct {

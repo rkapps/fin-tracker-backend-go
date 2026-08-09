@@ -30,9 +30,9 @@ func (p PortfolioService) GetSummary(uid string) ([]*domain.AccountSummary, erro
 	return p.storage.GetAccountSummaries(uid)
 }
 
-func (p PortfolioService) GetHoldings(uid string, category string, atype string, acctIds []string) ([]*domain.HoldingSummary, error) {
+func (p PortfolioService) GetHoldings(uid string, category string, atype string, acctIds []string) ([]*dto.HoldingSummary, error) {
 
-	hldgs := []*domain.HoldingSummary{}
+	hldgs := []*dto.HoldingSummary{}
 	var err error
 	accts, err := p.storage.GetAccounts(uid)
 	if err != nil {
@@ -46,103 +46,6 @@ func (p PortfolioService) GetHoldings(uid string, category string, atype string,
 	p.logger.Info("GetHoldings", "lots", len(lots), "ticker storage", p.tickersService.storage)
 	return portfolio.GetHoldings(p.tickersService.storage, p.logger, false, accts, acctIds, lots)
 
-	// portfolio := portfolio.NewPortfolio(p.storage, p.logConfig, p.logger)
-
-	// hldgs := []*dto.HoldingSummary{}
-	// hldgsm := make(map[string]*dto.HoldingSummary)
-
-	// acctIdsm := make(map[string]string)
-	// for _, acctId := range acctIds {
-	// 	acctIdsm[acctId] = acctId
-	// }
-
-	// accts, err := p.storage.GetAccounts(uid)
-	// if err != nil {
-	// 	return hldgs, nil
-	// }
-	// acctsm := make(map[string]*domain.Account)
-	// for _, acct := range accts {
-	// 	acctsm[acct.ID] = acct
-	// }
-
-	// lots, err := p.storage.GetActivityLots(uid)
-	// if err != nil {
-	// 	return hldgs, nil
-	// }
-
-	// // get tickermap
-	// tm := GetTickersMapforLots(p.storage, lots)
-
-	// for _, lot := range lots {
-	// 	if lot.Status != domain.LotStatusOpen {
-	// 		continue
-	// 	}
-	// 	acct := acctsm[lot.AccountID]
-	// 	if acct == nil {
-	// 		p.logger.Error("GetHoldings - Account not found", "AccountId", lot.AccountID, "LotId", lot.ID)
-	// 		// log.Println(lot)
-	// 		continue
-	// 	}
-
-	// 	filter := filterBankAccount(acctsm, lot.AccountID)
-	// 	if !filter {
-	// 		continue
-	// 	}
-	// 	filter = filterAccount(acctIdsm, acct, category, atype, acctIds)
-	// 	if !filter {
-	// 		continue
-	// 	}
-
-	// 	key := fmt.Sprintf("%s-%s-%s-%s-%s", acct.Category, acct.Type, acct.Name, lot.AccountID, lot.Symbol)
-	// 	p.logger.Debug("GetHoldings", "Key", key, "Lot", lot.Qty)
-
-	// 	h := hldgsm[key]
-
-	// 	zero := decimal.NewFromFloat(0.0)
-	// 	if h == nil {
-	// 		h = &dto.HoldingSummary{}
-	// 		h.Category = string(acct.Category)
-	// 		h.Type = string(acct.Type)
-	// 		h.AccountName = acct.Name
-	// 		h.Acct_ID = lot.AccountID
-	// 		h.Symbol = lot.Symbol
-	// 		h.Qty = zero
-	// 		h.Cost = zero
-	// 		h.CostValue = zero
-	// 		h.MktValue = zero
-	// 		hldgs = append(hldgs, h)
-	// 		hldgsm[key] = h
-	// 	}
-	// 	h.Cost = lot.Cost
-	// 	h.Qty = h.Qty.Add(lot.Qty)
-	// 	h.CostValue = h.CostValue.Add(lot.CostValue)
-	// 	if !h.Qty.IsZero() {
-	// 		h.Cost = h.CostValue.Div(h.Qty)
-	// 	}
-
-	// 	ticker := tm[lot.Symbol]
-	// 	if len(ticker.Symbol) == 0 {
-	// 		ticker = GetTickerPriceDiff(tm, lot.Symbol)
-	// 		tm[lot.Symbol] = ticker
-	// 	}
-
-	// 	h.PrLast = ticker.PrLast
-	// 	h.PrDiffAmt = ticker.PrDiffAmt
-	// 	h.PrDiffPerc = ticker.PrDiffPerc
-	// 	h.MktValue = h.MktValue.Add(lot.Qty.Mul(ticker.PrLast))
-	// 	h.Dglamount = h.Dglamount.Add(lot.Qty.Mul(ticker.PrDiffAmt))
-	// 	h.Glamount = h.MktValue.Sub(h.CostValue)
-	// 	if !h.CostValue.IsZero() {
-	// 		h.Glperc = h.Glamount.Mul(decimal.NewFromFloat(100.0)).Div(h.CostValue)
-	// 	}
-
-	// 	p.logger.Trace("GetHoldings", "Holding", h.Qty)
-
-	// }
-
-	// p.logger.Info("GetHoldings", "Holdings", len(hldgs))
-
-	// return hldgs, nil
 }
 
 func (p PortfolioService) GetActivities(uid string, category string, atype string,
@@ -200,11 +103,11 @@ func (p PortfolioService) GetActivities(uid string, category string, atype strin
 
 		acct = acctsm[actv.RcvAccountID]
 		if acct != nil {
-			ractv.RcvAccount = acct.Name
+			ractv.RcvAccount = acct.ID
 		}
 		acct = acctsm[actv.SentAccountID]
 		if acct != nil {
-			ractv.SentAccount = acct.Name
+			ractv.SentAccount = acct.ID
 		}
 
 		ractvs = append(ractvs, ractv)
@@ -268,7 +171,10 @@ func (p PortfolioService) GetIncome(uid string, category string, atype string,
 		income := dto.Income{}
 		income.Category = string(acct.Category)
 		income.Type = string(acct.Type)
+		income.AcctountID = acct.ID
 		income.AccountName = acct.Name
+		income.AccountDisplayName = acct.ID
+
 		income.Date = actv.Date
 		income.Symbol = actv.RcvSymbol
 		income.Qty = actv.RcvAmount
