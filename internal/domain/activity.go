@@ -94,12 +94,16 @@ const (
 	ActivityTypeDeposit  ActivityType = "deposit"
 	ActivityTypeWithdraw ActivityType = "withdraw"
 	ActivityTypeRollover ActivityType = "rollover"
+	ActivityTypeSend     ActivityType = "send"
+	ActivityTypeReceive  ActivityType = "receive"
 	ActivityTypeTransfer ActivityType = "transfer"
 
 	// costs
 	ActivityTypeFee        ActivityType = "fee"
 	ActivityTypeTax        ActivityType = "tax" // foreign withholding
 	ActivityTypeCommission ActivityType = "commission"
+
+	ActivityTypeAdjustment ActivityType = "adjustment"
 )
 
 type ActivityStatus string

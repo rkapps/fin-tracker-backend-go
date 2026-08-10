@@ -40,8 +40,6 @@ func (p CashActivityProcessor) Process(ctx context.Context, actv *domain.Activit
 	if strings.Compare(string(actv.TxnType), string(domain.ActivityTypeDeposit)) == 0 ||
 		strings.Compare(string(actv.TxnType), string(domain.ActivityTypeWithdraw)) == 0 {
 
-		p.logger.Debug("Process")
-
 		_, err = lm.UpdateBankLot(newctx, actv)
 		if err != nil {
 			return nil, err

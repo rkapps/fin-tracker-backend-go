@@ -164,12 +164,18 @@ func GetHoldings(storage storage.TickerStorageService, logger *logger.Logger, by
 		}
 
 		logger.Trace("GetHoldings", "Holding", h.Qty)
-
 	}
 
-	logger.Info("GetHoldings", "Holdings", len(hldgs))
+	uhldgs := []*dto.HoldingSummary{}
+	for _, hldg := range hldgs {
+		if hldg.MktValue.LessThan(decimal.NewFromFloat(1.0)) {
+			continue
+		}
+		uhldgs = append(uhldgs, hldg)
+	}
 
-	return hldgs, nil
+	logger.Info("GetHoldings", "Holdings", len(uhldgs))
+	return uhldgs, nil
 
 }
 

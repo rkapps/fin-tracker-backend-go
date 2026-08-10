@@ -99,6 +99,15 @@ func (r ImportedAccountRefresher) Refresh(ctx context.Context, account domain.Ac
 
 			actv.Status = domain.ActivityStatusPending
 
+		case string(domain.ActivityTypeReceive):
+			actv.RcvQuantity = iactv.RcvAmount
+			actv.RcvSymbol = iactv.RcvCurrency
+			actv.RcvAmount = iactv.SentAmount
+			actv.SentAccount = iactv.SentAccount
+			actv.RcvAccount = iactv.RcvAccount
+			actv.RcvAccountID = account.ID
+			actv.Status = domain.ActivityStatusPending
+
 		case string(domain.ActivityTypeSell):
 			actv.RcvQuantity = iactv.RcvAmount
 			actv.RcvSymbol = iactv.RcvCurrency
@@ -108,6 +117,23 @@ func (r ImportedAccountRefresher) Refresh(ctx context.Context, account domain.Ac
 			actv.SentSymbol = iactv.SentCurrency
 			actv.SentQuantity = iactv.SentAmount
 			actv.SentPrice = decimal.NewFromFloat(1.0)
+			actv.SentAccountID = account.ID
+			actv.Status = domain.ActivityStatusPending
+
+		case string(domain.ActivityTypeSend):
+			actv.SentAmount = iactv.RcvAmount
+			actv.SentSymbol = iactv.SentCurrency
+			actv.SentQuantity = iactv.SentAmount
+			actv.SentAccount = iactv.SentAccount
+			actv.SentAccountID = account.ID
+			actv.RcvAccount = iactv.RcvAccount
+			actv.Status = domain.ActivityStatusPending
+
+		case string(domain.ActivityTypeAdjustment):
+			actv.SentAmount = iactv.SentAmount
+			actv.SentSymbol = iactv.SentCurrency
+			actv.SentQuantity = iactv.SentAmount
+			actv.SentAccount = iactv.SentAccount
 			actv.SentAccountID = account.ID
 			actv.Status = domain.ActivityStatusPending
 
@@ -131,6 +157,14 @@ func (r ImportedAccountRefresher) Refresh(ctx context.Context, account domain.Ac
 			actv.RcvAmount = iactv.SentAmount
 			actv.RcvAccount = iactv.RcvAccount
 			actv.RcvPrice = decimal.NewFromFloat(1.0)
+			actv.SentAmount = iactv.SentAmount
+			actv.SentSymbol = iactv.SentCurrency
+			actv.SentQuantity = iactv.SentAmount
+			actv.SentAccount = iactv.SentAccount
+			actv.SentPrice = decimal.NewFromFloat(1.0)
+			actv.Status = domain.ActivityStatusPending
+
+		case string(domain.ActivityTypeFee):
 			actv.SentAmount = iactv.SentAmount
 			actv.SentSymbol = iactv.SentCurrency
 			actv.SentQuantity = iactv.SentAmount

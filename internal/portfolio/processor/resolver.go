@@ -14,8 +14,17 @@ func ResolveProcessor(actv domain.Activity, lm LotManager, logConfig *logger.Con
 		return NewCashActivityProcessor(logConfig), nil
 	case domain.ActivityTypeBuy:
 		return NewAcquisitionActivityProcessor(logConfig), nil
+	case domain.ActivityTypeReceive:
+		return NewReceiveActivityProcessor(logConfig), nil
 	case domain.ActivityTypeSell:
 		return NewDisposalActivityProcessor(logConfig), nil
+	case domain.ActivityTypeSend:
+		return NewSendActivityProcessor(logConfig), nil
+	case domain.ActivityTypeFee:
+		return NewFeeActivityProcessor(logConfig), nil
+	case domain.ActivityTypeAdjustment:
+		return NewAdjustmentActivityProcessor(logConfig), nil
+
 	}
 
 	return nil, fmt.Errorf("%s activity processor not available.", actv.TxnType)

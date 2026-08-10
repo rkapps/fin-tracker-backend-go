@@ -15,8 +15,10 @@ type LotManager interface {
 	CreateAssetLot(ctx context.Context, actv *domain.Activity, acctId string, symbol string, qty decimal.Decimal, value decimal.Decimal) *domain.ActivityLot
 
 	MatchOpenLots(ctx context.Context, account domain.Account, symbol string) []*domain.ActivityLot
+	MatchTransfer(ctx context.Context, actv *domain.Activity) ([]*domain.ActivityLot, *domain.Activity, bool)
 	NextLotSeq(ctx context.Context, accountID string) int
-	ReduceLotQty(ctx context.Context, actv *domain.Activity) (decimal.Decimal, error)
+	ReduceLotQty(ctx context.Context, actv *domain.Activity) ([]*domain.ActivityLot, decimal.Decimal, error)
+	StoreTransfer(ctx context.Context, actv *domain.Activity, lots []*domain.ActivityLot)
 	UpdateBankLot(ctx context.Context, activity *domain.Activity) (*domain.ActivityLot, error)
 	UpdateCashLot(ctx context.Context, activity *domain.Activity, acctId string, symbol string, amount decimal.Decimal) (*domain.ActivityLot, error)
 }
@@ -32,10 +34,9 @@ type ProcessorResult struct {
 }
 
 func NewProcessResult() *ProcessorResult {
-
 	return &ProcessorResult{}
 }
 
-func (pr *ProcessorResult) appendLot(lot *domain.ActivityLot) {
-	pr.Lots = append(pr.Lots, lot)
-}
+// func (pr *ProcessorResult) appendLot(lot *domain.ActivityLot) {
+// 	pr.Lots = append(pr.Lots, lot)
+// }
