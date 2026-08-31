@@ -4,9 +4,9 @@ import (
 	"context"
 	"os"
 
+	"github.com/rkapps/fin-tracker-backend-go/cmd/api/handlers"
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common"
 	logger "github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
-	"github.com/rkapps/fin-tracker-backend-go/internal/handlers"
 
 	_ "github.com/rkapps/fin-tracker-backend-go/internal/migrations"
 
@@ -23,7 +23,7 @@ func main() {
 	logConfig := logger.New()
 	mlog := logConfig.For("main")
 
-	mlog.Logger.Info("main", "Lotgevel", logConfig)
+	mlog.Logger.Info("main", "LogLevel", logConfig)
 	config := &firebase.Config{
 		ProjectID: os.Getenv("FINTRACKER_PROJECT_ID"),
 	}
