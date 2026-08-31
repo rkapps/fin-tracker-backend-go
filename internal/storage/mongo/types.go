@@ -14,7 +14,12 @@ type FinTrackerMongoStorage struct {
 	database *mongodb.MongoDatabase
 }
 
-func NewFinTrackerMongoStorage(database *mongodb.MongoDatabase) storage.FinTrackerStorageService {
+var _ storage.AccountStorageService = FinTrackerMongoStorage{}
+var _ storage.TransactionStorageService = FinTrackerMongoStorage{}
+var _ storage.UserStorageService = FinTrackerMongoStorage{}
+var _ storage.ProviderStorageService = FinTrackerMongoStorage{}
+
+func NewFinTrackerMongoStorage(database *mongodb.MongoDatabase) FinTrackerMongoStorage {
 	return FinTrackerMongoStorage{database}
 }
 
@@ -30,8 +35,8 @@ func (s FinTrackerMongoStorage) accountCredentials() core.Repository[string, *do
 	return mongodb.GetMongoRepository[string, *domain.AccountCredential](s.database)
 }
 
-func (s FinTrackerMongoStorage) accountSyncStates() core.Repository[string, *domain.AccountSyncState] {
-	return mongodb.GetMongoRepository[string, *domain.AccountSyncState](s.database)
+func (s FinTrackerMongoStorage) accountStates() core.Repository[string, *domain.AccountState] {
+	return mongodb.GetMongoRepository[string, *domain.AccountState](s.database)
 }
 
 func (s FinTrackerMongoStorage) accountSummaries() core.Repository[string, *domain.AccountSummary] {
@@ -49,12 +54,28 @@ func (s FinTrackerMongoStorage) acitivityLots() core.Repository[string, *domain.
 	return mongodb.GetMongoRepository[string, *domain.ActivityLot](s.database)
 }
 
+func (s FinTrackerMongoStorage) glEntries() core.Repository[string, *domain.GLEntry] {
+	return mongodb.GetMongoRepository[string, *domain.GLEntry](s.database)
+}
+
 func (s FinTrackerMongoStorage) transaction() core.Repository[string, *domain.Transaction] {
 	return mongodb.GetMongoRepository[string, *domain.Transaction](s.database)
 }
 
 func (s FinTrackerMongoStorage) users() core.Repository[string, *domain.User] {
 	return mongodb.GetMongoRepository[string, *domain.User](s.database)
+}
+
+func (s FinTrackerMongoStorage) sync_cursors() core.Repository[string, *domain.SyncCursor] {
+	return mongodb.GetMongoRepository[string, *domain.SyncCursor](s.database)
+}
+
+func (s FinTrackerMongoStorage) sync_raw_items() core.Repository[string, *domain.RawItem] {
+	return mongodb.GetMongoRepository[string, *domain.RawItem](s.database)
+}
+
+func (s FinTrackerMongoStorage) crypto_prices() core.Repository[string, *domain.CryptoPrice] {
+	return mongodb.GetMongoRepository[string, *domain.CryptoPrice](s.database)
 }
 
 // Ticker Mongo Storage
@@ -68,6 +89,7 @@ func NewTickerMongoStorage(database *mongodb.MongoDatabase) storage.TickerStorag
 func (s TickerMongoStorage) context() context.Context {
 	return context.Background()
 }
+
 func (s TickerMongoStorage) tickers() core.Repository[string, *domain.Ticker] {
 	return mongodb.GetMongoRepository[string, *domain.Ticker](s.database)
 }

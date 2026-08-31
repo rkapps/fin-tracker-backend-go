@@ -8,7 +8,7 @@ import (
 )
 
 // DeleteImortedActivities implements Repo.
-func (s FinTrackerMongoStorage) DeleteImortedActivities(ids []string) error {
+func (s FinTrackerMongoStorage) DeleteImportedActivities(ids []string) error {
 
 	if len(ids) == 0 {
 		return nil
@@ -44,7 +44,7 @@ func (s FinTrackerMongoStorage) DeleteActivityLots(ids []string) error {
 }
 
 // GetImortedActivities
-func (s FinTrackerMongoStorage) GetImortedActivities(uid string, acctId string) ([]*domain.ActivityImport, error) {
+func (s FinTrackerMongoStorage) GetImportedActivities(uid string, acctId string) ([]*domain.ActivityImport, error) {
 	filter := bson.M{"uid": uid, "accountId": acctId}
 	actvs, err := s.acitivyImports().Find(s.context(), filter, bson.D{}, 0, 0)
 	if err != nil {
@@ -104,8 +104,7 @@ func (s FinTrackerMongoStorage) SaveImportedActivities(actvs []*domain.ActivityI
 	for _, actv := range actvs {
 		ids = append(ids, actv.ID)
 	}
-	s.acitivyImports().BulkWrite(s.context(), ids, actvs)
-	return nil
+	return s.acitivyImports().BulkWrite(s.context(), ids, actvs)
 }
 
 // Save activities
@@ -114,8 +113,7 @@ func (s FinTrackerMongoStorage) SaveActivities(actvs []*domain.Activity) error {
 	for _, actv := range actvs {
 		ids = append(ids, actv.ID)
 	}
-	s.acitivities().BulkWrite(s.context(), ids, actvs)
-	return nil
+	return s.acitivities().BulkWrite(s.context(), ids, actvs)
 }
 
 // Save activity lots
@@ -124,6 +122,5 @@ func (s FinTrackerMongoStorage) SaveActivityLots(lots []*domain.ActivityLot) err
 	for _, lot := range lots {
 		ids = append(ids, lot.ID)
 	}
-	s.acitivityLots().BulkWrite(s.context(), ids, lots)
-	return nil
+	return s.acitivityLots().BulkWrite(s.context(), ids, lots)
 }

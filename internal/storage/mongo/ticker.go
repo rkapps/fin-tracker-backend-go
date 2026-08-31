@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 	"github.com/rkapps/fin-tracker-backend-go/internal/utils"
@@ -64,6 +65,17 @@ func (s TickerMongoStorage) GetTickerHistory(symbol string) ([]*domain.TickerHis
 	filter := bson.D{{Key: domain.FIELD_HISTORY_SYMBOL, Value: symbol}}
 	slog.Debug("GetTickerHistory", "filter", filter)
 	return s.tickerHistory().Find(s.context(), filter, bson.D{}, 0, 0)
+}
+
+func (s TickerMongoStorage) GetTickerHistoryByDate(symbol string, date time.Time) (*domain.TickerHistory, error) {
+	filter := bson.M{domain.FIELD_HISTORY_SYMBOL: symbol, "date": date}
+	slog.Debug("GetTickerHistory", "filter", filter)
+	ths, err := s.tickerHistory().Find(s.context(), filter, bson.D{}, 0, 0)
+	if len(ths) > 0 {
+		return ths[0], nil
+	} else {
+		return nil, err
+	}
 }
 
 func (s TickerMongoStorage) GetTickerSentiments(symbol string) ([]*domain.TickerSentiment, error) {

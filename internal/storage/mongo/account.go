@@ -9,6 +9,38 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
+func (s FinTrackerMongoStorage) DeleteAccount(uid string, id string) error {
+	// filter := bson.M{domain.FIELD_UID: uid, domain.FIELD_ID: id}
+	return s.accounts().DeleteByID(s.context(), id)
+}
+
+func (s FinTrackerMongoStorage) DeleteAccountCredential(uid string, id string) error {
+	// filter := bson.M{domain.FIELD_UID: uid, domain.FIELD_ID: id}
+	return s.accountCredentials().DeleteByID(s.context(), id)
+}
+
+// DeleteAccountSummary
+func (s FinTrackerMongoStorage) DeleteAccountSummaries(ids []string) error {
+
+	err := s.accountSummaries().DeleteMany(s.context(), ids)
+	if err != nil {
+		log.Printf("Delete AccountSummary error: %v", err)
+		return nil
+	}
+	return err
+}
+
+// DeleteGlEntries
+func (s FinTrackerMongoStorage) DeleteGlEntries(ids []string) error {
+
+	err := s.glEntries().DeleteMany(s.context(), ids)
+	if err != nil {
+		log.Printf("Delete GlEntry error: %v", err)
+		return nil
+	}
+	return err
+}
+
 func (s FinTrackerMongoStorage) GetAccount(uid string, id string) (*domain.Account, error) {
 	// filter := bson.M{domain.FIELD_UID: uid, domain.FIELD_ID: id}
 	acct, err := s.accounts().FindByID(s.context(), id)
@@ -22,13 +54,13 @@ func (s FinTrackerMongoStorage) GetAccount(uid string, id string) (*domain.Accou
 
 }
 
-func (s FinTrackerMongoStorage) GetAccountSyncState(uid string, id string) (*domain.AccountSyncState, error) {
+func (s FinTrackerMongoStorage) GetAccountState(uid string, id string) (*domain.AccountState, error) {
 	// filter := bson.M{domain.FIELD_UID: uid, domain.FIELD_ID: id}
-	acct, err := s.accountSyncStates().FindByID(s.context(), id)
+	acct, err := s.accountStates().FindByID(s.context(), id)
 	if err != nil {
 		slog.Debug("Get Account", "Error", err)
 	}
-	if acct.UID != uid {
+	if acct != nil && acct.UID != uid {
 		return nil, fmt.Errorf("Not authorized: %s", id)
 	}
 	return acct, err
@@ -41,7 +73,7 @@ func (s FinTrackerMongoStorage) GetAccountCredential(uid string, id string) (*do
 	if err != nil {
 		slog.Debug("Get Account", "Error", err)
 	}
-	if acct.UID != uid {
+	if acct == nil || acct.UID != uid {
 		return nil, fmt.Errorf("Not authorized: %s", id)
 	}
 	return acct, err
@@ -59,6 +91,17 @@ func (s FinTrackerMongoStorage) GetAccounts(uid string) (domain.Accounts, error)
 
 }
 
+func (s FinTrackerMongoStorage) GetAccountCredentials(uid string) ([]*domain.AccountCredential, error) {
+	filter := bson.M{domain.FIELD_UID: uid}
+	accts, err := s.accountCredentials().Find(s.context(), filter, bson.D{}, 0, 0)
+	if err != nil {
+		slog.Debug("GetAccountCredentials", "Error", err)
+	}
+	slog.Debug("GetAccountCredentials", "Filter", filter, "Count", len(accts))
+	return accts, err
+
+}
+
 func (s FinTrackerMongoStorage) GetAccountSummaries(uid string) ([]*domain.AccountSummary, error) {
 	filter := bson.M{domain.FIELD_UID: uid}
 	accts, err := s.accountSummaries().Find(s.context(), filter, bson.D{}, 0, 0)
@@ -67,31 +110,25 @@ func (s FinTrackerMongoStorage) GetAccountSummaries(uid string) ([]*domain.Accou
 	}
 	slog.Debug("Get AccountSummaries", "Filter", filter, "Count", len(accts))
 	return accts, err
-
 }
 
-func (s FinTrackerMongoStorage) DeleteAccount(uid string, id string) error {
-	// filter := bson.M{domain.FIELD_UID: uid, domain.FIELD_ID: id}
-	return s.accounts().DeleteByID(s.context(), id)
-}
+func (s FinTrackerMongoStorage) GetGlEntries(uid string) ([]*domain.GLEntry, error) {
+	filter := bson.M{domain.FIELD_UID: uid}
 
-// DeleteAccountSummary
-func (s FinTrackerMongoStorage) DeleteAccountSummaries(ids []string) error {
-
-	err := s.accountSummaries().DeleteMany(s.context(), ids)
+	accts, err := s.glEntries().Find(s.context(), filter, bson.D{}, 0, 0)
 	if err != nil {
-		log.Printf("Delete AccountSummary error: %v", err)
-		return nil
+		slog.Debug("Get GlEntries", "Error", err)
 	}
-	return err
-}
+	slog.Debug("Get GlEntries", "Filter", filter, "Count", len(accts))
+	return accts, err
 
+}
 func (s FinTrackerMongoStorage) SaveAccount(data *domain.Account) error {
 	return s.accounts().UpdateOne(s.context(), data)
 }
 
-func (s FinTrackerMongoStorage) SaveAccountSyncState(data *domain.AccountSyncState) error {
-	return s.accountSyncStates().UpdateOne(s.context(), data)
+func (s FinTrackerMongoStorage) SaveAccountState(data *domain.AccountState) error {
+	return s.accountStates().UpdateOne(s.context(), data)
 }
 
 func (s FinTrackerMongoStorage) SaveAccountCredential(data *domain.AccountCredential) error {
@@ -105,5 +142,15 @@ func (s FinTrackerMongoStorage) SaveAccountSummaries(asumys []*domain.AccountSum
 		ids = append(ids, asum.ID)
 	}
 	s.accountSummaries().BulkWrite(s.context(), ids, asumys)
+	return nil
+}
+
+// SaveGlEntries
+func (s FinTrackerMongoStorage) SaveGlEntries(glEntries []*domain.GLEntry) error {
+	ids := []string{}
+	for _, asum := range glEntries {
+		ids = append(ids, asum.ID)
+	}
+	s.glEntries().BulkWrite(s.context(), ids, glEntries)
 	return nil
 }

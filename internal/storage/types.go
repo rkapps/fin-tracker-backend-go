@@ -1,52 +1,78 @@
 package storage
 
 import (
+	"context"
 	"time"
 
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 	"github.com/shopspring/decimal"
 )
 
-// const (
-// 	FINTRACKER_DB_NAME = "rustic_finance"
-// )
-
-type FinTrackerStorageService interface {
-
-	//Accounts
-	DeleteAccount(uid string, id string) error
-	DeleteAccountSummaries(ids []string) error
-	DeleteActivities(ids []string) error
-	DeleteActivityLots(ids []string) error
-	DeleteImortedActivities(ids []string) error
-	GetAccount(uid string, id string) (*domain.Account, error)
+type AccountStorageService interface {
+	GetAccount(uid, id string) (*domain.Account, error)
 	GetAccounts(uid string) (domain.Accounts, error)
-	GetAccountSummaries(uid string) ([]*domain.AccountSummary, error)
-	GetAccountCredential(uid string, id string) (*domain.AccountCredential, error)
-	GetAccountSyncState(uid string, id string) (*domain.AccountSyncState, error)
-	GetActivities(uid string) ([]*domain.Activity, error)
-	GetActivitiesForAccount(uid string, acctId string) ([]*domain.Activity, error)
-	GetActivityLots(uid string) ([]*domain.ActivityLot, error)
-	GetActivityLotsForAccount(uid string, acctId string) ([]*domain.ActivityLot, error)
-	GetImortedActivities(uid string, acctId string) ([]*domain.ActivityImport, error)
-
 	SaveAccount(acct *domain.Account) error
-	SaveAccountCredential(acct *domain.AccountCredential) error
-	SaveAccountSyncState(acct *domain.AccountSyncState) error
-	SaveAccountSummaries(asumys []*domain.AccountSummary) error
-	SaveImportedActivities(actvs []*domain.ActivityImport) error
-	SaveActivities(actvs []*domain.Activity) error
+	DeleteAccount(uid, id string) error
+	DeleteAccountCredential(uid, id string) error
+	GetAccountCredentials(uid string) ([]*domain.AccountCredential, error)
+	GetAccountCredential(uid, id string) (*domain.AccountCredential, error)
+	SaveAccountCredential(cred *domain.AccountCredential) error
+
+	GetAccountState(uid, id string) (*domain.AccountState, error)
+	SaveAccountState(state *domain.AccountState) error
+
+	GetAccountSummaries(uid string) ([]*domain.AccountSummary, error)
+	SaveAccountSummaries(summaries []*domain.AccountSummary) error
+	DeleteAccountSummaries(ids []string) error
+
+	// Activities
+	GetActivities(uid string) ([]*domain.Activity, error)
+	GetActivitiesForAccount(uid, acctID string) ([]*domain.Activity, error)
+	SaveActivities(acts []*domain.Activity) error
+	DeleteActivities(ids []string) error
+
+	GetActivityLots(uid string) ([]*domain.ActivityLot, error)
+	GetActivityLotsForAccount(uid, acctID string) ([]*domain.ActivityLot, error)
 	SaveActivityLots(lots []*domain.ActivityLot) error
+	DeleteActivityLots(ids []string) error
 
-	//Transaction
-	ImportTransactions(userId string, startDate time.Time, endDate time.Time, transactions []*domain.Transaction) error
-	SearchTransactions(userId string, startDate time.Time, endDate time.Time, searchText string) (domain.Transactions, error)
-	SummaryTransactions(userId string, startDate time.Time, endDate time.Time) ([]domain.TransactionAgg, error)
+	GetImportedActivities(uid, acctID string) ([]*domain.ActivityImport, error)
+	SaveImportedActivities(acts []*domain.ActivityImport) error
+	DeleteImportedActivities(ids []string) error
 
-	//User
+	// Glentry
+	DeleteGlEntries(ids []string) error
+	GetGlEntries(uid string) ([]*domain.GLEntry, error)
+	SaveGlEntries(glEntries []*domain.GLEntry) error
+}
+
+type TransactionStorageService interface {
+	ImportTransactions(uid string, start, end time.Time, txns []*domain.Transaction) error
+	SearchTransactions(uid string, start, end time.Time, searchText string) (domain.Transactions, error)
+	SummaryTransactions(uid string, start, end time.Time) ([]domain.TransactionAgg, error)
+}
+
+type UserStorageService interface {
 	GetUsers() []*domain.User
 	GetUser(id string) (*domain.User, error)
 	SaveUser(user *domain.User) error
+}
+
+type ProviderStorageService interface {
+	DeleteAllCursors(ctx context.Context, uid, id string) error
+	DeleteAllRawItems(ctx context.Context, uid, id string) error
+	LoadAllCursors(ctx context.Context, uid, acctID string) ([]*domain.SyncCursor, error)
+	LoadAllRawItems(ctx context.Context, uid, acctID string) ([]*domain.RawItem, error)
+
+	LoadCursor(ctx context.Context, uid, acctID, provider, stream string) (*domain.SyncCursor, error)
+	SaveCursor(ctx context.Context, cursor *domain.SyncCursor) error
+	UpsertRaw(ctx context.Context, uid, acctID, provider string, items []domain.RawItem) error
+	UnprocessedRaw(ctx context.Context, uid, acctID string, transformVersion int) ([]domain.RawItem, error)
+	MarkProcessed(ctx context.Context, rawIDs []string, transformVersion int) error
+
+	//cryptoprice
+	GetCryptoPrices() ([]*domain.CryptoPrice, error)
+	SaveCryptoPrices([]*domain.CryptoPrice) error
 }
 
 type TickerStorageService interface {
@@ -57,6 +83,7 @@ type TickerStorageService interface {
 	GetTickerGroups() (domain.TickerGroups, error)
 	GetTickerEmbeddings(symbol string) ([]*domain.TickerEmbedding, error)
 	GetTickerHistory(symbol string) ([]*domain.TickerHistory, error)
+	GetTickerHistoryByDate(symbol string, date time.Time) (*domain.TickerHistory, error)
 	GetTickerSentiments(symbol string) ([]*domain.TickerSentiment, error)
 	GetTickers(symbols []string) (domain.Tickers, error)
 	GetTickerPrice(symbol string) (decimal.Decimal, error)
