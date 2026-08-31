@@ -5,7 +5,6 @@ import (
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/shopspring/decimal"
 )
 
 type FeeActivityProcessor struct {
@@ -26,14 +25,8 @@ func (p FeeActivityProcessor) Process(ctx context.Context, actv *domain.Activity
 	newctx := logger.WithContext(ctx, p.logger)
 
 	pr := NewProcessResult()
-
-	// update the cash lot
-	_, err := lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.SentSymbol, actv.SentAmount.Mul(decimal.NewFromFloat(-1.0)))
-	if err != nil {
-		return nil, err
-	}
-
-	pr.Value = actv.SentAmount
+	value := lm.UpdateFeeLot(newctx, actv)
+	pr.Value = value
 	p.logger.Debug("Process", "RcvValue", actv.RcvAmount)
 
 	return pr, nil

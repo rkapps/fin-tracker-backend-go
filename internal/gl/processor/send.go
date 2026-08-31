@@ -26,13 +26,16 @@ func (p SendActivityProcessor) Process(ctx context.Context, actv *domain.Activit
 	pr := NewProcessResult()
 
 	// Reduce the lot of the asset and get the costvalue for the gl
-	touched, value, _ := lm.ReduceLotQty(newctx, actv)
+	touched, value, _ := lm.ReduceLotQty(newctx, actv, actv.SentAmount)
 	p.logger.Debug("Process", "Touched", touched, "Value", value)
-	// // update the cash lot
-	// lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount)
-	// set  the value
-	// pr.Lots = touched
+
+	// only store on send, not for stakefee etc...
+	// if actv.TxnType == domain.ActivityTypeSend {
 	lm.StoreTransfer(ctx, actv, touched)
+	// }
+
+	lm.UpdateFeeLot(ctx, actv)
+
 	pr.Value = value
 	// p.logger.Debug("Process", "Touched", pr.Lots)
 	// p.logger.Debug("Process", "CostValue", value, "RcvValue", actv.RcvAmount)

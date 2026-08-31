@@ -28,9 +28,9 @@ func (p CashActivityProcessor) Process(ctx context.Context, actv *domain.Activit
 
 	var err error
 	if actv.TxnType == domain.ActivityTypeWithdraw {
-		_, err = lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.SentSymbol, actv.SentAmount)
+		_, err = lm.UpdateCashLot(newctx, actv, actv.SentAccountID, actv.SentSymbol, actv.SentAmount)
 	} else {
-		_, err = lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount)
+		_, err = lm.UpdateCashLot(newctx, actv, actv.RcvAccountID, actv.RcvSymbol, actv.RcvAmount)
 	}
 
 	if err != nil {

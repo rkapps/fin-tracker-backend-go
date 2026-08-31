@@ -8,10 +8,10 @@ import (
 )
 
 type TransactionsService struct {
-	storage storage.FinTrackerStorageService
+	storage storage.TransactionStorageService
 }
 
-func NewTransactionsService(storage storage.FinTrackerStorageService) TransactionsService {
+func NewTransactionsService(storage storage.TransactionStorageService) TransactionsService {
 	return TransactionsService{storage: storage}
 }
 

@@ -11,16 +11,18 @@ import (
 // Implemented by GainLoss — processor never imports GainLoss directly.
 type LotManager interface {
 	CloseLot(ctx context.Context, lot *domain.ActivityLot) error
-	CreateGLEntry(ctx context.Context, lot *domain.ActivityLot, activity *domain.Activity, qty decimal.Decimal) domain.GLEntry
 	CreateAssetLot(ctx context.Context, actv *domain.Activity, acctId string, symbol string, qty decimal.Decimal, value decimal.Decimal) *domain.ActivityLot
+	CreateGLDisposal(ctx context.Context, lots []*domain.ActivityLot, activity *domain.Activity) decimal.Decimal
+	CreateGLIncome(ctx context.Context, lots *domain.ActivityLot, activity *domain.Activity) error
 
 	MatchOpenLots(ctx context.Context, account domain.Account, symbol string) []*domain.ActivityLot
 	MatchTransfer(ctx context.Context, actv *domain.Activity) ([]*domain.ActivityLot, *domain.Activity, bool)
 	NextLotSeq(ctx context.Context, accountID string) int
-	ReduceLotQty(ctx context.Context, actv *domain.Activity) ([]*domain.ActivityLot, decimal.Decimal, error)
+	ReduceLotQty(ctx context.Context, actv *domain.Activity, samount decimal.Decimal) ([]*domain.ActivityLot, decimal.Decimal, error)
 	StoreTransfer(ctx context.Context, actv *domain.Activity, lots []*domain.ActivityLot)
 	UpdateBankLot(ctx context.Context, activity *domain.Activity) (*domain.ActivityLot, error)
 	UpdateCashLot(ctx context.Context, activity *domain.Activity, acctId string, symbol string, amount decimal.Decimal) (*domain.ActivityLot, error)
+	UpdateFeeLot(ctx context.Context, activity *domain.Activity) decimal.Decimal
 }
 
 type ActivityProcessor interface {

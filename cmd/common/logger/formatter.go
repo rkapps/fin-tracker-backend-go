@@ -28,8 +28,8 @@ func newFixedWidthHandler(inner slog.Handler, keyWidth, valWidth int) *fixedWidt
 		keyWidth: keyWidth,
 		valWidth: valWidth,
 		posWidths: []fieldWidth{
-			{key: 20, val: 50}, // 1st arg — e.g. UID, AccountID (long values)
-			{key: 10, val: 20}, // 2nd arg — e.g. Symbol, Type (short values)
+			{key: 15, val: 70}, // 1st arg — e.g. UID, AccountID (long values)
+			{key: 10, val: 25}, // 2nd arg — e.g. Symbol, Type (short values)
 			{key: 6, val: 20},  // 3rd arg — e.g. Qty, Amount
 			{key: 6, val: 10},  // 4th arg
 		},
@@ -84,7 +84,7 @@ func (h *fixedWidthHandler) Handle(ctx context.Context, r slog.Record) error {
 	})
 
 	// build full message — caller + component + message + attrs
-	fullMsg := fmt.Sprintf("%s %-25s %-20s %s",
+	fullMsg := fmt.Sprintf("%20s %-25s %-25s %s",
 		caller,
 		h.component,
 		r.Message,

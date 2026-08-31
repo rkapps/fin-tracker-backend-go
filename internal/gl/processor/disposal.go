@@ -26,12 +26,20 @@ func (p DisposalActivityProcessor) Process(ctx context.Context, actv *domain.Act
 	pr := NewProcessResult()
 
 	// Reduce the lot of the asset and get the costvalue for the gl
-	touched, value, _ := lm.ReduceLotQty(newctx, actv)
+	touched, value, _ := lm.ReduceLotQty(newctx, actv, actv.SentAmount)
 	// update the cash lot
-	lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount)
+	_, _ = lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount)
 
-	// set  the value
-	pr.Lots = touched
+	// // if actv.Fee.IsPositive() && actv.AccountID == "CoinbasePro" {
+	// if actv.Fee.IsPositive() {
+	// 	// log.Println(actv.AccountID)
+	// 	// lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.FeeCurrency, actv.Fee)
+	// }
+	// _ = lm.UpdateFeeLot(ctx, actv)
+
+	gl := lm.CreateGLDisposal(newctx, touched, actv)
+
+	actv.GlAmount = gl
 	pr.Value = actv.RcvAmount
 	p.logger.Debug("Process", "CostValue", value, "RcvValue", actv.RcvAmount)
 

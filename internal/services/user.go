@@ -6,10 +6,10 @@ import (
 )
 
 type UserService struct {
-	storage storage.FinTrackerStorageService
+	storage storage.UserStorageService
 }
 
-func NewUserService(storage storage.FinTrackerStorageService) UserService {
+func NewUserService(storage storage.UserStorageService) UserService {
 	return UserService{storage: storage}
 }
 
@@ -23,10 +23,10 @@ func (s UserService) GetUser(id string) (*domain.User, error) {
 
 func (s UserService) SaveUser(user *domain.User) error {
 
-	// apply defaults if not set
-	if user.LotMatchingMethod == "" {
-		user.LotMatchingMethod = domain.LotMatchingHIFO
-	}
+	// // apply defaults if not set
+	// if user.CostBasisMethod == "" {
+	// 	user.CostBasisMethod = domain.CostBasisHIFO
+	// }
 	if user.CurrencyCode == "" {
 		user.CurrencyCode = "USD"
 	}
