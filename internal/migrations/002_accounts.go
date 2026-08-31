@@ -14,7 +14,7 @@ import (
 
 func init() {
 
-	migrations.Register(os.Getenv("FINTRACKER_DB_NAME"), 15, "Accounts Schema",
+	migrations.Register(os.Getenv("FINTRACKER_DB_NAME"), 2, "Accounts Schema",
 		func(database *mongodb.MongoDatabase) error {
 			var err error
 			if err = createAccountIndex(database); err != nil {
@@ -44,7 +44,7 @@ func createAccountIndex(database *mongodb.MongoDatabase) error {
 		return err
 	}
 
-	cols := mongodb.GetMongoRepository[string, *domain.AccountSyncState](database)
+	cols := mongodb.GetMongoRepository[string, *domain.AccountState](database)
 	if err = cols.CreateIndexes(context.Background(), []mongo.IndexModel{createIdIndex(), createUIDIndex()}); err != nil {
 		return err
 	}

@@ -14,15 +14,15 @@ import (
 
 func init() {
 
-	migrations.Register(os.Getenv("FINTRACKER_DB_NAME"), 16, "Transaction Schema",
+	migrations.Register(os.Getenv("FINTRACKER_DB_NAME"), 3, "Transaction Schema",
 		func(database *mongodb.MongoDatabase) error {
 			var err error
 			if err = createTransactionIndex(database); err != nil {
 				return err
 			}
-			if err = createSearchIndex(database); err != nil {
-				return err
-			}
+			// if err = createSearchIndex(database); err != nil {
+			// 	return err
+			// }
 
 			return nil
 		},
