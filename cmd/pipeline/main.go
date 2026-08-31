@@ -10,7 +10,7 @@ import (
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common"
 	logger "github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
-	"github.com/rkapps/fin-tracker-backend-go/internal/pipeline"
+	"github.com/rkapps/fin-tracker-backend-go/cmd/pipeline/pipeline"
 )
 
 func main() {
