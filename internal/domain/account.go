@@ -11,18 +11,18 @@ import (
 )
 
 type Account struct {
-	ID                string            `json:"id" bson:"id"`
-	UID               string            `json:"-" bson:"uid"`
-	Name              string            `json:"name" bson:"name"`
-	Active            bool              `json:"active" bson:"active"`
-	Category          AccountCategory   `json:"category" bson:"category"`
-	Type              AccountType       `json:"type" bson:"type"`
-	AlternateNames    []string          `json:"alternateNames,omitempty" bson:"alternateNames,omitempty"`
-	Detail            AccountDetail     `json:"detail" bson:"detail"`
-	TaxStatus         TaxStatus         `json:"taxStatus" bson:"taxStatus"`
-	LotMatchingMethod LotMatchingMethod `json:"lotMatchingMethod" bson:"lotMatchingMethod"`
-	CreatedAt         time.Time         `json:"createdAt" bson:"createdAt"`
-	UpdatedAt         time.Time         `json:"updatedAt" bson:"updatedAt"`
+	ID              string          `json:"id" bson:"id"`
+	UID             string          `json:"-" bson:"uid"`
+	Name            string          `json:"name" bson:"name"`
+	Active          bool            `json:"active" bson:"active"`
+	Category        AccountCategory `json:"category" bson:"category"`
+	Type            AccountType     `json:"type" bson:"type"`
+	AlternateNames  []string        `json:"alternateNames,omitempty" bson:"alternateNames,omitempty"`
+	Detail          AccountDetail   `json:"detail" bson:"detail"`
+	TaxStatus       TaxStatus       `json:"taxStatus" bson:"taxStatus"`
+	CostBasisMethod CostBasisMethod `json:"costBasisMethod" bson:"costBasisMethod"`
+	CreatedAt       time.Time       `json:"createdAt" bson:"createdAt"`
+	UpdatedAt       time.Time       `json:"updatedAt" bson:"updatedAt"`
 }
 
 // Id returns the unique id for the ticker
@@ -186,4 +186,31 @@ func (a *Account) UnmarshalJSON(data []byte) error {
 
 	a.Detail = detail
 	return nil
+}
+
+func (a Account) ProviderName() string {
+	if cd, ok := a.Detail.(*CryptoDetail); ok { // pointer, not value
+		if cd.Exchange != "" {
+			return cd.Exchange
+		} else if cd.Blockchain != "" {
+			return cd.Blockchain
+		}
+	}
+	return a.ID
+}
+
+func (a Account) Blockchain() string {
+	if cd, ok := a.Detail.(*CryptoDetail); ok { // pointer, not value
+		if cd.Blockchain != "" {
+			return cd.Blockchain
+		}
+	}
+	return ""
+}
+
+func (a Account) Address() string {
+	if cd, ok := a.Detail.(*CryptoDetail); ok { // pointer, not value
+		return cd.Address
+	}
+	return ""
 }

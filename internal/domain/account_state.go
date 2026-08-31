@@ -2,7 +2,7 @@ package domain
 
 import "time"
 
-type AccountSyncState struct {
+type AccountState struct {
 	ID           string     `json:"id" bson:"id"`
 	UID          string     `json:"-" bson:"uid"`
 	LastSyncDate *time.Time `json:"lastSyncDate,omitempty" bson:"lastSyncDate,omitempty"`
@@ -13,10 +13,10 @@ type AccountSyncState struct {
 }
 
 // Id returns the unique id for the ticker
-func (a *AccountSyncState) Id() string {
+func (a *AccountState) Id() string {
 	return a.ID
 }
 
-func (a *AccountSyncState) CollectionName() string {
-	return ACCOUNT_SYNC_STATE_COLLECTION_NAME
+func (a *AccountState) CollectionName() string {
+	return ACCOUNT_STATE_COLLECTION_NAME
 }

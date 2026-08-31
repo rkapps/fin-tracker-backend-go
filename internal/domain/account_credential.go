@@ -1,14 +1,18 @@
 package domain
 
 type AccountCredential struct {
-	ID  string
-	UID string
-	// Provider string // "coinbase", "kraken", "alpaca"
+	ID       string
+	UID      string
+	Provider string // "coinbase", "kraken", "alpaca"
+
+	// Encrypted at the storage layer. Plaintext is provider.Config JSON,
+	// e.g. coinbase.Config{KeyName, PrivateKey} or kraken.Config{APIKey, APISecret}.
+	EncryptedConfig []byte
 
 	// Encrypted fields
-	APIKey     string // Encrypted
-	APISecret  string // Encrypted
-	Passphrase string // Encrypted (some exchanges need this)
+	// APIKey     string // Encrypted
+	// APISecret  string // Encrypted
+	// Passphrase string // Encrypted (some exchanges need this)
 
 	// Metadata
 	// Label       string   // User's nickname

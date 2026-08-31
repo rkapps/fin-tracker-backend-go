@@ -5,8 +5,11 @@ const (
 	// Common Fields
 	FIELD_UID        = "uid"
 	FIELD_ID         = "id"
-	FIELD_ACCOUNT_ID = "account_id"
+	FIELD_ACCOUNT_ID = "accountId"
 	FIELD_DATE       = "date"
+	FIELD_PROVIDER   = "provider"
+	FIELD_STREAM     = "stream"
+	FIELD_MS         = "ms"
 
 	//Fields
 	FIELD_SYMBOL             = "symbol"
@@ -36,13 +39,13 @@ const (
 
 	// portfolio Collections
 	ACCOUNT_COLLECTION_NAME            = "account"
-	ACCOUNT_SYNC_STATE_COLLECTION_NAME = "account_sync_state"
+	ACCOUNT_STATE_COLLECTION_NAME      = "account_state"
 	ACCOUNT_CREDENTIAL_COLLECTION_NAME = "account_credential"
 	ACCOUNT_SUMMARY_COLLECTION_NAME    = "account_summary"
 	ACTIVITY_COLLECTION_NAME           = "activity"
 	ACTIVITY_IMPORT_COLLECTION_NAME    = "activity_import"
 	ACTIVITY_LOT_COLLECTION_NAME       = "activity_lot"
-	GL_ENTRY_COLLECTION                = "gl_entry"
+	GL_ENTRY_COLLECTION_NAME           = "gl_entry"
 
 	// tickers collection
 	TICKER_CONTROL_COLLECTION_NAME   = "ticker_control"
@@ -54,6 +57,11 @@ const (
 	TICKER_NEWS_COLLECTION_NAME      = "ticker_news"
 	TICKER_ALPHA_COLLECTION_NAME     = "ticker_alpha"
 	TRANSACTION_COLLECTION_NAME      = "transaction"
+
+	// synccursor collection
+	SYNC_CURSOR_COLLECTION_NAME  = "sync_cursor"
+	RAW_ITEM_COLLECTION_NAME     = "raw_item"
+	CRYPTO_PRICE_COLLECTION_NAME = "crypto_price"
 
 	//ExNasdaq defines the string NASDAQ
 	ExNasdaq string = "NASDAQ"
