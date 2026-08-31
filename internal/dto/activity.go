@@ -22,10 +22,11 @@ type ActivityResponse struct {
 	SentValue   decimal.Decimal `json:"sentValue"`
 	SentBalance decimal.Decimal `json:"sentBalance"`
 	Value       decimal.Decimal `json:"value"`
-	Gl_Amount   decimal.Decimal `json:"glAmount"`
+	GlAmount    decimal.Decimal `json:"glAmount"`
 	FeeAmount   decimal.Decimal `json:"feeAmount"`
 	FeeSymbol   string          `json:"feeSymbol"`
 	Notes       string          `json:"notes"`
+	Orphan      bool            `json:"orphan" bson:"orphan"`
 	Tag         string          `json:"tag"`
 }
 
@@ -39,12 +40,12 @@ func NewActivityResponseFromActivity(acct domain.Account, actv domain.Activity) 
 	ractv.FeeSymbol = actv.FeeCurrency
 	ractv.RcvAccount = acct.ID
 	ractv.RcvSymbol = actv.RcvSymbol
-	ractv.RcvAmount = actv.RcvQuantity
+	ractv.RcvAmount = actv.RcvAmount
 	ractv.RcvBalance = actv.RcvBalance
 	ractv.SentSymbol = actv.SentSymbol
-	ractv.SentAmount = actv.SentQuantity
+	ractv.SentAmount = actv.SentAmount
 	ractv.SentBalance = actv.SentBalance
 	ractv.Notes = actv.Notes
-
+	ractv.Orphan = actv.Orphan
 	return ractv
 }
