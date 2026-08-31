@@ -1,6 +1,9 @@
 package utils
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // DateAdjustForUtc returns converts time from 0 hour to 23
 func DateAdjustForUtc(t time.Time) time.Time {
@@ -26,6 +29,56 @@ func DateFromString(sDate string) time.Time {
 		// log.Printf("%s - Error: %v", sDate, err)
 	}
 	return t
+}
+
+// DateTimeFromString parses the string
+func DateTimeFromString(sDate string) *time.Time {
+	// if strings.Compare("null", sDate) == 0 {
+	// 	return nil
+	// }
+	// t, _ := time.Parse("2006-01-02 15:04:05.999", sDate)
+	// // fmt.Println(err)
+	if strings.Compare("null", sDate) == 0 {
+		return nil
+	}
+
+	sDate = strings.ReplaceAll(sDate, "+00", "")
+	// time.RFC850
+	t, err := time.Parse("2006-01-02 15:04:05", sDate)
+	if err != nil {
+		t, err = time.Parse("2006-01-02 15:04:05.999", sDate)
+		if err != nil {
+			t, err = time.Parse("2006-01-02 15:04:05.999999", sDate)
+
+			if err != nil {
+				t, err = time.Parse("2006-01-02T15:04:05.000000Z", sDate)
+
+				if err != nil {
+					t, err = time.Parse("2006-01-02T15:04:05.00000Z", sDate)
+
+					if err != nil {
+						t, err = time.Parse("2006-01-02T15:04:05.000Z", sDate)
+						if err != nil {
+							t, err = time.Parse("2006-01-02T15:04:05.00Z", sDate)
+							if err != nil {
+								t, err = time.Parse("2006-01-02T15:04:05.0Z", sDate)
+								if err != nil {
+									t, err = time.Parse("2006-01-02T15:04:05Z", sDate)
+									if err != nil {
+										t, err = time.Parse("2006-01-02 15:04:05 -0700", sDate)
+									}
+								}
+
+							}
+
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return &t
 }
 
 // DateFormat1 formats a date to 2020-01-01

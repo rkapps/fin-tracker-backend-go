@@ -17,3 +17,4 @@ func TrimCommas(value string) string {
 	value = strings.TrimLeft(value, ",")
 	return value
 }
+

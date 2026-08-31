@@ -2,7 +2,6 @@ package utils
 
 import (
 	"math"
-	"strconv"
 
 	"github.com/shopspring/decimal"
 )
@@ -24,9 +23,8 @@ func ConvertIntToDecimal(value int) decimal.Decimal {
 }
 
 // ConvertDecimalToFloat64 converts decimal to float64
-func ConvertStringToFloat64(dec string) float64 {
-	val, _ := strconv.ParseFloat(dec, 64)
-	return val
+func ConvertStringToDecimal(dec string) (decimal.Decimal, error) {
+	return decimal.NewFromString(dec)
 }
 
 // PriceDiff calculates the difference in amount and percentage
