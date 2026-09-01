@@ -108,7 +108,7 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 				continue
 			}
 			switch txn.Type {
-			case "buy":
+			case "buy", "raise_offering_distribution":
 
 				buy := txn.Buy
 				total, _ := utils.ConvertStringToDecimal(buy.Total.Amount)
@@ -186,7 +186,6 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 					actv.Fee = tamount
 
 					actv.Notes = fmt.Sprintf("To:%s", txn.To.Address)
-
 				}
 
 			case "fiat_withdrawal":
@@ -252,9 +251,12 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 					actv.SentSymbol = actv.RcvSymbol
 					actv.AccountID = sacct.ID
 				}
-			case "staking_reward", "interest":
+			case "staking_reward", "interest", "subscription_rebate":
+
 				if strings.Compare(txn.Type, "staking_reward") == 0 {
 					actv.TxnType = domain.ActivityTypeReward
+				} else if strings.Compare(txn.Type, "subscription_rebate") == 0 {
+					actv.TxnType = domain.ActivityTypeRebate
 				} else {
 					actv.TxnType = domain.ActivityTypeInterest
 				}
@@ -350,13 +352,8 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 					stkActvsm[ms] = actv
 					continue
 				}
-			// case "unstaking_transfer":
-			// 	// log.Println(txn)
-			// 	continue
 
 			case "retail_eth2_deprecation":
-				// log.Println(txn.Amount)
-
 				actv.TxnType = domain.ActivityTypeTransfer
 				actv.SentAccountID = actv.AccountID
 				actv.SentSymbol = symbol
@@ -365,8 +362,34 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 				actv.RcvSymbol = "ETH"
 				actv.RcvAmount = actv.SentAmount
 
-			// case "tx":
-			// 	continue
+			case "retail_simple_dust", "incentives_rewards_payout":
+				//ignore this --- value too low
+				continue
+
+			case "raise_offering_deposit":
+				// log.Println(txn)
+				actv.RcvAccountID = actv.AccountID
+				actv.SentAccountID = actv.AccountID
+
+				if amount.IsPositive() {
+					actv.TxnType = domain.ActivityTypeSell
+					actv.RcvSymbol = nsymbol
+					actv.RcvAmount = namount
+					actv.SentSymbol = symbol
+					actv.SentAmount = amount
+				} else {
+					continue
+				}
+				// } else {
+
+				// 	actv.TxnType = domain.ActivityTypeSell
+				// 	actv.RcvSymbol = nsymbol
+				// 	actv.RcvAmount = namount.Neg()
+				// 	actv.SentSymbol = symbol
+				// 	actv.SentAmount = amount.Neg()
+				// }
+				// continue
+
 			default:
 				r.logger.Info("Transform", "Transaction", fmt.Sprintf("%s-%s", txn.Type, txn.Id), "Date", txn.Created_At)
 				// log.Println(txn)
