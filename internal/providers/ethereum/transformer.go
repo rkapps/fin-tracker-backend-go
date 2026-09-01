@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/nanmu42/etherscan-api"
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
+	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 )
 
 type EthereumTransformer struct {
@@ -52,43 +52,76 @@ func (s EthereumTransformer) Transform(ctx context.Context, ps core.PriceService
 	})
 
 	for i, ntxn := range ntxns {
+
+		if ntxn.IsError == 1 {
+			continue
+		}
 		date := ntxn.TimeStamp.Time()
 		tsfrs := tsfrsm[ntxn.Hash]
-		s.debug = true
+		s.debug = false
+
+		if strings.Compare(ntxn.Hash, "0xda322dce9c71087dde918d12e6887103f066cd0d2200d06104b0b6e40c99e308") == 0 {
+			s.debug = true
+		}
+		if i > 100 {
+			// s.debug = true
+		}
 
 		if s.debug {
 			s.logger.Info("Transform")
 			s.logger.Info("Transform", "Normal", ntxn.Hash, "Date", date)
+			s.logger.Info("Transform", "Transfers", len(tsfrs))
+			s.logger.Info("Transform", "Error", ntxn.IsError)
 		}
 
 		nactvs := s.buildActivityFromNormal(ps, eaccts, ntxn, tsfrs)
 		actvs = append(actvs, nactvs...)
 		hashProcessed[ntxn.Hash] = ntxn.Hash
-		if i > 5 {
-			break
+		if i > 120 {
+			// break
 		}
 	}
 
 	// get orders list of hashes
-	hashes := s.sortTransfers(tsfrsm)
+	hashes := sortTransfers(tsfrsm)
 	for i, hash := range hashes {
 		if _, ok := hashProcessed[hash]; ok {
 			continue
 		}
 		tsfrs := tsfrsm[hash]
 		date := tsfrs[0].TimeStamp.Time()
+		s.debug = false
 
-		s.debug = true
+		if i > 55 {
+			// s.debug = true
+		}
 		if s.debug {
 			s.logger.Info("Transform")
 			s.logger.Info("Transform", "erc20", hash, "Date", date)
+			s.logger.Info("Transform", "Transfers--", len(tsfrs))
 		}
 
 		tactvs := s.buildActivityFromErc20(ps, eaccts, tsfrs)
+		// if strings.Compare(hash, "0x5c0999ad603644c239467d1efb8f57bd3112808d65f94f74c2f864316b9d9a11") == 0 {
+		// 	for _, actv := range tactvs {
+		// 		actv.Date = actv.Date.Add(time.Second * 8)
+		// 		// log.Println(actv.Date.Add(time.Second * 8))
+		// 	}
+		// }
 		actvs = append(actvs, tactvs...)
 
-		if i > 5 {
-			break
+		if i > 60 {
+			// break
+		}
+	}
+
+	for _, itxn := range itxns {
+		if _, ok := hashProcessed[itxn.Hash]; ok {
+			continue
+		}
+		actv := s.createInternalTxnActivity(ps, eaccts, itxn)
+		if actv != nil {
+			actvs = append(actvs, actv)
 		}
 	}
 
@@ -109,7 +142,7 @@ func (s EthereumTransformer) buildActivityFromNormal(
 	}
 
 	if strings.Compare(ntxn.Input, "0x") == 0 {
-		actv := s.createNormalTxnActivity(ps, eaccts, ntxn)
+		actv := s.createNormalTxnActivity(ps, eaccts, ntxn, Selector{})
 		if actv != nil {
 			actvs = append(actvs, actv)
 			return actvs
@@ -118,28 +151,95 @@ func (s EthereumTransformer) buildActivityFromNormal(
 
 	//
 	sel := knownSelectors[method]
+	if sel.Category == CategoryUnknown {
+		// s.logger.Warn("buildNormalActivity", "Method", method, "Warning", "Selector Unknow")
+		return nil
+	}
+
+	if len(sel.Category) == 0 {
+		s.logger.Error("buildNormalActivity", "Txn", ntxn.Hash, "Error", "Selector is blank")
+		return nil
+	}
+	if s.debug {
+		s.logger.Info("Transform", "Selector", sel.Category)
+	}
 
 	switch len(tsfrs) {
 	case 0:
-		actv := s.createNormalTxnActivity(ps, eaccts, ntxn)
-		if actv != nil {
-			actv.TxnType = sel.TxnType
-			actvs = append(actvs, actv)
+		switch sel.Category {
+		case CategoryWrap:
+			actv := s.createNormalWrapActivity(ps, eaccts, ntxn, sel)
+			if actv != nil {
+				// actv.TxnType = sel.TxnType
+				actvs = append(actvs, actv)
+			}
+		default:
+			actv := s.createNormalTxnActivity(ps, eaccts, ntxn, sel)
+			if actv != nil {
+				// actv.TxnType = sel.TxnType
+				actvs = append(actvs, actv)
+			}
 		}
 
 	case 1:
 		switch sel.Category {
-		// case CategorySwap:
+		case CategoryWrap:
+			actv := s.createErc20WrapActivity(ps, eaccts, tsfrs[0], sel)
+			if actv != nil {
+				// actv.TxnType = sel.TxnType
+				actvs = append(actvs, actv)
+			}
+
 		// case CategoryApprove:
 		case CategoryReward, CategoryDeposit, CategoryWithdrawal, CategoryTransfer:
-			actv := s.createErc20Activity(ps, eaccts, tsfrs[0])
+			actv := s.createErc20Activity(ps, eaccts, tsfrs[0], sel)
 			if actv != nil {
-				actv.TxnType = sel.TxnType
+				// actv.TxnType = sel.TxnType
 				actvs = append(actvs, actv)
 			}
 		}
+	case 2:
+		switch sel.Category {
+		case CategoryTransfer:
+			actv := s.createErc20Activity(ps, eaccts, tsfrs[0], sel)
+			if actv != nil {
+				// actv.TxnType = sel.TxnType
+				actvs = append(actvs, actv)
+			}
+
+		case CategorySwap, CategoryWrap:
+			actv := s.createErc20TradeActivity(ps, eaccts, tsfrs[0], tsfrs[1], sel)
+			if actv == nil {
+				actv = s.createErc20TradeActivity(ps, eaccts, tsfrs[1], tsfrs[0], sel)
+			}
+			if actv != nil {
+				actvs = append(actvs, actv)
+			}
+		case CategoryMultiToken:
+			mactvs := s.createErcMultiActivity(ps, eaccts, tsfrs)
+			actvs = append(actvs, mactvs...)
+
+			// add normal actvitity only if positive amount
+			amount, _ := providers.ConvertStringToBaseDecimal(ntxn.Value.Int().String(), TXN_DECIMALS)
+			if amount.IsPositive() {
+				actv := s.createNormalTxnActivity(ps, eaccts, ntxn, sel)
+				if actv != nil {
+					actv.TxnType = domain.ActivityTypeAddLiquidity
+					actvs = append(actvs, actv)
+				}
+			}
+
+		case CategoryWithdrawal:
+			// 0x2e1a7d4d
+			// withdraw
+			// hash - 0x3cd0719a3605fcdec3e78d557609eb0c58534b2e72983aeaf908319ef1de63a6
+		}
+	case 3:
+		mactvs := s.createErcMultiActivity(ps, eaccts, tsfrs)
+		actvs = append(actvs, mactvs...)
+
 	default:
-		s.logger.Error("buildNormalErc20", "Warning", "Not implemented", "Transfers", len(tsfrs))
+		s.logger.Error("buildNormalErc20", "Warning", fmt.Sprintf("%s Not implemented", sel.TxnType), "Transfers", len(tsfrs))
 	}
 
 	return actvs
@@ -152,7 +252,12 @@ func (s EthereumTransformer) buildActivityFromErc20(
 	actvs := []*domain.Activity{}
 	switch len(tsfrs) {
 	case 1:
-		actv := s.createErc20Activity(ps, eaccts, tsfrs[0])
+		actv := s.createErc20Activity(ps, eaccts, tsfrs[0], Selector{})
+		if actv != nil {
+			actvs = append(actvs, actv)
+		}
+	case 2:
+		actv := s.createErc20Activity(ps, eaccts, tsfrs[0], Selector{})
 		if actv != nil {
 			actvs = append(actvs, actv)
 		}
@@ -213,20 +318,4 @@ func (s EthereumTransformer) marshalData(rawsm map[string][]domain.RawItem,
 		}
 	}
 	return tsfrsm, itxns, ntxns
-}
-
-func (s EthereumTransformer) sortTransfers(tsfrsm map[string][]etherscan.ERC20Transfer) []string {
-
-	// Now get a date-ordered list of hashes to process
-	hashes := make([]string, 0, len(tsfrsm))
-	for h := range tsfrsm {
-		hashes = append(hashes, h)
-	}
-	sort.Slice(hashes, func(i, j int) bool {
-		// compare using the FIRST transfer's timestamp for each hash — all transfers
-		// under one hash share the same transaction, so any one of them works
-		return time.Time(tsfrsm[hashes[i]][0].TimeStamp).Before(time.Time(tsfrsm[hashes[j]][0].TimeStamp))
-	})
-
-	return hashes
 }

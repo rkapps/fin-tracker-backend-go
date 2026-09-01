@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
@@ -123,20 +122,19 @@ func (p Portfolio) refreshUserActivities(ctx context.Context, accts []*domain.Ac
 	g, ctx := errgroup.WithContext(ctx)
 
 	for provider, acreds := range acredsm {
-		resync := false
+		// resync := false
+		// if strings.Compare(provider, "ethereum") == 0 || strings.Compare(provider, "binance") == 0 {
+		// 	resync = true
+		// }
 
-		if strings.Compare(provider, "ethereum") == 0 || strings.Compare(provider, "binance") == 0 {
-			resync = true
-		}
-
-		if !resync {
-			for _, acred := range acreds {
-				aactvs, _ := p.accountsStorage.GetActivitiesForAccount(acred.Account.UID, acred.Account.ID)
-				// p.logger.Info("refreshUserActivities", "Provider", acred.Account.ID, "Refreshed", len(aactvs))
-				activities = append(activities, aactvs...)
-			}
-			continue
-		}
+		// if !resync {
+		// 	for _, acred := range acreds {
+		// 		aactvs, _ := p.accountsStorage.GetActivitiesForAccount(acred.Account.UID, acred.Account.ID)
+		// 		// p.logger.Info("refreshUserActivities", "Provider", acred.Account.ID, "Refreshed", len(aactvs))
+		// 		activities = append(activities, aactvs...)
+		// 	}
+		// 	continue
+		// }
 
 		g.Go(func() error {
 

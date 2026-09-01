@@ -99,10 +99,19 @@ func (gl *GainLoss) Run(ctx context.Context, actvs []*domain.Activity) (GainLoss
 			// break
 		}
 
+		//adjustments
+		if strings.Compare(actv.ID, "0xb16d3d72068a6ce015c5639987134249fc231eb8aaa2172533c33350fe9465d1") == 0 ||
+			strings.Compare(actv.ID, "0x5c0999ad603644c239467d1efb8f57bd3112808d65f94f74c2f864316b9d9a11") == 0 {
+			actv.Date = actv.Date.Add(time.Second * 8)
+		}
+		if strings.Compare(actv.SentSymbol, "ETH...") == 0 {
+			continue
+		}
+
 		gl.debug = false
 		if //strings.Compare(actv.AccountID, "Solana-Fa8jM") == 0 ||
-		strings.Compare(actv.ID, "0x111b7ba88dfe46926829d73271faaca7241f5e5c7a0a64d9ac0a2cbeda6d054b") == 0 {
-			gl.debug = true
+		strings.Compare(actv.ID, "0xb16d3d72068a6ce015c5639987134249fc231eb8aaa2172533c33350fe9465d1") == 0 {
+			// gl.debug = true
 		}
 		if gl.debug {
 			gl.logger.Info("---Run---", "Activity", actv.Debug(), "Date", actv.Date)
@@ -557,7 +566,14 @@ func (gl GainLoss) UpdateFeeLot(ctx context.Context, actv *domain.Activity) deci
 	value := decimal.Zero
 	// logger := logger.FromContext(ctx) // ← gets processor's logger
 	if strings.Compare(actv.FeeCurrency, "USD") == 0 {
-		gl.UpdateCashLot(ctx, actv, actv.AccountID, actv.FeeCurrency, actv.Fee)
+
+		switch actv.TxnType {
+		case domain.ActivityTypeDeposit, domain.ActivityTypeBuy:
+			gl.UpdateCashLot(ctx, actv, actv.AccountID, actv.FeeCurrency, actv.Fee)
+		case domain.ActivityTypeWithdraw, domain.ActivityTypeSell:
+			gl.UpdateCashLot(ctx, actv, actv.AccountID, actv.FeeCurrency, actv.Fee.Neg())
+		}
+
 		value = actv.Fee
 	} else {
 		_, value, _ = gl.ReduceLotQty(ctx, actv, actv.Fee)
