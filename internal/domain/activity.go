@@ -89,6 +89,7 @@ const (
 	ActivityTypeInterest ActivityType = "interest"
 	ActivityTypeIncome   ActivityType = "income" // staking, rewards, cashback
 	ActivityTypeReward   ActivityType = "reward" // staking, rewards, cashback
+	ActivityTypeRebate   ActivityType = "rebate" // rebate
 
 	// corporate actions
 	ActivityTypeSplit   ActivityType = "split"
