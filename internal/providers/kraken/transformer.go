@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
@@ -93,6 +94,11 @@ func (k KrakenAccountTransformer) Transform(ctx context.Context, ps core.PriceSe
 				actv.SentAccountID = actv.AccountID
 				actv.SentSymbol = symbol
 				actv.SentAmount = amount.Neg()
+
+				if strings.Compare(actv.ID, "LC5PIG-5QLXI-J25DVS") == 0 || strings.Compare(actv.ID, "LRH5YV-5HJKI-GLPD2Q") == 0 {
+					actv.Date = actv.Date.Add(time.Minute * -2)
+				}
+
 			case "deposit":
 				actv.TxnType = domain.ActivityTypeReceive
 				actv.RcvAccountID = actv.AccountID
