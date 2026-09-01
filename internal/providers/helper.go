@@ -15,6 +15,17 @@ var (
 	MAX_DECIMALS = 8
 )
 
+func ConvertFloatToTime(curtime float64) (*time.Time, error) {
+	var i (int64) = int64(curtime)
+	tm := time.Unix(i, 10)
+	return &tm, nil
+}
+
+func ConvertInt64ToTime(curtime int64) (*time.Time, error) {
+	tm := time.Unix(curtime, 10)
+	return &tm, nil
+}
+
 func ConvertStringToBaseDecimal(quantity string, dec decimal.Decimal) (decimal.Decimal, error) {
 
 	qty, err := utils.ConvertStringToDecimal(quantity)
@@ -31,22 +42,6 @@ func ConvertInt64ToBaseDecimal(quantity int64, dec decimal.Decimal) (decimal.Dec
 	return qty, nil
 }
 
-func LoadTestLogger() *logger.Logger {
-	logConfig := logger.New()
-	return logConfig.For("test")
-}
-
-func ConvertFloatToTime(curtime float64) (*time.Time, error) {
-	var i (int64) = int64(curtime)
-	tm := time.Unix(i, 10)
-	return &tm, nil
-}
-
-func ConvertInt64ToTime(curtime int64) (*time.Time, error) {
-	tm := time.Unix(curtime, 10)
-	return &tm, nil
-}
-
 // Get the account for the address
 func GetAccountFromAddress(accts []domain.Account, address string) *domain.Account {
 	for _, acct := range accts {
@@ -55,4 +50,21 @@ func GetAccountFromAddress(accts []domain.Account, address string) *domain.Accou
 		}
 	}
 	return nil
+}
+
+func GetBaseCurrency() string {
+	return "USD"
+}
+
+func IsCurrency(symbol string) bool {
+	if strings.Compare(symbol, "USD") == 0 ||
+		strings.Compare(symbol, "GUSD") == 0 {
+		return true
+	}
+	return false
+}
+
+func LoadTestLogger() *logger.Logger {
+	logConfig := logger.New()
+	return logConfig.For("test")
 }

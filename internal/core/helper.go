@@ -24,15 +24,6 @@ func AmountsMatch(a, b decimal.Decimal) bool {
 	return relDiff.LessThanOrEqual(amountTolerancePercentDecimal)
 }
 
-func IsStableCoin(symbol string) bool {
-	if strings.Compare(symbol, "USD") == 0 ||
-		// strings.Compare(symbol, "USDT") == 0
-		strings.Compare(symbol, "GUSD") == 0 {
-		return true
-	}
-	return false
-}
-
 // GetBankAccount implements Service.
 func GetBankAccount(accts []*domain.Account, name string) *domain.Account {
 	// accts := a.repo.GetAccounts(ctx)
