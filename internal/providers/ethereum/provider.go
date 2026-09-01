@@ -31,6 +31,10 @@ func NewEthereum(api API, logConfig *logger.Config) *Provider {
 	return new(api, "ethereum", logConfig)
 }
 
+func NewOptimism(api API, logConfig *logger.Config) *Provider {
+	return new(api, "optimism", logConfig)
+}
+
 func new(api API, name string, logConfig *logger.Config) *Provider {
 	slog := logConfig.For(fmt.Sprintf("syncer.%s", name))
 	return &Provider{HTTP: api, name: name, Limiter: rate.NewLimiter(rate.Every(10*time.Second), 1), logger: slog}
@@ -118,9 +122,9 @@ func (p *Provider) fetchERC20Transfers(acred domain.AccountWithCredential, block
 	for {
 		resp, err := p.HTTP.GetERC20Transfers(acred.Account.Address(), &blockNumber, page, PAGE_OFFSET)
 		if err != nil {
-			p.logger.Error("fetchERC20Transfers", "Error", err)
+			// p.logger.Error("fetchERC20Transfers", "Error", err)
 		}
-		p.logger.Info("fetchERC20", "erc20", fmt.Sprintf("Account: %s", acred.Account.ID), "count", len(resp))
+		p.logger.Info("fetchERC20", "erc20", fmt.Sprintf("%s-%s", acred.Account.ID, acred.Account.Address()), "count", len(resp))
 		var items []domain.RawItem
 		for _, transfer := range resp {
 			raw, err := json.Marshal(transfer)
@@ -157,9 +161,9 @@ func (p *Provider) fetchERC721Transfers(acred domain.AccountWithCredential, bloc
 	for {
 		resp, err := p.HTTP.GetERC721Transfers(acred.Account.Address(), &blockNumber, page, PAGE_OFFSET)
 		if err != nil {
-			p.logger.Error("fetchERC721Transfers", "Error", err)
+			// p.logger.Error("fetchERC721Transfers", "Error", err)
 		}
-		p.logger.Info("fetchERC721", "erc721", fmt.Sprintf("Account: %s", acred.Account.ID), "count", len(resp))
+		p.logger.Info("fetchERC20", "erc721", fmt.Sprintf("%s-%s", acred.Account.ID, acred.Account.Address()), "count", len(resp))
 		var items []domain.RawItem
 		for _, transfer := range resp {
 			raw, _ := json.Marshal(transfer)
@@ -188,9 +192,10 @@ func (p *Provider) fetchInternalTransactions(acred domain.AccountWithCredential,
 
 		resp, err := p.HTTP.GetInternalTransactions(acred.Account.Address(), &blockNumber, page, PAGE_OFFSET)
 		if err != nil {
-			p.logger.Error("fetchInternal", "Error", err)
+			// p.logger.Error("fetchInternal", "Error", err)
 		}
-		p.logger.Info("fetchInternal", "Internal", fmt.Sprintf("Account: %s", acred.Account.ID), "count", len(resp))
+		p.logger.Info("fetchInternal", "Internal", fmt.Sprintf("%s-%s", acred.Account.ID, acred.Account.Address()), "count", len(resp))
+
 		var items []domain.RawItem
 		for _, txn := range resp {
 			raw, _ := json.Marshal(txn)
@@ -220,9 +225,9 @@ func (p *Provider) fetchNormalTransactions(acred domain.AccountWithCredential, b
 
 		resp, err := p.HTTP.GetNormalTransactions(acred.Account.Address(), &blockNumber, page, PAGE_OFFSET)
 		if err != nil {
-			p.logger.Error("fetchNormal", "Error", err)
+			// p.logger.Error("fetchNormal", "Error", err)
 		}
-		p.logger.Info("fetchNormal", "normal", fmt.Sprintf("Account: %s", acred.Account.ID), "count", len(resp))
+		p.logger.Info("fetchNormal", "normal", fmt.Sprintf("%s-%s", acred.Account.ID, acred.Account.Address()), "count", len(resp))
 		var items []domain.RawItem
 		for _, txn := range resp {
 			raw, _ := json.Marshal(txn)
