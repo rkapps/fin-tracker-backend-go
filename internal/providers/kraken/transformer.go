@@ -3,7 +3,6 @@ package kraken
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
@@ -58,7 +57,6 @@ func (k KrakenAccountTransformer) Transform(ctx context.Context, ps core.PriceSe
 			tpair := pairsm[trade.AssetPair]
 			baseSymbol := assetsm[tpair.Base]
 			quoteSymbol := assetsm[tpair.Quote]
-			k.logger.Info("Transform", "Trade", fmt.Sprintf("%v-%s", ts, trade.Type), "AssetPair", fmt.Sprintf("%s-%s", baseSymbol.Altname, quoteSymbol.Altname))
 
 			actv := &domain.Activity{}
 			actv.UID = acred.Account.UID
