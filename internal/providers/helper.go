@@ -11,14 +11,15 @@ import (
 )
 
 var (
-	base = decimal.NewFromInt(10)
+	base         = decimal.NewFromInt(10)
+	MAX_DECIMALS = 8
 )
 
 func ConvertStringToBaseDecimal(quantity string, dec decimal.Decimal) (decimal.Decimal, error) {
 
 	qty, err := utils.ConvertStringToDecimal(quantity)
 	if err == nil {
-		qty = qty.Div(base.Pow(dec))
+		qty = qty.Div(base.Pow(dec)).RoundUp(int32(MAX_DECIMALS))
 	}
 	return qty, err
 }
