@@ -7,18 +7,21 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// amountTolerance accounts for precision differences between sources
-// reporting the same transfer (e.g. send vs receive amounts differing
-// in decimal places). Adjust here if real data shows mismatches.
-const amountTolerance = "0.001"
+const amountTolerancePercent = "0.005" // 0.5% — adjust based on what you actually observe
 
-var amountToleranceDecimal = decimal.RequireFromString(amountTolerance)
+var amountTolerancePercentDecimal = decimal.RequireFromString(amountTolerancePercent)
 
 // AmountsMatch reports whether two amounts represent the same transfer,
-// within a fixed tolerance to absorb precision/rounding differences
-// between sources.
+// using a relative tolerance so it scales correctly across different
+// transfer sizes (a fixed tolerance can't work for both small and large amounts).
 func AmountsMatch(a, b decimal.Decimal) bool {
-	return a.Sub(b).Abs().LessThanOrEqual(amountToleranceDecimal)
+	diff := a.Sub(b).Abs()
+	base := decimal.Max(a.Abs(), b.Abs())
+	if base.IsZero() {
+		return diff.IsZero()
+	}
+	relDiff := diff.Div(base)
+	return relDiff.LessThanOrEqual(amountTolerancePercentDecimal)
 }
 
 func IsStableCoin(symbol string) bool {
