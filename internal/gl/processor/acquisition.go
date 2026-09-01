@@ -28,7 +28,7 @@ func (p AquisitionActivityProcessor) Process(ctx context.Context, actv *domain.A
 	pr := NewProcessResult()
 
 	// Create the lot of the asset
-	lm.CreateAssetLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount, actv.SentAmount.Add(actv.Fee))
+	lm.CreateAssetLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount, actv.SentAmount)
 
 	if len(actv.SentAccountID) > 0 && strings.Compare(actv.SentAccountID, actv.RcvAccountID) != 0 {
 		_, err := lm.UpdateBankLot(newctx, actv)
@@ -42,11 +42,6 @@ func (p AquisitionActivityProcessor) Process(ctx context.Context, actv *domain.A
 			return nil, err
 		}
 
-		// // if actv.Fee.IsPositive() && actv.AccountID == "CoinbasePro" {
-		// if actv.Fee.IsPositive() {
-		// 	// log.Println(actv.AccountID)
-		// 	lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.FeeCurrency, actv.Fee)
-		// }
 		lm.UpdateFeeLot(ctx, actv)
 
 	}

@@ -30,12 +30,7 @@ func (p DisposalActivityProcessor) Process(ctx context.Context, actv *domain.Act
 	// update the cash lot
 	_, _ = lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount)
 
-	// // if actv.Fee.IsPositive() && actv.AccountID == "CoinbasePro" {
-	// if actv.Fee.IsPositive() {
-	// 	// log.Println(actv.AccountID)
-	// 	// lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.FeeCurrency, actv.Fee)
-	// }
-	// _ = lm.UpdateFeeLot(ctx, actv)
+	_ = lm.UpdateFeeLot(ctx, actv)
 
 	gl := lm.CreateGLDisposal(newctx, touched, actv)
 
