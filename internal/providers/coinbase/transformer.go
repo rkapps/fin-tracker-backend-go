@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 	"time"
@@ -36,9 +37,6 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 
 	actvs := []*domain.Activity{}
 
-	// // get grouped raw items by account
-	// rawsm := providers.GroupRawItems(raws)
-
 	for _, acred := range acreds {
 		raws := rawsm[acred.Account.ID]
 		if len(raws) == 0 {
@@ -50,23 +48,8 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 		pms, caccts, txns := r.marshalData(raws)
 		r.logger.Debug("Transform", "Payments", len(pms))
 		r.logger.Debug("Transform", "Transactions", len(txns))
+		r.logger.Debug("Transform", "CAccounts", len(caccts))
 
-		// add payments to map by payment names
-		// pmsm := make(map[string]CnbPaymentMethod)
-		// for _, pm := range pms {
-		// 	pmsm[pm.Payment_Method_Name] = pm
-		// }
-
-		for _, cacct := range caccts {
-			// log.Println(cacct)
-			r.logger.Debug("Transform", "Account", acred.Account.ID, "CnbAccount", cacct.Balance.Currency)
-			if cacct.Balance.Currency == "ETH" ||
-				cacct.Balance.Currency == "BCH" ||
-				cacct.Balance.Currency == "USD" ||
-				cacct.Balance.Currency == "LTC" {
-				// log.Printf("%s-%s", cacct.Id, cacct.Balance.Currency)
-			}
-		}
 		sort.Slice(txns, func(a, b int) bool {
 			date1 := utils.DateTimeFromString(txns[a].Created_At)
 			date2 := utils.DateTimeFromString(txns[b].Created_At)
@@ -75,7 +58,6 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 
 		stkActvsm := make(map[int]*domain.Activity)
 
-		loopBreak := false
 		for i, txn := range txns {
 
 			if strings.Compare(txn.Id, "e12f748a-42a9-5a2e-b46e-35753dc5a49f") == 0 {
@@ -131,7 +113,6 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 					r.logger.Debug("Transform", "Payment", txn.Buy.Payment_Method_Name, "Account", bacct)
 					if bacct != nil {
 						actv.SentAccountID = bacct.ID
-						// actv.SentAccount = bacct.ID
 					}
 				}
 
@@ -169,8 +150,6 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 						strings.Compare(txn.From.Name, "Coinbase Earn") == 0 ||
 						strings.Compare(txn.From.Name, "Coinbase Rewards") == 0 {
 
-						// log.Println(txn.Amount)
-						// log.Println(txn.Native_Amount)
 						actv.TxnType = domain.ActivityTypeReward
 						actv.Value = namount
 					}
@@ -193,7 +172,6 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 				actv.SentAccountID = acred.Account.ID
 				actv.SentAmount = amount.Abs()
 				actv.SentSymbol = symbol
-				// log.Println(txn)
 				racct := core.GetFirstBankAccount(gaccts)
 				if racct != nil {
 					actv.RcvAccountID = racct.ID
@@ -209,7 +187,6 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 				actv.RcvAccountID = acred.Account.ID
 				actv.RcvAmount = amount.Abs()
 				actv.RcvSymbol = symbol
-				// log.Println(txn)
 				sacct := core.GetFirstBankAccount(gaccts)
 				if sacct != nil {
 					actv.SentAccountID = sacct.ID
@@ -221,7 +198,6 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 				}
 
 			case "pro_deposit", "exchange_deposit":
-				// log.Println(txn)
 				actv.TxnType = domain.ActivityTypeTransfer
 				actv.SentAccountID = acred.Account.ID
 				actv.SentAmount = amount.Abs()
@@ -236,7 +212,7 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 					actv.RcvSymbol = actv.SentSymbol
 				}
 			case "pro_withdrawal", "exchange_withdrawal":
-				// log.Println(amount)
+
 				actv.TxnType = domain.ActivityTypeTransfer
 				actv.RcvAccountID = acred.Account.ID
 				actv.RcvAmount = amount.Abs()
@@ -306,13 +282,6 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 					actv.RcvSymbol = prds[1]
 					actv.RcvAmount = amount.Mul(fprice)
 				}
-				// log.Println(atf.Commission)
-				// fee, err := utils.ConvertStringToDecimal(atf.Commission)
-				// if err == nil {
-				// log.Println(fee)
-				// actv.Fee = fee
-				// actv.FeeCurrency = "USD"
-				// }
 			case "staking_transfer":
 				r.logger.Debug("Transform", "Transaction", fmt.Sprintf("%s-%s", txn.Type, txn.Id), "Date", txn.Created_At)
 				r.logger.Debug("Transform", "Amount", txn.Amount, "NativeAmount", txn.Native_Amount)
@@ -362,7 +331,7 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 				actv.RcvSymbol = "ETH"
 				actv.RcvAmount = actv.SentAmount
 
-			case "retail_simple_dust", "incentives_rewards_payout":
+			case "retail_simple_dust", "incentives_rewards_payout", "raise_offering_pooling", "tx", "unstaking_transfer":
 				//ignore this --- value too low
 				continue
 
@@ -380,27 +349,12 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 				} else {
 					continue
 				}
-				// } else {
-
-				// 	actv.TxnType = domain.ActivityTypeSell
-				// 	actv.RcvSymbol = nsymbol
-				// 	actv.RcvAmount = namount.Neg()
-				// 	actv.SentSymbol = symbol
-				// 	actv.SentAmount = amount.Neg()
-				// }
-				// continue
-
 			default:
 				r.logger.Info("Transform", "Transaction", fmt.Sprintf("%s-%s", txn.Type, txn.Id), "Date", txn.Created_At)
-				// log.Println(txn)
-				loopBreak = true
+				log.Println(txn)
 				continue
 			}
 			actvs = append(actvs, actv)
-			if loopBreak {
-				// log.Println(i)
-				// break
-			}
 			if i > 11 {
 				// break
 			}
@@ -450,7 +404,6 @@ func (r CoinbaseAccountTransformer) getPaymentMethod(raw domain.RawItem) (CnbPay
 func (r CoinbaseAccountTransformer) getAccount(raw domain.RawItem) (CnbAccount, error) {
 	var a CnbAccount
 	bytes, err := json.Marshal(raw.Payload)
-	// log.Printf("%s", bytes)
 	if err == nil {
 		err = json.Unmarshal(bytes, &a)
 	}
