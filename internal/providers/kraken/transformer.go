@@ -3,13 +3,14 @@ package kraken
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
+	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 	"github.com/rkapps/fin-tracker-backend-go/internal/utils"
 )
 
@@ -52,10 +53,58 @@ func (k KrakenAccountTransformer) Transform(ctx context.Context, ps core.PriceSe
 		k.logger.Info("Transform", "Trades", len(trades), "Ledgers", len(ledgers))
 		//trades
 		for _, trade := range trades {
-			k.logger.Info("Transform", "Trade", trade.OrderTxID, "AssetPair", trade.AssetPair)
+			// k.logger.Info("Transform", "Trade", trade.OrderTxID, "AssetPair", trade.AssetPair)
+			ts, _ := KrakenTime(trade.Time)
 			tpair := pairsm[trade.AssetPair]
-			log.Println(tpair)
-			break
+			baseSymbol := assetsm[tpair.Base]
+			quoteSymbol := assetsm[tpair.Quote]
+			k.logger.Info("Transform", "Trade", fmt.Sprintf("%v-%s", ts, trade.Type), "AssetPair", fmt.Sprintf("%s-%s", baseSymbol.Altname, quoteSymbol.Altname))
+
+			actv := &domain.Activity{}
+			actv.UID = acred.Account.UID
+			actv.AccountID = acred.Account.ID
+			actv.ID = trade.OrderTxID
+			actv.Date = *ts
+
+			switch trade.Type {
+			case string(domain.ActivityTypeBuy):
+				actv.SentAccountID = acred.Account.ID
+				actv.SentSymbol = quoteSymbol.Altname
+				actv.SentAmount = utils.ConvertFloatToDecimal(trade.Cost)
+				actv.RcvAccountID = acred.Account.ID
+				actv.RcvSymbol = baseSymbol.Altname
+				actv.RcvAmount = utils.ConvertFloatToDecimal(trade.Volume)
+				if providers.IsCurrency(actv.SentSymbol) {
+					actv.TxnType = domain.ActivityTypeBuy
+				} else {
+					actv.TxnType = domain.ActivityTypeTrade
+					price, _ := ps.GetCryptoPrice(actv.SentSymbol, actv.Date)
+					actv.SentPrice = price
+					price, _ = ps.GetCryptoPrice(actv.RcvSymbol, actv.Date)
+					actv.RcvPrice = price
+				}
+			case string(domain.ActivityTypeSell):
+
+				actv.SentAccountID = acred.Account.ID
+				actv.SentSymbol = baseSymbol.Altname
+				actv.SentAmount = utils.ConvertFloatToDecimal(trade.Volume)
+				actv.RcvAccountID = acred.Account.ID
+				actv.RcvSymbol = quoteSymbol.Altname
+				actv.RcvAmount = utils.ConvertFloatToDecimal(trade.Cost)
+
+				if providers.IsCurrency(actv.RcvSymbol) {
+					actv.TxnType = domain.ActivityTypeSell
+				} else {
+					actv.TxnType = domain.ActivityTypeTrade
+					price, _ := ps.GetCryptoPrice(actv.SentSymbol, actv.Date)
+					actv.SentPrice = price
+					price, _ = ps.GetCryptoPrice(actv.RcvSymbol, actv.Date)
+					actv.RcvPrice = price
+				}
+			default:
+				k.logger.Error("Transform", "Trade", trade.OrderTxID, "ErrorType", trade.Type)
+			}
+			actvs = append(actvs, actv)
 		}
 
 		// ledgers
