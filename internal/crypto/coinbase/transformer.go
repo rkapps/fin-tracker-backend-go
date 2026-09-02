@@ -29,6 +29,7 @@ func (r CoinbaseAccountTransformer) Name() string {
 }
 
 func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.PriceService,
+	spamService core.CryptoSpamService,
 	gaccts []*domain.Account,
 	acreds []domain.AccountWithCredential,
 	globalRaws []domain.RawItem,

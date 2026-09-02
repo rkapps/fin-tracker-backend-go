@@ -72,8 +72,8 @@ type ProviderStorageService interface {
 }
 
 type CryptoStorageService interface {
-	//cryptoprice
 	GetCryptoPrices() ([]*domain.CryptoPrice, error)
+	GetCryptoSpams() ([]*domain.CryptoSpam, error)
 	SaveCryptoPrices([]*domain.CryptoPrice) error
 }
 

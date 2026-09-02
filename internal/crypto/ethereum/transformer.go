@@ -29,6 +29,7 @@ func (s EthereumTransformer) Name() string {
 }
 
 func (s EthereumTransformer) Transform(ctx context.Context, ps core.PriceService,
+	spamService core.CryptoSpamService,
 	gaccts []*domain.Account,
 	acreds []domain.AccountWithCredential,
 	globalRaws []domain.RawItem,
@@ -56,12 +57,18 @@ func (s EthereumTransformer) Transform(ctx context.Context, ps core.PriceService
 		if ntxn.IsError == 1 {
 			continue
 		}
+
+		if spamService.IsSpamEthereumFromAddress(ntxn.From, crypto.BLOCKCHAIN_ETHEREUM) {
+			s.logger.Debug("Transform", "Spam", fmt.Sprintf("FAddress: %s", ntxn.From))
+			continue
+		}
+
 		date := ntxn.TimeStamp.Time()
 		tsfrs := tsfrsm[ntxn.Hash]
 		s.debug = false
 
-		if strings.Compare(ntxn.Hash, "0xda322dce9c71087dde918d12e6887103f066cd0d2200d06104b0b6e40c99e308") == 0 {
-			// s.debug = true
+		if strings.Compare(ntxn.Hash, "0xdd80e14d133f450dbdea65bbb3c454e9b0b0cef544d6128e4c5e4d3aad01df9b") == 0 {
+			s.debug = true
 		}
 		if i > 100 {
 			// s.debug = true
@@ -89,9 +96,24 @@ func (s EthereumTransformer) Transform(ctx context.Context, ps core.PriceService
 			continue
 		}
 		tsfrs := tsfrsm[hash]
-		date := tsfrs[0].TimeStamp.Time()
+		tsfr := tsfrs[0]
+
+		date := tsfr.TimeStamp.Time()
 		s.debug = false
 
+		if spamService.IsSpamEthereumContractAddress(tsfr.ContractAddress, crypto.BLOCKCHAIN_ETHEREUM) {
+			s.logger.Debug("Transform", "Spam", fmt.Sprintf("CAddress: %s", tsfr.ContractAddress))
+			continue
+		}
+		if spamService.IsSpamEthereumSymbol(tsfr.TokenSymbol, crypto.BLOCKCHAIN_ETHEREUM) {
+			s.logger.Info("Transform", "Spam", fmt.Sprintf("Symbol: %s", tsfr.TokenSymbol))
+			continue
+		}
+
+		if strings.Compare(tsfr.Hash, "0xdd80e14d133f450dbdea65bbb3c454e9b0b0cef544d6128e4c5e4d3aad01df9b") == 0 {
+			s.debug = true
+			continue
+		}
 		if i > 55 {
 			// s.debug = true
 		}

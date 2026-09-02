@@ -78,6 +78,10 @@ func (s FinTrackerMongoStorage) crypto_prices() core.Repository[string, *domain.
 	return mongodb.GetMongoRepository[string, *domain.CryptoPrice](s.database)
 }
 
+func (s FinTrackerMongoStorage) crypto_spams() core.Repository[string, *domain.CryptoSpam] {
+	return mongodb.GetMongoRepository[string, *domain.CryptoSpam](s.database)
+}
+
 // Ticker Mongo Storage
 type TickerMongoStorage struct {
 	database *mongodb.MongoDatabase

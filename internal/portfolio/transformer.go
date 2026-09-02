@@ -20,6 +20,7 @@ func ResolveTransformer(transformerRegistry core.TransformerRegistry, provider s
 // without re-fetching.
 func Refresh(ctx context.Context,
 	ps core.PriceService,
+	spamService core.CryptoSpamService,
 	storage storage.ProviderStorageService, gaccts []*domain.Account, acreds []domain.AccountWithCredential, tf core.TransformerProvider,
 ) ([]*domain.Activity, error) {
 
@@ -41,7 +42,7 @@ func Refresh(ctx context.Context,
 		}
 		rawsm[acred.Account.ID] = araws
 	}
-	actvs, err = tf.Transform(ctx, ps, gaccts, acreds, globalRaws, rawsm)
+	actvs, err = tf.Transform(ctx, ps, spamService, gaccts, acreds, globalRaws, rawsm)
 	return actvs, err
 
 	// if err := st.UpsertActivities(ctx, acts); err != nil {

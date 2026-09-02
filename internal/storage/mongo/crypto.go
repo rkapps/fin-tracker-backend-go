@@ -9,6 +9,10 @@ func (s FinTrackerMongoStorage) GetCryptoPrices() ([]*domain.CryptoPrice, error)
 	return s.crypto_prices().Find(s.context(), bson.M{}, bson.D{}, 0, 0)
 }
 
+func (s FinTrackerMongoStorage) GetCryptoSpams() ([]*domain.CryptoSpam, error) {
+	return s.crypto_spams().Find(s.context(), bson.M{}, bson.D{}, 0, 0)
+}
+
 func (s FinTrackerMongoStorage) SaveCryptoPrices(cprices []*domain.CryptoPrice) error {
 	ids := []string{}
 	for _, cprice := range cprices {

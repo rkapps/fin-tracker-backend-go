@@ -66,6 +66,7 @@ const (
 type SolanaActivity struct {
 	saccts         []domain.Account
 	ps             core.PriceService
+	spamService    core.CryptoSpamService
 	tokenAccountsm map[string]SolanaTokenAccount
 	stakeAmountm   map[string]decimal.Decimal
 	txn            SolanaParsedTransaction
@@ -74,11 +75,12 @@ type SolanaActivity struct {
 }
 
 func NewSolanaActivity(saacts []domain.Account, ps core.PriceService,
+	spamService core.CryptoSpamService,
 	tokenAccountsm map[string]SolanaTokenAccount,
 	stakeAmountm map[string]decimal.Decimal,
 	txn SolanaParsedTransaction, logger *logger.Logger, debug bool) SolanaActivity {
 
-	return SolanaActivity{saccts: saacts, ps: ps,
+	return SolanaActivity{saccts: saacts, ps: ps, spamService: spamService,
 		tokenAccountsm: tokenAccountsm,
 		stakeAmountm:   stakeAmountm, txn: txn, logger: logger, debug: debug,
 	}
@@ -119,12 +121,12 @@ func (s SolanaActivity) ProcessTransaction() []*domain.Activity {
 		}
 
 		// //Check for spam sources
-		// if _, ok := cspamsm[strings.ToLower(parsed.Info.Source)]; ok {
-		// 	if debug {
-		// 		log.Printf("        Spam Source: %s", parsed.Info.Source)
-		// 	}
-		// 	return nil
-		// }
+		if s.spamService.IsSpamSolanaSignature(parsed.Info.Source, crypto.BLOCKCHAIN_SOLANA) {
+			if s.debug {
+				s.logger.Info("ProcessTransaction", "Spam", fmt.Sprintf("Source: %s", parsed.Info.Source))
+			}
+			return nil
+		}
 
 		if strings.Compare(parsed.Type, "initializeAccount") == 0 {
 			acctsm[parsed.Info.Account] = parsed.Info

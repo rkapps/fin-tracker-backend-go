@@ -22,6 +22,7 @@ type Portfolio struct {
 	cryptoStorage       storage.CryptoStorageService
 	encryptionService   core.EncryptionService // Encrypt/Decrypt
 	priceService        core.PriceService
+	spamService         core.CryptoSpamService
 	syncRegistry        core.SyncRegistry
 	transformerRegistry core.TransformerRegistry
 	logger              *logger.Logger
@@ -43,7 +44,11 @@ func NewPortfolio(
 	plog := logConfig.For("portfolio")
 
 	ps := core.NewPriceService(tickersStorage, cryptoStorage)
+	spamService := core.NewCryptoSpamService(cryptoStorage)
+
 	ps.LoadCryptoPrices()
+	spamService.LoadCryptoSpams()
+
 	return Portfolio{
 		userStorage:         userStorage,
 		accountsStorage:     accountsStorage,
@@ -51,6 +56,7 @@ func NewPortfolio(
 		providerStorage:     providerStorage,
 		cryptoStorage:       cryptoStorage,
 		priceService:        ps,
+		spamService:         spamService,
 		encryptionService:   encryptionService,
 		syncRegistry:        syncRegistry,
 		transformerRegistry: transformerRegistry,
@@ -155,7 +161,7 @@ func (p Portfolio) refreshUserActivities(ctx context.Context, accts []*domain.Ac
 
 			transformer, err := ResolveTransformer(p.transformerRegistry, provider)
 			if transformer != nil {
-				actvs, err := Refresh(ctx, p.priceService, p.providerStorage, accts, acreds, transformer)
+				actvs, err := Refresh(ctx, p.priceService, p.spamService, p.providerStorage, accts, acreds, transformer)
 				if err != nil {
 					p.logger.Error("refreshUserActivities", "provider", err)
 				}

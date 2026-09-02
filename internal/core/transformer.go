@@ -12,6 +12,7 @@ type TransformerProvider interface {
 	// Transform sees ALL unprocessed raws for the account, across streams —
 	// required for cross-stream merging (Coinbase) and leg grouping (Kraken).
 	Transform(ctx context.Context, ps PriceService,
+		spamService CryptoSpamService,
 		gaccts []*domain.Account,
 		acreds []domain.AccountWithCredential,
 		globalRaws []domain.RawItem,

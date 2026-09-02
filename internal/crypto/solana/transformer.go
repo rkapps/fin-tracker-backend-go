@@ -26,6 +26,7 @@ func (s SolanaAccountTransformer) Name() string {
 }
 
 func (s SolanaAccountTransformer) Transform(ctx context.Context, ps core.PriceService,
+	spamService core.CryptoSpamService,
 	gaccts []*domain.Account,
 	acreds []domain.AccountWithCredential,
 	globalRaws []domain.RawItem,
@@ -75,8 +76,8 @@ func (s SolanaAccountTransformer) Transform(ctx context.Context, ps core.PriceSe
 		if i > 160 {
 			// debug = true
 		}
-		if strings.Compare(txn.Signature, "3h3ycgpYvVg58WrwsSbEscn1ecxygkbWuMahW2inhY9eFKLCN2jNxQ5tg8UTGTauyCzDR1omWerJmU4TYQv3y4LH") == 0 {
-			debug = true
+		if strings.Compare(txn.Signature, "4r375g95Zy4B8DtmE37rdfcoXX8Tp6C6pu3rwSQ4foy8A6HvoiKEyTnbRBUFrMSzcBhAzF4sFDAHMbDEVv3yns9n") == 0 {
+			// debug = true
 		}
 		if debug {
 			s.logger.Info("")
@@ -85,7 +86,7 @@ func (s SolanaAccountTransformer) Transform(ctx context.Context, ps core.PriceSe
 			s.logger.Info("Transform", "Address", txn.Address)
 		}
 		// debug = true
-		sActivity := NewSolanaActivity(saccts, ps, tokenAccountsm, stakeAmountm, txn, s.logger, debug)
+		sActivity := NewSolanaActivity(saccts, ps, spamService, tokenAccountsm, stakeAmountm, txn, s.logger, debug)
 		tactvs := sActivity.ProcessTransaction()
 		if debug {
 			s.logger.Debug("Transform", "Transaction", txn.Signature, "Activities", len(tactvs))

@@ -28,6 +28,8 @@ func (c CardanoAccountTransformer) Name() string {
 }
 
 func (c CardanoAccountTransformer) Transform(ctx context.Context, ps core.PriceService,
+	spamService core.CryptoSpamService,
+
 	gaccts []*domain.Account,
 	acreds []domain.AccountWithCredential,
 	globalRaws []domain.RawItem,

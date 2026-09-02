@@ -27,6 +27,7 @@ func (k KrakenAccountTransformer) Name() string {
 }
 
 func (k KrakenAccountTransformer) Transform(ctx context.Context, ps core.PriceService,
+	spamService core.CryptoSpamService,
 	gaccts []*domain.Account,
 	acreds []domain.AccountWithCredential,
 	globalRaws []domain.RawItem,
