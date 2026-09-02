@@ -27,10 +27,6 @@ func (ps PriceService) GetCryptoPrice(symbol string, date time.Time) (decimal.De
 	ndate := date.Truncate(d)
 	ms := ndate.UTC().UnixMilli()
 
-	if len(ps.pm) == 0 {
-		ps.LoadCryptoPrices()
-	}
-
 	key := fmt.Sprintf("%s-%d", symbol, ms)
 	// log.Printf("Date: %v Key: %s", ndate, key)
 	cp, ok := ps.pm[key]
