@@ -67,7 +67,7 @@ func GetApiApp(
 	tstorage := mongo.NewTickerMongoStorage(rdatabase)
 	tickersService := services.NewStocksService(tstorage)
 	portfolioService := services.NewPortfolioService(userService, storage, tickersService,
-		storage, syncRegistry, transformerRegistry, c, logConfig,
+		storage, storage, syncRegistry, transformerRegistry, c, logConfig,
 	)
 
 	return ApiApp{Database: database, UserService: userService,
@@ -112,7 +112,7 @@ func GetPipelineApp(
 	blog.Info("GetPipelineApp", "tstorage", storage)
 
 	portfolioService := services.NewPortfolioService(storage, storage, tickersService,
-		storage, syncRegistry, transformerRegistry, c, logConfig,
+		storage, storage, syncRegistry, transformerRegistry, c, logConfig,
 	)
 
 	return PipelineApp{Database: database, UserService: userService, PortfolioService: portfolioService}, nil

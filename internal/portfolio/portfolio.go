@@ -19,6 +19,7 @@ type Portfolio struct {
 	accountsStorage     storage.AccountStorageService
 	tickersStorage      storage.TickerStorageService
 	providerStorage     storage.ProviderStorageService
+	cryptoStorage       storage.CryptoStorageService
 	encryptionService   core.EncryptionService // Encrypt/Decrypt
 	priceService        core.PriceService
 	syncRegistry        core.SyncRegistry
@@ -32,6 +33,7 @@ func NewPortfolio(
 	accountsStorage storage.AccountStorageService,
 	tickersStorage storage.TickerStorageService,
 	providerStorage storage.ProviderStorageService,
+	cryptoStorage storage.CryptoStorageService,
 	encryptionService core.EncryptionService, // Encrypt/Decrypt
 	syncRegistry core.SyncRegistry,
 	transformerRegistry core.TransformerRegistry,
@@ -40,13 +42,14 @@ func NewPortfolio(
 ) Portfolio {
 	plog := logConfig.For("portfolio")
 
-	ps := core.NewPriceService(tickersStorage, providerStorage)
+	ps := core.NewPriceService(tickersStorage, cryptoStorage)
 	ps.LoadCryptoPrices()
 	return Portfolio{
 		userStorage:         userStorage,
 		accountsStorage:     accountsStorage,
 		tickersStorage:      tickersStorage,
 		providerStorage:     providerStorage,
+		cryptoStorage:       cryptoStorage,
 		priceService:        ps,
 		encryptionService:   encryptionService,
 		syncRegistry:        syncRegistry,
@@ -90,7 +93,7 @@ func (p Portfolio) RefreshUserAccounts(ctx context.Context, uid string, simulate
 	cprices := p.priceService.GetCryptoPrices()
 	p.logger.Info("RefresUserAccounts", "CryptoPrices", len(cprices))
 	// store crypto prices
-	p.providerStorage.SaveCryptoPrices(cprices)
+	p.cryptoStorage.SaveCryptoPrices(cprices)
 
 	asumys, err := p.summarizeData(uid, accts, glResult.Actvs, glResult.Lots)
 	if err != nil {

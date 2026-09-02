@@ -10,10 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func (s FinTrackerMongoStorage) GetCryptoPrices() ([]*domain.CryptoPrice, error) {
-	return s.crypto_prices().Find(s.context(), bson.M{}, bson.D{}, 0, 0)
-}
-
 // DeleteAllSyncCursors implements Repo.
 func (s FinTrackerMongoStorage) DeleteAllCursors(ctx context.Context, uid, id string) error {
 
@@ -117,12 +113,4 @@ func (s FinTrackerMongoStorage) UpsertRaw(ctx context.Context, uid, acctID, prov
 		ptrs[i] = &items[i]
 	}
 	return s.sync_raw_items().BulkWrite(ctx, ids, ptrs)
-}
-
-func (s FinTrackerMongoStorage) SaveCryptoPrices(cprices []*domain.CryptoPrice) error {
-	ids := []string{}
-	for _, cprice := range cprices {
-		ids = append(ids, cprice.ID)
-	}
-	return s.crypto_prices().BulkWrite(s.context(), ids, cprices)
 }

@@ -20,6 +20,7 @@ type PortfolioService struct {
 	accountsStorage     storage.AccountStorageService
 	tickersService      TickersService
 	providerStorage     storage.ProviderStorageService
+	cryptoStorage       storage.CryptoStorageService
 	syncRegistry        core.SyncRegistry
 	transformerRegistry core.TransformerRegistry
 	encryptionService   core.EncryptionService // Encrypt/Decrypt
@@ -32,6 +33,7 @@ func NewPortfolioService(
 	accountsStroage storage.AccountStorageService,
 	tickersService TickersService,
 	providerStorage storage.ProviderStorageService,
+	cryptoStorage storage.CryptoStorageService,
 	syncRegistry core.SyncRegistry,
 	transformerRegistry core.TransformerRegistry,
 	encryptionService core.EncryptionService,
@@ -44,6 +46,7 @@ func NewPortfolioService(
 		accountsStorage:     accountsStroage,
 		tickersService:      tickersService,
 		providerStorage:     providerStorage,
+		cryptoStorage:       cryptoStorage,
 		syncRegistry:        syncRegistry,
 		transformerRegistry: transformerRegistry,
 		encryptionService:   encryptionService,
@@ -229,6 +232,7 @@ func (p PortfolioService) RefreshUserAccounts(ctx context.Context, uid string, s
 	portfolio := portfolio.NewPortfolio(
 		p.userStorage, p.accountsStorage, p.tickersService.storage,
 		p.providerStorage,
+		p.cryptoStorage,
 		p.encryptionService,
 		p.syncRegistry,
 		p.transformerRegistry,
@@ -242,6 +246,7 @@ func (p PortfolioService) SyncUserAccounts(ctx context.Context, uid string) erro
 		p.userStorage,
 		p.accountsStorage, p.tickersService.storage,
 		p.providerStorage,
+		p.cryptoStorage,
 		p.encryptionService,
 		p.syncRegistry,
 		p.transformerRegistry,

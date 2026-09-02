@@ -69,7 +69,9 @@ type ProviderStorageService interface {
 	UpsertRaw(ctx context.Context, uid, acctID, provider string, items []domain.RawItem) error
 	UnprocessedRaw(ctx context.Context, uid, acctID string, transformVersion int) ([]domain.RawItem, error)
 	MarkProcessed(ctx context.Context, rawIDs []string, transformVersion int) error
+}
 
+type CryptoStorageService interface {
 	//cryptoprice
 	GetCryptoPrices() ([]*domain.CryptoPrice, error)
 	SaveCryptoPrices([]*domain.CryptoPrice) error

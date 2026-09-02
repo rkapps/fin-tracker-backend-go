@@ -11,13 +11,13 @@ import (
 
 type PriceService struct {
 	tstorage storage.TickerStorageService
-	pstorage storage.ProviderStorageService
+	cstorage storage.CryptoStorageService
 	pm       map[string]*domain.CryptoPrice
 }
 
-func NewPriceService(tstorage storage.TickerStorageService, pstorage storage.ProviderStorageService) PriceService {
+func NewPriceService(tstorage storage.TickerStorageService, cstorage storage.CryptoStorageService) PriceService {
 	pm := make(map[string]*domain.CryptoPrice)
-	return PriceService{tstorage, pstorage, pm}
+	return PriceService{tstorage, cstorage, pm}
 }
 
 func (ps PriceService) GetCryptoPrice(symbol string, date time.Time) (decimal.Decimal, error) {
@@ -60,7 +60,7 @@ func (ps PriceService) GetCryptoPrices() []*domain.CryptoPrice {
 }
 
 func (ps PriceService) LoadCryptoPrices() {
-	prices, _ := ps.pstorage.GetCryptoPrices()
+	prices, _ := ps.cstorage.GetCryptoPrices()
 	for _, price := range prices {
 		ps.pm[price.ID] = price
 	}
