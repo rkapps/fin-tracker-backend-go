@@ -53,6 +53,9 @@ func (s FinTrackerMongoStorage) acitivities() core.Repository[string, *domain.Ac
 func (s FinTrackerMongoStorage) acitivityLots() core.Repository[string, *domain.ActivityLot] {
 	return mongodb.GetMongoRepository[string, *domain.ActivityLot](s.database)
 }
+func (s FinTrackerMongoStorage) acitivityAdjs() core.Repository[string, *domain.ActivityAdj] {
+	return mongodb.GetMongoRepository[string, *domain.ActivityAdj](s.database)
+}
 
 func (s FinTrackerMongoStorage) glEntries() core.Repository[string, *domain.GLEntry] {
 	return mongodb.GetMongoRepository[string, *domain.GLEntry](s.database)

@@ -31,6 +31,7 @@ type AccountStorageService interface {
 	SaveActivities(acts []*domain.Activity) error
 	DeleteActivities(ids []string) error
 
+	GetActivityAdjs(uid string) ([]*domain.ActivityAdj, error)
 	GetActivityLots(uid string) ([]*domain.ActivityLot, error)
 	GetActivityLotsForAccount(uid, acctID string) ([]*domain.ActivityLot, error)
 	SaveActivityLots(lots []*domain.ActivityLot) error

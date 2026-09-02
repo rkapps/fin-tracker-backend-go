@@ -76,6 +76,17 @@ func (s FinTrackerMongoStorage) GetActivitiesForAccount(uid string, acctId strin
 	return actvs, err
 }
 
+// GetActivityAdj
+func (s FinTrackerMongoStorage) GetActivityAdjs(uid string) ([]*domain.ActivityAdj, error) {
+	filter := bson.M{"uid": uid}
+	adjs, err := s.acitivityAdjs().Find(s.context(), filter, bson.D{}, 0, 0)
+	if err != nil {
+		log.Printf("Delete Imported Activities error: %v", err)
+		return nil, err
+	}
+	return adjs, err
+}
+
 // GetActivityLots
 func (s FinTrackerMongoStorage) GetActivityLots(uid string) ([]*domain.ActivityLot, error) {
 	filter := bson.M{"uid": uid}

@@ -45,6 +45,7 @@ const (
 	ACTIVITY_COLLECTION_NAME           = "activity"
 	ACTIVITY_IMPORT_COLLECTION_NAME    = "activity_import"
 	ACTIVITY_LOT_COLLECTION_NAME       = "activity_lot"
+	ACTIVITY_ADJ_COLLECTION_NAME       = "activity_adj"
 	GL_ENTRY_COLLECTION_NAME           = "gl_entry"
 
 	// tickers collection
@@ -62,6 +63,7 @@ const (
 	SYNC_CURSOR_COLLECTION_NAME  = "sync_cursor"
 	RAW_ITEM_COLLECTION_NAME     = "raw_item"
 	CRYPTO_PRICE_COLLECTION_NAME = "crypto_price"
+	CRYPTO_SPAM_COLLECTION_NAME  = "crypto_spam"
 
 	//ExNasdaq defines the string NASDAQ
 	ExNasdaq string = "NASDAQ"

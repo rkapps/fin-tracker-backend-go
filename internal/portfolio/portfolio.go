@@ -87,6 +87,10 @@ func (p Portfolio) RefreshUserAccounts(ctx context.Context, uid string, simulate
 		return fmt.Errorf("error refreshing user activities")
 	}
 
+	// adjust actvities
+	p.AdjustActivities(uid, actvs)
+
+	// run gainloss
 	p.logger.Info("RefreshUserAccounts", "Activities", len(actvs))
 	gl := gl.NewGainLoss(*user, accts, simulate, p.logConfig)
 
@@ -190,6 +194,25 @@ func (p Portfolio) refreshUserActivities(ctx context.Context, accts []*domain.Ac
 	}
 
 	return activities, nil
+}
+
+func (p Portfolio) AdjustActivities(uid string, actvs []*domain.Activity) {
+
+	adjs, _ := p.accountsStorage.GetActivityAdjs(uid)
+	adjm := make(map[string]domain.ActivityAdj)
+	for _, actv := range adjs {
+		adjm[actv.ID] = *actv
+	}
+
+	for _, actv := range actvs {
+		adjActv := adjm[actv.ID]
+		if len(adjActv.ID) == 0 {
+			continue
+		}
+		if len(adjActv.TxnType) > 0 {
+			actv.TxnType = domain.ActivityType(adjActv.TxnType)
+		}
+	}
 }
 
 // group accounts by provider, paired with their matching credential
