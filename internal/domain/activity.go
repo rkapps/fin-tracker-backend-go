@@ -117,6 +117,7 @@ const (
 
 	ActivityTypeDelegation ActivityType = "delegation"
 	ActivityTypeAdjustment ActivityType = "adjustment"
+	ActivityTypeLost       ActivityType = "lost"
 )
 
 type ActivityStatus string

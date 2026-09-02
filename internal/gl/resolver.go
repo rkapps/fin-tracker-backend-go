@@ -42,6 +42,8 @@ func ResolveProcessor(actv domain.Activity, lm processor.LotManager, logConfig *
 		return processor.NewTradeInActivityProcessor(logConfig), nil
 	case domain.ActivityTypeTradeOut, domain.ActivityTypeExitLiquidity:
 		return processor.NewTradeOutActivityProcessor(logConfig), nil
+	case domain.ActivityTypeLost:
+		return processor.NewLostActivityProcessor(logConfig), nil
 
 	}
 
