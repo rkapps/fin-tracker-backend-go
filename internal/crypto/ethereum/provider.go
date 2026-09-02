@@ -34,6 +34,10 @@ func NewOptimism(api API, logConfig *logger.Config) *Provider {
 	return new(api, "optimism", logConfig)
 }
 
+func NewPolygon(api API, logConfig *logger.Config) *Provider {
+	return new(api, "polygon", logConfig)
+}
+
 func new(api API, name string, logConfig *logger.Config) *Provider {
 	slog := logConfig.For(fmt.Sprintf("syncer.%s", name))
 	return &Provider{HTTP: api, name: name, Limiter: rate.NewLimiter(rate.Every(10*time.Second), 1), logger: slog}

@@ -138,6 +138,7 @@ func getSyncProviderRegistry(logConfig *logger.Config) core.SyncRegistry {
 
 	//ethereum
 	registry.Register(ethereum.NewEthereum(ethereum.NewEtherscanClient(etherscan_api_key), logConfig))
+	registry.Register(ethereum.NewPolygon(ethereum.NewPolygonClient(etherscan_api_key), logConfig))
 	return *registry
 }
 
