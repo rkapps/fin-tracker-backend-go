@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
+	"github.com/rkapps/fin-tracker-backend-go/internal/core"
 )
 
 type Client struct {
@@ -31,7 +31,7 @@ func NewBlockFrostHTTPClient(blockfrost_project_id string) *Client {
 func (c *Client) GetEpochInformation(ctx context.Context, epoch int64, page int64) ([]EpochInformation, error) {
 	url := fmt.Sprintf("%s/epochs/%d/next?page=%d", c.baseURL, epoch, page)
 	var epochs []EpochInformation
-	_, err := providers.DoRequest(url, http.MethodGet, c.getCardanoHeaders(), nil, nil, &epochs)
+	_, err := core.DoHttpRequest(url, http.MethodGet, c.getCardanoHeaders(), nil, nil, &epochs)
 	// log.Println(body)
 	return epochs, err
 }
@@ -39,7 +39,7 @@ func (c *Client) GetEpochInformation(ctx context.Context, epoch int64, page int6
 func (c *Client) GetAccountRewards(ctx context.Context, saddress string, page int, count int) ([]AccountReward, error) {
 	url := fmt.Sprintf("%s/accounts/%s/rewards?page=%d&count=%d", c.baseURL, saddress, page, count)
 	var rewards []AccountReward
-	_, err := providers.DoRequest(url, http.MethodGet, c.getCardanoHeaders(), nil, nil, &rewards)
+	_, err := core.DoHttpRequest(url, http.MethodGet, c.getCardanoHeaders(), nil, nil, &rewards)
 	// log.Println(body)
 	return rewards, err
 }
@@ -47,7 +47,7 @@ func (c *Client) GetAccountRewards(ctx context.Context, saddress string, page in
 func (c *Client) GetAccountAddresses(ctx context.Context, saddress string) ([]AccountAddress, error) {
 	url := fmt.Sprintf("%s/accounts/%s/addresses", c.baseURL, saddress)
 	var addresses []AccountAddress
-	_, err := providers.DoRequest(url, http.MethodGet, c.getCardanoHeaders(), nil, nil, &addresses)
+	_, err := core.DoHttpRequest(url, http.MethodGet, c.getCardanoHeaders(), nil, nil, &addresses)
 	// log.Println(body)
 	return addresses, err
 }
@@ -55,7 +55,7 @@ func (c *Client) GetAccountAddresses(ctx context.Context, saddress string) ([]Ac
 func (c *Client) GetAccountTransactions(ctx context.Context, address string, bheight int64, page int) ([]AddressTransaction, error) {
 	url := fmt.Sprintf("%s/addresses/%s/transactions?from=%d&page=%d", c.baseURL, address, bheight, page)
 	var txns []AddressTransaction
-	_, err := providers.DoRequest(url, http.MethodGet, c.getCardanoHeaders(), nil, nil, &txns)
+	_, err := core.DoHttpRequest(url, http.MethodGet, c.getCardanoHeaders(), nil, nil, &txns)
 	// log.Println(body)
 	return txns, err
 }
@@ -64,21 +64,21 @@ func (c *Client) GetTransactionUTXOs(txHash string) (TransactionUTXO, error) {
 
 	txutxo := TransactionUTXO{}
 	url := fmt.Sprintf("%s/txs/%s/utxos", c.baseURL, txHash)
-	_, err := providers.DoRequest(url, "GET", c.getCardanoHeaders(), nil, nil, &txutxo)
+	_, err := core.DoHttpRequest(url, "GET", c.getCardanoHeaders(), nil, nil, &txutxo)
 	return txutxo, err
 }
 
 func (c *Client) GetTransactionMetadata(txHash string) ([]TransactionMetadata, error) {
 	tmds := []TransactionMetadata{}
 	url := fmt.Sprintf("%s/txs/%s/metadata", c.baseURL, txHash)
-	_, err := providers.DoRequest(url, "GET", c.getCardanoHeaders(), nil, nil, &tmds)
+	_, err := core.DoHttpRequest(url, "GET", c.getCardanoHeaders(), nil, nil, &tmds)
 	return tmds, err
 }
 
 func (c *Client) GetTransactionDelegations(txHash string) ([]TransactionDelegation, error) {
 	var delegations []TransactionDelegation
 	url := fmt.Sprintf("%s/txs/%s/delegations", c.baseURL, txHash)
-	_, err := providers.DoRequest(url, "GET", c.getCardanoHeaders(), nil, nil, &delegations)
+	_, err := core.DoHttpRequest(url, "GET", c.getCardanoHeaders(), nil, nil, &delegations)
 	// log.Printf("body: %v", body)
 	return delegations, err
 }
@@ -87,7 +87,7 @@ func (c *Client) GetTransactionStakeCerticates(txHash string) ([]TransasctionSta
 
 	tstakes := []TransasctionStakeCertificate{}
 	url := fmt.Sprintf("%s/txs/%s/stakes", c.baseURL, txHash)
-	_, err := providers.DoRequest(url, "GET", c.getCardanoHeaders(), nil, nil, &tstakes)
+	_, err := core.DoHttpRequest(url, "GET", c.getCardanoHeaders(), nil, nil, &tstakes)
 	return tstakes, err
 
 }
@@ -95,7 +95,7 @@ func (c *Client) GetTransactionStakeCerticates(txHash string) ([]TransasctionSta
 func (c *Client) GetTransactionInfo(txHash string) (TransactionInfo, error) {
 	var tinfo TransactionInfo
 	url := fmt.Sprintf("%s/txs/%s", c.baseURL, txHash)
-	_, err := providers.DoRequest(url, "GET", c.getCardanoHeaders(), nil, nil, &tinfo)
+	_, err := core.DoHttpRequest(url, "GET", c.getCardanoHeaders(), nil, nil, &tinfo)
 	// log.Println(body)
 	return tinfo, err
 }
@@ -103,7 +103,7 @@ func (c *Client) GetTransactionInfo(txHash string) (TransactionInfo, error) {
 func (c *Client) GetTransactionWithdrawals(stakeaddress string) ([]TransactionWithdrawal, error) {
 	var tws []TransactionWithdrawal
 	url := fmt.Sprintf("%s/accounts/%s/withdrawals", c.baseURL, stakeaddress)
-	_, err := providers.DoRequest(url, "GET", c.getCardanoHeaders(), nil, nil, &tws)
+	_, err := core.DoHttpRequest(url, "GET", c.getCardanoHeaders(), nil, nil, &tws)
 	return tws, err
 }
 

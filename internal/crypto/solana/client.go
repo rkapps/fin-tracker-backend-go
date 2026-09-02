@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
+	"github.com/rkapps/fin-tracker-backend-go/internal/core"
 )
 
 type Client struct {
@@ -48,7 +48,7 @@ func (c *Client) GetSolanaTokenAccounts(address string) (SolanaTokenAccountResul
 
 	url := fmt.Sprintf("%s/%s", c.baseURL, c.API_KEY)
 	var result SolanaTokenAccountResult
-	_, err = providers.DoRequest(url, http.MethodPost, nil, nil, body, &result)
+	_, err = core.DoHttpRequest(url, http.MethodPost, nil, nil, body, &result)
 	// log.Println(body)
 	return result, err
 }
@@ -73,7 +73,7 @@ func (c *Client) GetSolanaSignaturesForAddress(addr string, untilSig string) (So
 	// log.Println(string(body))
 
 	url := fmt.Sprintf("%s/%s", c.baseURL, c.API_KEY)
-	_, err = providers.DoRequest(url, http.MethodPost, nil, nil, body, &result)
+	_, err = core.DoHttpRequest(url, http.MethodPost, nil, nil, body, &result)
 
 	return result, err
 }
@@ -93,7 +93,7 @@ func (c *Client) GetSolanaTransaction(sig string) (SolanaParsedTransactionResult
 		return result, err
 	}
 	url := fmt.Sprintf("%s/%s", c.baseURL, c.API_KEY)
-	providers.DoRequest(url, http.MethodPost, nil, nil, body, &result)
+	core.DoHttpRequest(url, http.MethodPost, nil, nil, body, &result)
 	return result, nil
 }
 

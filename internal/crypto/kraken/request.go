@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
+	"github.com/rkapps/fin-tracker-backend-go/internal/core"
 )
 
 // Execute a public method query
@@ -23,7 +23,7 @@ func doRequestPublic(baseURL, version, method string, dst interface{}) (string, 
 	}
 	env.Result = dst
 	var body string
-	if body, err := providers.DoRequest(reqURL, http.MethodPost, nil, nil, nil, &env); err != nil {
+	if body, err := core.DoHttpRequest(reqURL, http.MethodPost, nil, nil, nil, &env); err != nil {
 		return body, err
 	}
 	if len(env.Error) > 0 {
@@ -55,7 +55,7 @@ func doRequestPrivate(cfg Config, baseURL, version, method string, values url.Va
 	}
 	env.Result = dst
 	var body string
-	if body, err := providers.DoRequest(reqURL, http.MethodPost, headers, nil, []byte(encoded), &env); err != nil {
+	if body, err := core.DoHttpRequest(reqURL, http.MethodPost, headers, nil, []byte(encoded), &env); err != nil {
 		return body, err
 	}
 	if len(env.Error) > 0 {

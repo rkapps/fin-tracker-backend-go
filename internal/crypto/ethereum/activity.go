@@ -5,8 +5,8 @@ import (
 
 	"github.com/nanmu42/etherscan-api"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
+	"github.com/rkapps/fin-tracker-backend-go/internal/crypto"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 	"github.com/shopspring/decimal"
 )
 
@@ -22,15 +22,15 @@ func (s EthereumTransformer) createNormalTxnActivity(
 ) *domain.Activity {
 
 	// conver amount
-	amount, _ := providers.ConvertStringToBaseDecimal(ntxn.Value.Int().String(), TXN_DECIMALS)
+	amount, _ := crypto.ConvertStringToBaseDecimal(ntxn.Value.Int().String(), TXN_DECIMALS)
 	if amount.IsZero() {
 		// s.logger.Warn("createNormalTxnActivity", "Warning", "Value is zero")
 		// DONT SKIP ANY TRANSACTIONS BECAUSE OF THE FEE
 		// return nil
 	}
 
-	faddrAcct := providers.GetAccountFromAddress(eaccts, ntxn.From)
-	taddrAcct := providers.GetAccountFromAddress(eaccts, ntxn.To)
+	faddrAcct := crypto.GetAccountFromAddress(eaccts, ntxn.From)
+	taddrAcct := crypto.GetAccountFromAddress(eaccts, ntxn.To)
 
 	if faddrAcct == nil && taddrAcct == nil {
 		if s.debug {
@@ -90,7 +90,7 @@ func (s EthereumTransformer) createNormalTxnActivity(
 	gasprice := ntxn.GasPrice.Int().Int64()
 	gasused := int64(ntxn.GasUsed)
 
-	fee, _ := providers.ConvertInt64ToBaseDecimal(gasprice*gasused, TXN_DECIMALS)
+	fee, _ := crypto.ConvertInt64ToBaseDecimal(gasprice*gasused, TXN_DECIMALS)
 	actv.Fee = fee
 	actv.FeeCurrency = ETH_BASE_CURRENCY
 
@@ -111,8 +111,8 @@ func (s EthereumTransformer) createErc20Activity(
 	ps core.PriceService, eaccts []domain.Account, tsfr etherscan.ERC20Transfer, sel Selector,
 ) *domain.Activity {
 
-	faddrAcct := providers.GetAccountFromAddress(eaccts, tsfr.From)
-	taddrAcct := providers.GetAccountFromAddress(eaccts, tsfr.To)
+	faddrAcct := crypto.GetAccountFromAddress(eaccts, tsfr.From)
+	taddrAcct := crypto.GetAccountFromAddress(eaccts, tsfr.To)
 
 	if faddrAcct == nil && taddrAcct == nil {
 		if s.debug {
@@ -126,12 +126,12 @@ func (s EthereumTransformer) createErc20Activity(
 	actv.Hash = tsfr.Hash
 	actv.Date = tsfr.TimeStamp.Time()
 
-	fee, _ := providers.ConvertInt64ToBaseDecimal(int64(tsfr.Gas)*int64(tsfr.GasUsed), TXN_DECIMALS)
+	fee, _ := crypto.ConvertInt64ToBaseDecimal(int64(tsfr.Gas)*int64(tsfr.GasUsed), TXN_DECIMALS)
 	actv.Fee = fee
 	actv.FeeCurrency = ETH_BASE_CURRENCY
 
 	// decExp := decimal.NewFromInt(int64(tsfr.TokenDecimal))
-	// amount, _ := providers.ConvertStringToBaseDecimal(tsfr.Value.Int().String(), decExp)
+	// amount, _ := crypto.ConvertStringToBaseDecimal(tsfr.Value.Int().String(), decExp)
 	amount, _ := ConvertERC20Value(tsfr.Value.Int().String(), tsfr.TokenDecimal)
 
 	if s.debug {
@@ -197,11 +197,11 @@ func (s EthereumTransformer) createErc20TradeActivity(
 	ps core.PriceService, eaccts []domain.Account, tsfr etherscan.ERC20Transfer, tsfr1 etherscan.ERC20Transfer, sel Selector,
 ) *domain.Activity {
 
-	faddrAcct := providers.GetAccountFromAddress(eaccts, tsfr.From)
-	taddrAcct := providers.GetAccountFromAddress(eaccts, tsfr1.To)
+	faddrAcct := crypto.GetAccountFromAddress(eaccts, tsfr.From)
+	taddrAcct := crypto.GetAccountFromAddress(eaccts, tsfr1.To)
 
 	// decExp := decimal.NewFromInt(int64(tsfr.TokenDecimal))
-	// amount, _ := providers.ConvertStringToBaseDecimal(tsfr.Value.Int().String(), decExp)
+	// amount, _ := crypto.ConvertStringToBaseDecimal(tsfr.Value.Int().String(), decExp)
 	amount1, _ := ConvertERC20Value(tsfr.Value.Int().String(), tsfr.TokenDecimal)
 	amount2, _ := ConvertERC20Value(tsfr1.Value.Int().String(), tsfr1.TokenDecimal)
 
@@ -251,8 +251,8 @@ func (s EthereumTransformer) createErc20WrapActivity(
 	ps core.PriceService, eaccts []domain.Account, tsfr etherscan.ERC20Transfer, sel Selector,
 ) *domain.Activity {
 
-	faddrAcct := providers.GetAccountFromAddress(eaccts, tsfr.From)
-	taddrAcct := providers.GetAccountFromAddress(eaccts, tsfr.To)
+	faddrAcct := crypto.GetAccountFromAddress(eaccts, tsfr.From)
+	taddrAcct := crypto.GetAccountFromAddress(eaccts, tsfr.To)
 
 	if faddrAcct == nil && taddrAcct == nil {
 		if s.debug {
@@ -267,7 +267,7 @@ func (s EthereumTransformer) createErc20WrapActivity(
 	actv.Date = tsfr.TimeStamp.Time()
 
 	// decExp := decimal.NewFromInt(int64(tsfr.TokenDecimal))
-	// amount, _ := providers.ConvertStringToBaseDecimal(tsfr.Value.Int().String(), decExp)
+	// amount, _ := crypto.ConvertStringToBaseDecimal(tsfr.Value.Int().String(), decExp)
 	amount, _ := ConvertERC20Value(tsfr.Value.Int().String(), tsfr.TokenDecimal)
 
 	if s.debug {
@@ -351,14 +351,14 @@ func (s EthereumTransformer) createNormalWrapActivity(
 ) *domain.Activity {
 
 	// conver amount
-	amount, _ := providers.ConvertStringToBaseDecimal(ntxn.Value.Int().String(), TXN_DECIMALS)
+	amount, _ := crypto.ConvertStringToBaseDecimal(ntxn.Value.Int().String(), TXN_DECIMALS)
 	if amount.IsZero() {
 		// s.logger.Warn("createNormalTxnActivity", "Warning", "Value is zero")
 		// DONT SKIP ANY TRANSACTIONS BECAUSE OF THE FEE
 		// return nil
 	}
 
-	faddrAcct := providers.GetAccountFromAddress(eaccts, ntxn.From)
+	faddrAcct := crypto.GetAccountFromAddress(eaccts, ntxn.From)
 
 	actv := &domain.Activity{}
 	actv.ID = ntxn.Hash
@@ -384,7 +384,7 @@ func (s EthereumTransformer) createNormalWrapActivity(
 	gasprice := ntxn.GasPrice.Int().Int64()
 	gasused := int64(ntxn.GasUsed)
 
-	fee, _ := providers.ConvertInt64ToBaseDecimal(gasprice*gasused, TXN_DECIMALS)
+	fee, _ := crypto.ConvertInt64ToBaseDecimal(gasprice*gasused, TXN_DECIMALS)
 	actv.Fee = fee
 	actv.FeeCurrency = ETH_BASE_CURRENCY
 
@@ -400,12 +400,12 @@ func (s EthereumTransformer) createInternalTxnActivity(
 ) *domain.Activity {
 
 	// conver amount
-	amount, _ := providers.ConvertStringToBaseDecimal(itxn.Value.Int().String(), TXN_DECIMALS)
+	amount, _ := crypto.ConvertStringToBaseDecimal(itxn.Value.Int().String(), TXN_DECIMALS)
 	if amount.IsZero() {
 		return nil
 	}
 
-	taddrAcct := providers.GetAccountFromAddress(eaccts, itxn.To)
+	taddrAcct := crypto.GetAccountFromAddress(eaccts, itxn.To)
 
 	actv := &domain.Activity{}
 	actv.ID = itxn.Hash
@@ -437,7 +437,7 @@ func (s EthereumTransformer) createInternalTxnActivity(
 	gasprice := int64(itxn.Gas)
 	gasused := int64(itxn.GasUsed)
 
-	fee, _ := providers.ConvertInt64ToBaseDecimal(gasprice*gasused, TXN_DECIMALS)
+	fee, _ := crypto.ConvertInt64ToBaseDecimal(gasprice*gasused, TXN_DECIMALS)
 	actv.Fee = fee
 	actv.FeeCurrency = ETH_BASE_CURRENCY
 

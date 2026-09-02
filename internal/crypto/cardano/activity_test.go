@@ -3,7 +3,7 @@ package cardano
 import (
 	"testing"
 
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
+	"github.com/rkapps/fin-tracker-backend-go/internal/crypto"
 	"github.com/rkapps/fin-tracker-backend-go/internal/utils"
 )
 
@@ -26,7 +26,7 @@ func loadTransaction(fileName string) Transaction {
 }
 func TestReceiveActivity(t *testing.T) {
 
-	logger := providers.LoadTestLogger()
+	logger := crypto.LoadTestLogger()
 	loadTestAddresses()
 	txn := loadTransaction("testdata/receive_2.json")
 	utxo := NewAccountActivity(addrAcctm, nil, logger, false)
@@ -37,7 +37,7 @@ func TestReceiveActivity(t *testing.T) {
 
 func TestSendActivity(t *testing.T) {
 
-	logger := providers.LoadTestLogger()
+	logger := crypto.LoadTestLogger()
 	loadTestAddresses()
 	txn := loadTransaction("testdata/send.json")
 	utxo := NewAccountActivity(addrAcctm, nil, logger, false)

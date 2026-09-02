@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
+	"github.com/rkapps/fin-tracker-backend-go/internal/crypto"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 )
 
 type TradeActivityProcessor struct {
@@ -26,7 +26,7 @@ func (p TradeActivityProcessor) Process(ctx context.Context, actv *domain.Activi
 	newctx := logger.WithContext(ctx, p.logger)
 	pr := NewProcessResult()
 
-	if providers.IsCurrency(actv.RcvSymbol) {
+	if crypto.IsCurrency(actv.RcvSymbol) {
 
 		// Reduce the lot of the asset and get the costvalue for the gl
 		touched, value, _ := lm.ReduceLotQty(newctx, actv, actv.SentAmount)
@@ -40,7 +40,7 @@ func (p TradeActivityProcessor) Process(ctx context.Context, actv *domain.Activi
 		pr.Value = actv.RcvAmount
 		p.logger.Debug("Process", "CostValue", value, "RcvValue", actv.RcvAmount)
 
-	} else if providers.IsCurrency(actv.SentSymbol) {
+	} else if crypto.IsCurrency(actv.SentSymbol) {
 
 		// update cash lot --- send negative of sentamount
 		lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.SentSymbol, actv.SentAmount.Neg())

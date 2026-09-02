@@ -7,8 +7,8 @@ import (
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
+	"github.com/rkapps/fin-tracker-backend-go/internal/crypto"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 	"golang.org/x/time/rate"
 )
 
@@ -83,7 +83,7 @@ func (p *Provider) fetchTokens(account domain.Account, stream string) (core.Sync
 	var items []domain.RawItem
 	for _, t := range resp.Result.Value {
 		raw, _ := json.Marshal(t)
-		items = append(items, providers.GetRawItem(account, p.Name(), stream, t.Pubkey, raw, time.Now()))
+		items = append(items, core.GetRawItem(account, p.Name(), stream, t.Pubkey, raw, time.Now()))
 	}
 
 	return core.SyncPage{Items: items, NextCursor: "", HasMore: false}, nil
@@ -108,12 +108,12 @@ func (p *Provider) fetchTransactions(account domain.Account, cursor string) (cor
 
 	for _, v := range resp.Result {
 
-		date, _ := providers.ConvertInt64ToTime(int64(v.BlockTime))
+		date, _ := crypto.ConvertInt64ToTime(int64(v.BlockTime))
 		id := v.Signature
 		v.Address = account.Address()
 		v.Date = date
 		raw, _ := json.Marshal(v)
-		items = append(items, providers.GetRawItem(account, p.Name(), "signatures", id, raw, *date))
+		items = append(items, core.GetRawItem(account, p.Name(), "signatures", id, raw, *date))
 
 		// Get transaction for the signature
 		result, err := p.HTTP.GetSolanaTransaction(v.Signature)
@@ -129,7 +129,7 @@ func (p *Provider) fetchTransactions(account domain.Account, cursor string) (cor
 		txn.Date = v.Date
 
 		raw, _ = json.Marshal(txn)
-		items = append(items, providers.GetRawItem(account, p.Name(), "transactions", id, raw, *date))
+		items = append(items, core.GetRawItem(account, p.Name(), "transactions", id, raw, *date))
 	}
 
 	if len(resp.Result) > 0 {

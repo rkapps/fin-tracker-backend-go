@@ -1,4 +1,4 @@
-package providers
+package crypto
 
 import (
 	"strings"
@@ -62,6 +62,13 @@ func IsCurrency(symbol string) bool {
 		return true
 	}
 	return false
+}
+
+func KrakenTime(curtime float64) (*time.Time, error) {
+
+	var i (int64) = int64(curtime)
+	tm := time.Unix(i, 10)
+	return &tm, nil
 }
 
 func LoadTestLogger() *logger.Logger {

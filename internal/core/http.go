@@ -1,5 +1,4 @@
-// providers/http.go
-package providers
+package core
 
 import (
 	"bytes"
@@ -11,14 +10,14 @@ import (
 	"net/url"
 )
 
-// DoRequest executes an HTTP request and optionally decodes the JSON response
+// DoHttpRequest executes an HTTP request and optionally decodes the JSON response
 // body into dst. Auth is entirely the caller's responsibility — pass whatever
 // headers (Bearer JWT, API-Key/API-Sign, etc.) the target API needs; this
 // function has no knowledge of any specific provider's signing scheme.
 //
 // Returns the raw response body (even on decode success) in case the caller
 // wants it for logging/storage alongside the decoded value.
-func DoRequest(rawURL, method string, headers, query url.Values, body []byte, dst interface{}) (string, error) {
+func DoHttpRequest(rawURL, method string, headers, query url.Values, body []byte, dst interface{}) (string, error) {
 
 	var reqBody io.Reader
 	if body != nil {

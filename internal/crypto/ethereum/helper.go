@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/nanmu42/etherscan-api"
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
+	"github.com/rkapps/fin-tracker-backend-go/internal/crypto"
 	"github.com/shopspring/decimal"
 )
 
 func ConvertERC20Value(value string, tokenDecimals uint8) (decimal.Decimal, error) {
 	decExp := decimal.NewFromInt(int64(tokenDecimals))
-	return providers.ConvertStringToBaseDecimal(value, decExp)
+	return crypto.ConvertStringToBaseDecimal(value, decExp)
 }
 
 func sortTransfers(tsfrsm map[string][]etherscan.ERC20Transfer) []string {

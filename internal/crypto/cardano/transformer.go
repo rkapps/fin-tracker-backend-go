@@ -10,8 +10,8 @@ import (
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
+	"github.com/rkapps/fin-tracker-backend-go/internal/crypto"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 )
 
 type CardanoAccountTransformer struct {
@@ -154,7 +154,7 @@ func (c CardanoAccountTransformer) handleRewards(
 			actv.TxnType = domain.ActivityTypeReward
 			actv.RcvAccountID = acred.Account.ID
 			actv.RcvSymbol = "ADA"
-			amount, _ := providers.ConvertStringToBaseDecimal(reward.Amount, TXN_DECIMALS)
+			amount, _ := crypto.ConvertStringToBaseDecimal(reward.Amount, TXN_DECIMALS)
 			actv.RcvAmount = amount
 			price, err := ps.GetCryptoPrice(actv.RcvSymbol, actv.Date)
 			if err != nil {

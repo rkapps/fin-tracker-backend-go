@@ -1,4 +1,4 @@
-package providers
+package core
 
 import (
 	"crypto/sha256"
@@ -8,20 +8,6 @@ import (
 
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 )
-
-// func GroupRawItems(raws []domain.RawItem) map[string][]domain.RawItem {
-// 	// Group all raw items by Coinbase accountId
-// 	rawsm := make(map[string][]domain.RawItem)
-// 	for _, raw := range raws {
-// 		araws := rawsm[raw.AccountID]
-// 		if len(araws) == 0 {
-// 			araws = []domain.RawItem{}
-// 		}
-// 		araws = append(araws, raw)
-// 		rawsm[raw.AccountID] = araws
-// 	}
-// 	return rawsm
-// }
 
 func GetGlobalRawItem(name, stream string, id string, raw json.RawMessage, date time.Time) domain.RawItem {
 

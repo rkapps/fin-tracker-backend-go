@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
+	"github.com/rkapps/fin-tracker-backend-go/internal/crypto"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 	"github.com/shopspring/decimal"
 )
 
@@ -93,7 +93,7 @@ func (a *AccountActivity) add_entry(receive bool, address string, txnAmounts []T
 }
 
 func (a *AccountActivity) convertQty(quantity string) (decimal.Decimal, error) {
-	return providers.ConvertStringToBaseDecimal(quantity, TXN_DECIMALS)
+	return crypto.ConvertStringToBaseDecimal(quantity, TXN_DECIMALS)
 }
 
 func (a *AccountActivity) getActivity() ([]*domain.Activity, error) {

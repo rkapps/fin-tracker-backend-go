@@ -75,8 +75,8 @@ func (s SolanaAccountTransformer) Transform(ctx context.Context, ps core.PriceSe
 		if i > 160 {
 			// debug = true
 		}
-		if strings.Compare(txn.Signature, "3EBuBEVav9UYu9HagzbbN6jPGTa1Pdz5XuWgNZQAhskGprU2K1FEqK5xv5F3PookD7WTf2k3UjZ5TqqGtNP18MRp") == 0 {
-			// debug = true
+		if strings.Compare(txn.Signature, "3h3ycgpYvVg58WrwsSbEscn1ecxygkbWuMahW2inhY9eFKLCN2jNxQ5tg8UTGTauyCzDR1omWerJmU4TYQv3y4LH") == 0 {
+			debug = true
 		}
 		if debug {
 			s.logger.Info("")

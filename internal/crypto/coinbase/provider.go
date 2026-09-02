@@ -10,7 +10,6 @@ import (
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 	"github.com/rkapps/fin-tracker-backend-go/internal/utils"
 	"golang.org/x/time/rate"
 )
@@ -97,7 +96,7 @@ func (p *Provider) FetchPayments(ctx context.Context,
 		bytes, err := json.Marshal(payment_method)
 		if err != nil {
 		}
-		item := providers.GetRawItem(account, p.Name(), stream, payment_method.Id, json.RawMessage(bytes), *date)
+		item := core.GetRawItem(account, p.Name(), stream, payment_method.Id, json.RawMessage(bytes), *date)
 		items = append(items, item)
 	}
 	return core.SyncPage{
@@ -190,7 +189,7 @@ func (p *Provider) FetchAllAccounts(ctx context.Context,
 			}
 
 			// add raw account item
-			item := providers.GetRawItem(account, p.Name(), stream, peek.ID, raw, peek.CreatedAt)
+			item := core.GetRawItem(account, p.Name(), stream, peek.ID, raw, peek.CreatedAt)
 			aitems = append(aitems, item)
 
 		}
@@ -226,7 +225,7 @@ func (p *Provider) FetchAccountTransactions(ctx context.Context,
 				slog.Error("FetchRaw", "UnMarshallError", err)
 				continue
 			}
-			item := providers.GetRawItem(account, p.Name(), "transactions", peek.ID, raw, peek.CreatedAt)
+			item := core.GetRawItem(account, p.Name(), "transactions", peek.ID, raw, peek.CreatedAt)
 			aitems = append(aitems, item)
 		}
 

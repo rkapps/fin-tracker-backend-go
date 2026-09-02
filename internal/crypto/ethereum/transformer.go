@@ -10,8 +10,8 @@ import (
 	"github.com/nanmu42/etherscan-api"
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
+	"github.com/rkapps/fin-tracker-backend-go/internal/crypto"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 )
 
 type EthereumTransformer struct {
@@ -61,7 +61,7 @@ func (s EthereumTransformer) Transform(ctx context.Context, ps core.PriceService
 		s.debug = false
 
 		if strings.Compare(ntxn.Hash, "0xda322dce9c71087dde918d12e6887103f066cd0d2200d06104b0b6e40c99e308") == 0 {
-			s.debug = true
+			// s.debug = true
 		}
 		if i > 100 {
 			// s.debug = true
@@ -220,7 +220,7 @@ func (s EthereumTransformer) buildActivityFromNormal(
 			actvs = append(actvs, mactvs...)
 
 			// add normal actvitity only if positive amount
-			amount, _ := providers.ConvertStringToBaseDecimal(ntxn.Value.Int().String(), TXN_DECIMALS)
+			amount, _ := crypto.ConvertStringToBaseDecimal(ntxn.Value.Int().String(), TXN_DECIMALS)
 			if amount.IsPositive() {
 				actv := s.createNormalTxnActivity(ps, eaccts, ntxn, sel)
 				if actv != nil {

@@ -2,8 +2,6 @@ package kraken
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -11,8 +9,8 @@ import (
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
+	"github.com/rkapps/fin-tracker-backend-go/internal/crypto"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 	"golang.org/x/time/rate"
 )
 
@@ -106,7 +104,7 @@ func (p *Provider) fetchAssets(ctx context.Context, stream string) (core.SyncPag
 	p.logger.Debug("fetchAssets", "assets", len(resp))
 	var items []domain.RawItem
 	raw, _ := json.Marshal(resp)
-	items = append(items, providers.GetGlobalRawItem(p.Name(), stream, "all", raw, time.Now()))
+	items = append(items, core.GetGlobalRawItem(p.Name(), stream, "all", raw, time.Now()))
 
 	return core.SyncPage{Items: items, HasMore: false}, nil
 
@@ -123,7 +121,7 @@ func (p *Provider) fetchAssetPairs(ctx context.Context, stream string) (core.Syn
 
 	p.logger.Debug("fetchAssetPairs", "pairs", len(resp))
 	raw, _ := json.Marshal(resp)
-	items = append(items, providers.GetGlobalRawItem(p.Name(), stream, "all", raw, time.Now()))
+	items = append(items, core.GetGlobalRawItem(p.Name(), stream, "all", raw, time.Now()))
 
 	return core.SyncPage{Items: items, HasMore: false}, nil
 
@@ -150,8 +148,8 @@ func (p *Provider) fetchTrades(ctx context.Context, acred domain.AccountWithCred
 	for id, t := range resp.Trades {
 		t.TradeId = id
 		raw, _ := json.Marshal(t)
-		ts, _ := KrakenTime(t.Time)
-		items = append(items, getRawItem(acred, p.Name(), stream, id, raw, *ts))
+		ts, _ := crypto.KrakenTime(t.Time)
+		items = append(items, core.GetRawItem(acred.Account, p.Name(), stream, id, raw, *ts))
 		if t.Time > cur.MaxFTime {
 			cur.MaxFTime = t.Time
 		}
@@ -193,8 +191,8 @@ func (p *Provider) fetchLedgers(ctx context.Context, acred domain.AccountWithCre
 		// add the infoid
 		v.InfoId = id
 		raw, _ := json.Marshal(v)
-		t, _ := KrakenTime(v.Time)
-		items = append(items, getRawItem(acred, p.Name(), stream, id, raw, *t))
+		t, _ := crypto.KrakenTime(v.Time)
+		items = append(items, core.GetRawItem(acred.Account, p.Name(), stream, id, raw, *t))
 		if v.Time > cur.MaxFTime {
 			cur.MaxFTime = v.Time
 		}
@@ -211,31 +209,4 @@ func (p *Provider) fetchLedgers(ctx context.Context, acred domain.AccountWithCre
 
 	next, _ := json.Marshal(cur)
 	return core.SyncPage{Items: items, NextCursor: string(next), HasMore: hasMore}, nil
-}
-
-func KrakenTime(curtime float64) (*time.Time, error) {
-
-	var i (int64) = int64(curtime)
-	tm := time.Unix(i, 10)
-	return &tm, nil
-}
-
-func rawItemID(uid, accountID, provider, stream, externalID string) string {
-	h := sha256.Sum256([]byte(uid + ":" + accountID + ":" + provider + ":" + stream + ":" + externalID))
-	return hex.EncodeToString(h[:])[:32]
-}
-
-func getRawItem(acred domain.AccountWithCredential, name, stream string, id string, raw json.RawMessage, date time.Time) domain.RawItem {
-
-	return domain.RawItem{
-		UID:        acred.Account.UID,
-		AccountID:  acred.Account.ID,
-		ID:         rawItemID(acred.Account.UID, acred.Account.ID, name, stream, id),
-		ExternalID: id,
-		Provider:   name,
-		Stream:     stream,
-		Payload:    raw,
-		Timestamp:  date,
-	}
-
 }

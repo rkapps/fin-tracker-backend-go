@@ -8,8 +8,8 @@ import (
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
+	"github.com/rkapps/fin-tracker-backend-go/internal/crypto"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 	"github.com/rkapps/fin-tracker-backend-go/internal/utils"
 )
 
@@ -38,9 +38,6 @@ func (k KrakenAccountTransformer) Transform(ctx context.Context, ps core.PriceSe
 	// get assets and pairs from global raw
 	assetsm, pairsm := k.marshalGlobalData(globalRaws)
 
-	// // get grouped raw items by account
-	// rawsm := providers.GroupRawItems(raws)
-
 	for _, acred := range acreds {
 		raws := rawsm[acred.Account.ID]
 		if len(raws) == 0 {
@@ -53,7 +50,7 @@ func (k KrakenAccountTransformer) Transform(ctx context.Context, ps core.PriceSe
 		//trades
 		for _, trade := range trades {
 			// k.logger.Info("Transform", "Trade", trade.OrderTxID, "AssetPair", trade.AssetPair)
-			ts, _ := KrakenTime(trade.Time)
+			ts, _ := crypto.KrakenTime(trade.Time)
 			tpair := pairsm[trade.AssetPair]
 			baseSymbol := assetsm[tpair.Base]
 			quoteSymbol := assetsm[tpair.Quote]
@@ -72,7 +69,7 @@ func (k KrakenAccountTransformer) Transform(ctx context.Context, ps core.PriceSe
 				actv.RcvAccountID = acred.Account.ID
 				actv.RcvSymbol = baseSymbol.Altname
 				actv.RcvAmount = utils.ConvertFloatToDecimal(trade.Volume)
-				if providers.IsCurrency(actv.SentSymbol) {
+				if crypto.IsCurrency(actv.SentSymbol) {
 					actv.TxnType = domain.ActivityTypeBuy
 				} else {
 					actv.TxnType = domain.ActivityTypeTrade
@@ -90,7 +87,7 @@ func (k KrakenAccountTransformer) Transform(ctx context.Context, ps core.PriceSe
 				actv.RcvSymbol = quoteSymbol.Altname
 				actv.RcvAmount = utils.ConvertFloatToDecimal(trade.Cost)
 
-				if providers.IsCurrency(actv.RcvSymbol) {
+				if crypto.IsCurrency(actv.RcvSymbol) {
 					actv.TxnType = domain.ActivityTypeSell
 				} else {
 					actv.TxnType = domain.ActivityTypeTrade
@@ -108,7 +105,7 @@ func (k KrakenAccountTransformer) Transform(ctx context.Context, ps core.PriceSe
 		// ledgers
 		for i, ledger := range ledgers {
 
-			ts, err := KrakenTime(ledger.Time)
+			ts, err := crypto.KrakenTime(ledger.Time)
 			if err != nil {
 				k.logger.Error("Transform", "Ledger", ledger.InfoId, "Error", err)
 			}

@@ -6,8 +6,8 @@ import (
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
+	"github.com/rkapps/fin-tracker-backend-go/internal/crypto"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 	"github.com/shopspring/decimal"
 )
 
@@ -112,7 +112,7 @@ func (s SolanaActivity) ProcessTransaction() []*domain.Activity {
 			s.logger.Info("ProcessTransaction", "", fmt.Sprintf("Type:         %s", parsed.Type))
 			s.logger.Debug("ProcessTransaction", "", fmt.Sprintf("Owner         %s", parsed.Info.Owner))
 			s.logger.Debug("ProcessTransaction", "", fmt.Sprintf("Account       %s", parsed.Info.Account))
-			s.logger.Debug("ProcessTransaction", "", fmt.Sprintf("Source        %s", parsed.Info.Source))
+			s.logger.Info("ProcessTransaction", "", fmt.Sprintf("Source        %s", parsed.Info.Source))
 			s.logger.Debug("ProcessTransaction", "", fmt.Sprintf("Destination   %s", parsed.Info.Destination))
 			s.logger.Debug("ProcessTransaction", "", fmt.Sprintf("Mint          %s", parsed.Info.Mint))
 			s.logger.Debug("ProcessTransaction", "", fmt.Sprintf("Wallet        %s", parsed.Info.Wallet))
@@ -218,7 +218,7 @@ func (s SolanaActivity) processOuterInstruction(
 
 	parsed := instruction.Parsed
 	info := parsed.Info
-	amount, _ := providers.ConvertInt64ToBaseDecimal(info.Lamports, TXN_DECIMALS)
+	amount, _ := crypto.ConvertInt64ToBaseDecimal(info.Lamports, TXN_DECIMALS)
 
 	if s.debug {
 		s.logger.Debug("OuterInstruction", "Lamport", parsed.Info.Lamports, "Amount", amount)
@@ -249,8 +249,8 @@ func (s SolanaActivity) processOuterInstruction(
 
 		if amount.IsPositive() {
 
-			fAddrAcct := providers.GetAccountFromAddress(s.saccts, info.Source)
-			tAddrAcct := providers.GetAccountFromAddress(s.saccts, info.Destination)
+			fAddrAcct := crypto.GetAccountFromAddress(s.saccts, info.Source)
+			tAddrAcct := crypto.GetAccountFromAddress(s.saccts, info.Destination)
 			if s.debug {
 				if fAddrAcct != nil {
 					s.logger.Info("OuterInstruction", "", fmt.Sprintf("From: %s", fAddrAcct.ID))
@@ -265,7 +265,7 @@ func (s SolanaActivity) processOuterInstruction(
 	} else if strings.Compare(parsed.Type, "createAccountWithSeed") == 0 ||
 		strings.Compare(parsed.Type, "createAccount") == 0 {
 
-		fAddrAcct := providers.GetAccountFromAddress(s.saccts, info.Source)
+		fAddrAcct := crypto.GetAccountFromAddress(s.saccts, info.Source)
 		actv := s.createInstructionActivity(fAddrAcct, nil, BASE_CURRENCY, amount)
 		actv.TxnType = domain.ActivityTypeStake
 		actv.Notes = fmt.Sprintf("StakeAccount: %s", info.NewAccount)
@@ -277,7 +277,7 @@ func (s SolanaActivity) processOuterInstruction(
 	} else if strings.Compare(parsed.Type, "withdraw") == 0 {
 
 		if amount.IsPositive() {
-			tAddrAcct := providers.GetAccountFromAddress(s.saccts, info.Destination)
+			tAddrAcct := crypto.GetAccountFromAddress(s.saccts, info.Destination)
 			actv := s.createInstructionActivity(nil, tAddrAcct, BASE_CURRENCY, amount)
 			actv.TxnType = domain.ActivityTypeUnStake
 			actv.Notes = fmt.Sprintf("StakeAccount: %s", info.StakeAccount)
@@ -293,8 +293,8 @@ func (s SolanaActivity) processOuterInstruction(
 		// 	log.Printf("            Source: %v", pinfo.Source)
 		// 	log.Printf("            Source: %v", pinfo.Wallet)
 		// }
-		fAddrAcct := providers.GetAccountFromAddress(s.saccts, pinfo.Source)
-		tAddrAcct := providers.GetAccountFromAddress(s.saccts, pinfo.Wallet)
+		fAddrAcct := crypto.GetAccountFromAddress(s.saccts, pinfo.Source)
+		tAddrAcct := crypto.GetAccountFromAddress(s.saccts, pinfo.Wallet)
 
 		symbol := TOKENADDRESS_SYMBOL[info.Mint]
 		amount = decimal.NewFromFloat(info.TokenAmount.UiAmount)
@@ -343,8 +343,8 @@ func (s SolanaActivity) processSingleInnerInstruction(
 	// acct := s.AccountsService.GetAccount(ctx, result.Acct_Id)
 	var mergeBal int64
 
-	fAddrAcct := providers.GetAccountFromAddress(s.saccts, info.Source)
-	tAddrAcct := providers.GetAccountFromAddress(s.saccts, info.Destination)
+	fAddrAcct := crypto.GetAccountFromAddress(s.saccts, info.Source)
+	tAddrAcct := crypto.GetAccountFromAddress(s.saccts, info.Destination)
 	if s.debug {
 		fAccount := ""
 		tAccount := ""
@@ -385,7 +385,7 @@ func (s SolanaActivity) processSingleInnerInstruction(
 			}
 
 			if len(symbol) > 0 {
-				fAddrAcct = providers.GetAccountFromAddress(s.saccts, s.txn.Address)
+				fAddrAcct = crypto.GetAccountFromAddress(s.saccts, s.txn.Address)
 			} else {
 
 				tokenAccount := s.tokenAccountsm[info.Destination]
@@ -398,7 +398,7 @@ func (s SolanaActivity) processSingleInnerInstruction(
 				}
 				if len(token) > 0 {
 					symbol = TOKENADDRESS_SYMBOL[token]
-					tAddrAcct = providers.GetAccountFromAddress(s.saccts, s.txn.Address)
+					tAddrAcct = crypto.GetAccountFromAddress(s.saccts, s.txn.Address)
 				}
 				if s.debug {
 					s.logger.Info("InnerInstruction", "", fmt.Sprintf("Destination - Token: %s", token), "Symbol", symbol)
@@ -411,7 +411,7 @@ func (s SolanaActivity) processSingleInnerInstruction(
 				if len(token) > 0 {
 					symbol = TOKENADDRESS_SYMBOL[token]
 					if len(symbol) > 0 {
-						tAddrAcct = providers.GetAccountFromAddress(s.saccts, s.txn.Address)
+						tAddrAcct = crypto.GetAccountFromAddress(s.saccts, s.txn.Address)
 					}
 				}
 			}
@@ -421,9 +421,9 @@ func (s SolanaActivity) processSingleInnerInstruction(
 			symbol = TOKENADDRESS_SYMBOL[token]
 			if len(symbol) > 0 {
 				if strings.Compare(s.txn.Address, info.Authority) == 0 {
-					fAddrAcct = providers.GetAccountFromAddress(s.saccts, s.txn.Address)
+					fAddrAcct = crypto.GetAccountFromAddress(s.saccts, s.txn.Address)
 				} else {
-					tAddrAcct = providers.GetAccountFromAddress(s.saccts, s.txn.Address)
+					tAddrAcct = crypto.GetAccountFromAddress(s.saccts, s.txn.Address)
 				}
 			}
 
@@ -471,9 +471,9 @@ func (s SolanaActivity) processSingleInnerInstruction(
 	if mergeBal > 0 {
 		// amount = core.GetDecimalValue(float64(mergeBal), decimals)
 	} else if info.Lamports > 0 {
-		amount, _ = providers.ConvertInt64ToBaseDecimal(info.Lamports, decimals)
+		amount, _ = crypto.ConvertInt64ToBaseDecimal(info.Lamports, decimals)
 	} else {
-		amount, _ = providers.ConvertStringToBaseDecimal(info.Amount, decimals)
+		amount, _ = crypto.ConvertStringToBaseDecimal(info.Amount, decimals)
 	}
 
 	if strings.Compare(parsed.Type, "transferChecked") == 0 {

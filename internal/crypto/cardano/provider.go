@@ -11,7 +11,6 @@ import (
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 	"golang.org/x/time/rate"
 )
 
@@ -118,7 +117,7 @@ func (p Provider) fetchRewards(ctx context.Context, account domain.Account, stre
 	var items []domain.RawItem
 	for _, r := range rewards {
 		raw, _ := json.Marshal(r)
-		item := providers.GetRawItem(account, p.Name(), stream, fmt.Sprintf("%s-%d", address, r.Epoch), raw, time.Now())
+		item := core.GetRawItem(account, p.Name(), stream, fmt.Sprintf("%s-%d", address, r.Epoch), raw, time.Now())
 		items = append(items, item)
 	}
 
@@ -164,7 +163,7 @@ func (p Provider) fetchTransactions(ctx context.Context, account domain.Account,
 	// add addresses
 	raw, _ := json.Marshal(addrs)
 	// log.Println(string(raw))
-	item := providers.GetRawItem(account, p.Name(), "addresses", "addresses", raw, time.Now())
+	item := core.GetRawItem(account, p.Name(), "addresses", "addresses", raw, time.Now())
 	items = append(items, item)
 
 	var cur cardanoTransactionCursor
@@ -208,7 +207,7 @@ func (p Provider) fetchTransactions(ctx context.Context, account domain.Account,
 			}
 
 			// log.Println(string(raw))
-			item := providers.GetRawItem(account, p.Name(), stream, atxn.TxHash, raw, time.Now())
+			item := core.GetRawItem(account, p.Name(), stream, atxn.TxHash, raw, time.Now())
 			items = append(items, item)
 		}
 	}
@@ -285,7 +284,7 @@ func (p Provider) fetchEpochs(ctx context.Context, stream string, cursor string)
 	for _, e := range epochs {
 		raw, _ := json.Marshal(e)
 		epochStr := strconv.FormatInt(e.Epoch, 10)
-		item := providers.GetGlobalRawItem(p.Name(), stream, epochStr, raw, time.Unix(e.StartTime, 0))
+		item := core.GetGlobalRawItem(p.Name(), stream, epochStr, raw, time.Unix(e.StartTime, 0))
 		items = append(items, item)
 	}
 

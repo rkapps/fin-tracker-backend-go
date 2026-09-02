@@ -9,7 +9,6 @@ import (
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/rkapps/fin-tracker-backend-go/internal/providers"
 	"golang.org/x/time/rate"
 )
 
@@ -137,7 +136,7 @@ func (p *Provider) fetchERC20Transfers(acred domain.AccountWithCredential, block
 			if idx > 0 {
 				externalID = fmt.Sprintf("%s-%d", transfer.Hash, idx) // second (idx=1) → "-1", third (idx=2) → "-2", etc.
 			}
-			items = append(items, providers.GetRawItem(acred.Account, p.Name(), "erc20", externalID, raw, time.Now()))
+			items = append(items, core.GetRawItem(acred.Account, p.Name(), "erc20", externalID, raw, time.Now()))
 			if transfer.BlockNumber > cblockNumber {
 				cblockNumber = transfer.BlockNumber
 			}
@@ -167,7 +166,7 @@ func (p *Provider) fetchERC721Transfers(acred domain.AccountWithCredential, bloc
 		var items []domain.RawItem
 		for _, transfer := range resp {
 			raw, _ := json.Marshal(transfer)
-			items = append(items, providers.GetRawItem(acred.Account, p.Name(), "erc721", transfer.Hash, raw, time.Now()))
+			items = append(items, core.GetRawItem(acred.Account, p.Name(), "erc721", transfer.Hash, raw, time.Now()))
 			if transfer.BlockNumber > cblockNumber {
 				cblockNumber = transfer.BlockNumber
 			}
@@ -199,7 +198,7 @@ func (p *Provider) fetchInternalTransactions(acred domain.AccountWithCredential,
 		var items []domain.RawItem
 		for _, txn := range resp {
 			raw, _ := json.Marshal(txn)
-			items = append(items, providers.GetRawItem(acred.Account, p.Name(), "internal", txn.Hash, raw, time.Now()))
+			items = append(items, core.GetRawItem(acred.Account, p.Name(), "internal", txn.Hash, raw, time.Now()))
 			if txn.BlockNumber > cblockNumber {
 				cblockNumber = txn.BlockNumber
 			}
@@ -231,7 +230,7 @@ func (p *Provider) fetchNormalTransactions(acred domain.AccountWithCredential, b
 		var items []domain.RawItem
 		for _, txn := range resp {
 			raw, _ := json.Marshal(txn)
-			items = append(items, providers.GetRawItem(acred.Account, p.Name(), "normal", txn.Hash, raw, time.Now()))
+			items = append(items, core.GetRawItem(acred.Account, p.Name(), "normal", txn.Hash, raw, time.Now()))
 			if txn.BlockNumber > cblockNumber {
 				cblockNumber = txn.BlockNumber
 			}
