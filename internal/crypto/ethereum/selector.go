@@ -81,10 +81,10 @@ var knownSelectors = map[string]Selector{
 	"0x38ed1739": {CategorySwap, domain.ActivityTypeTrade, "swapExactTokensForTokens"},
 
 	"0x945bcec9": {CategorySwap, domain.ActivityTypeTrade, "batchswap"},
-	"0x52bbbe29": {CategorySwap, domain.ActivityTypeTrade, "swap"},
-
+	"0x5f575529": {CategorySwap, domain.ActivityTypeTrade, "swap (weth)"},
 	// wrap
-	"0x5f575529": {CategoryWrap, domain.ActivityTypeTrade, "swap (weth)"},
+	"0x52bbbe29": {CategorySwap, domain.ActivityTypeTrade, "wrap"},
+
 	"0xd0e30db0": {CategoryWrap, domain.ActivityTypeTrade, "deposit (weth)"},
 
 	//unknown
@@ -94,7 +94,6 @@ var knownSelectors = map[string]Selector{
 	"0x787a08a6": {CategoryUnknown, "", "cooldown (aave)"},
 	"0x7c5264b4": {CategoryUnknown, "", "startExitWithBurntTokens"},
 	"0xe02ae075": {CategoryUnknown, "", "leave (bancor)"},
-	"0xb95cac28": {CategoryUnknown, "", "joinPool"},
 	"0x7c544cc4": {CategoryUnknown, "", "migrateStkABPTWithPermit"},
 	"0x4f91440d": {CategoryUnknown, "", "restake"},
 	"0x357a0333": {CategoryUnknown, "", "initWithdrawal"},
@@ -102,7 +101,6 @@ var knownSelectors = map[string]Selector{
 	"0x295da87d": {CategoryUnknown, "", "burnSynths"},
 	"0x8e1a55fc": {CategoryUnknown, "", "build"},
 	"0xdb006a75": {CategoryUnknown, "", "redeem"},
-	"0x88316456": {CategoryUnknown, "", "mint"},
 	"0x1aa3a008": {CategoryUnknown, "", "register"},
 	"0x34fcd5be": {CategoryUnknown, "", "unknown-polygon"},
 	"0xa1798512": {CategoryUnknown, "", "unknown-polygon-spam"},
@@ -115,6 +113,9 @@ var knownSelectors = map[string]Selector{
 	// multi tokens
 	"0xf305d719": {CategoryMultiToken, "", "addLiquidityETH"},
 	"0xb02f0b73": {CategoryMultiToken, "", "exitPool"},
+	"0xb95cac28": {CategoryMultiToken, "", "joinPool"},
+
+	"0x88316456": {CategoryMultiToken, "", "mint"},
 }
 
 func lookupSelector(method string) (Selector, bool) {

@@ -99,7 +99,7 @@ func (s *accountSyncProvider) Sync(ctx context.Context, providerStorage storage.
 	if global, ok := s.syncProvider.(core.GlobalSyncProvider); ok {
 		s.logger.Debug("Sync", "GlobalProvider", s.syncProvider.Name(), "Stream", global.GlobalStreams())
 		for _, stream := range global.GlobalStreams() {
-			if strings.Compare("ethereum", s.syncProvider.Name()) != 0 {
+			if strings.Compare("polygon", s.syncProvider.Name()) != 0 {
 				continue
 			}
 			if err := s.syncGlobalStream(ctx, providerStorage, global, stream); err != nil {
@@ -110,7 +110,7 @@ func (s *accountSyncProvider) Sync(ctx context.Context, providerStorage storage.
 
 	for _, acred := range acreds { // serial: shared rate limit / nonce per provider
 		s.logger.Debug("Sync", "Account", acred.Account.ID)
-		if strings.Compare("ethereum", s.syncProvider.Name()) != 0 {
+		if strings.Compare("polygon", s.syncProvider.Name()) != 0 {
 			continue
 		}
 		for _, stream := range s.syncProvider.Streams() {

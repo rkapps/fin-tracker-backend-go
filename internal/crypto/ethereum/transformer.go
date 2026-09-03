@@ -67,8 +67,8 @@ func (s EthereumTransformer) Transform(ctx context.Context, ps core.PriceService
 		tsfrs := tsfrsm[ntxn.Hash]
 		s.debug = false
 
-		if strings.Compare(ntxn.Hash, "0xdd80e14d133f450dbdea65bbb3c454e9b0b0cef544d6128e4c5e4d3aad01df9b") == 0 {
-			s.debug = true
+		if strings.Compare(ntxn.Hash, "0xe4a72d11a8736326ce4940b3facb5a00a07c11cf700886e26a10f28bec999134") == 0 {
+			// s.debug = true
 		}
 		if i > 100 {
 			// s.debug = true
@@ -110,8 +110,7 @@ func (s EthereumTransformer) Transform(ctx context.Context, ps core.PriceService
 			continue
 		}
 
-		if strings.Compare(tsfr.Hash, "0xdd80e14d133f450dbdea65bbb3c454e9b0b0cef544d6128e4c5e4d3aad01df9b") == 0 {
-			s.debug = true
+		if strings.Compare(tsfr.Hash, "0xe4a72d11a8736326ce4940b3facb5a00a07c11cf700886e26a10f28bec999134") == 0 {
 			continue
 		}
 		if i > 55 {
@@ -124,12 +123,6 @@ func (s EthereumTransformer) Transform(ctx context.Context, ps core.PriceService
 		}
 
 		tactvs := s.buildActivityFromErc20(ps, eaccts, tsfrs)
-		// if strings.Compare(hash, "0x5c0999ad603644c239467d1efb8f57bd3112808d65f94f74c2f864316b9d9a11") == 0 {
-		// 	for _, actv := range tactvs {
-		// 		actv.Date = actv.Date.Add(time.Second * 8)
-		// 		// log.Println(actv.Date.Add(time.Second * 8))
-		// 	}
-		// }
 		actvs = append(actvs, tactvs...)
 
 		if i > 60 {
@@ -215,6 +208,12 @@ func (s EthereumTransformer) buildActivityFromNormal(
 		switch sel.Category {
 		case CategoryWrap:
 			actv := createErc20WrapActivity(ps, eaccts, tsfrs[0], ETH_WRAP_CURRENCY, sel, s.logger, s.debug)
+			if actv != nil {
+				// actv.TxnType = sel.TxnType
+				actvs = append(actvs, actv)
+			}
+		case CategorySwap:
+			actv := createErc20WrapActivity(ps, eaccts, tsfrs[0], ETH_BASE_CURRENCY, sel, s.logger, s.debug)
 			if actv != nil {
 				// actv.TxnType = sel.TxnType
 				actvs = append(actvs, actv)
