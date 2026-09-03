@@ -24,7 +24,8 @@ func NewPriceService(tstorage storage.TickerStorageService, cstorage storage.Cry
 func (ps PriceService) GetCryptoPrice(symbol string, date time.Time) (decimal.Decimal, error) {
 
 	if strings.Compare(symbol, "USDT") == 0 ||
-		strings.Compare(symbol, "USDC") == 0 {
+		strings.Compare(symbol, "USDC") == 0 ||
+		strings.Compare(symbol, "DAI") == 0 {
 		return decimal.NewFromFloat(1.0), nil
 	}
 
