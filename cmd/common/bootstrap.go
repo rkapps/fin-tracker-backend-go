@@ -139,6 +139,7 @@ func getSyncProviderRegistry(logConfig *logger.Config) core.SyncRegistry {
 	//ethereum
 	registry.Register(ethereum.NewEthereum(ethereum.NewEtherscanClient(etherscan_api_key), logConfig))
 	registry.Register(ethereum.NewPolygon(ethereum.NewPolygonClient(etherscan_api_key), logConfig))
+
 	return *registry
 }
 
@@ -148,7 +149,10 @@ func getTransformerRegistry(logConfig *logger.Config) core.TransformerRegistry {
 	registry.Register(kraken.NewKrakenAccountTransformer(logConfig))
 	registry.Register(cardano.NewCardanoAccountTransformer(logConfig))
 	registry.Register(solana.NewSolanaAccountTransformer(logConfig))
+
+	//ethereum
 	registry.Register(ethereum.NewEthereumTransformer(logConfig))
+	registry.Register(ethereum.NewPolygonTransformer(logConfig))
 	return *registry
 }
 

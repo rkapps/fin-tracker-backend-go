@@ -141,13 +141,21 @@ func (s EthereumTransformer) Transform(ctx context.Context, ps core.PriceService
 		if _, ok := hashProcessed[itxn.Hash]; ok {
 			continue
 		}
-		actv := s.createInternalTxnActivity(ps, eaccts, itxn)
+		actv := createInternalTxnActivity(ps, eaccts, itxn, s.logger, s.debug)
 		if actv != nil {
 			actvs = append(actvs, actv)
 		}
 	}
 
 	s.logger.Info("Transform", "Provider", s.Name(), "Actvs", len(actvs))
+	for _, actv := range actvs {
+		if strings.Compare(actv.RcvSymbol, "MATIC") == 0 {
+			actv.RcvSymbol = "POL"
+		}
+		if strings.Compare(actv.SentSymbol, "MATIC") == 0 {
+			actv.SentSymbol = "POL"
+		}
+	}
 
 	return actvs, nil
 }
@@ -164,7 +172,7 @@ func (s EthereumTransformer) buildActivityFromNormal(
 	}
 
 	if strings.Compare(ntxn.Input, "0x") == 0 {
-		actv := s.createNormalTxnActivity(ps, eaccts, ntxn, Selector{})
+		actv := createNormalTxnActivity(ps, eaccts, ntxn, ETH_BASE_CURRENCY, Selector{}, s.logger, s.debug)
 		if actv != nil {
 			actvs = append(actvs, actv)
 			return actvs
@@ -190,13 +198,13 @@ func (s EthereumTransformer) buildActivityFromNormal(
 	case 0:
 		switch sel.Category {
 		case CategoryWrap:
-			actv := s.createNormalWrapActivity(ps, eaccts, ntxn, sel)
+			actv := createNormalWrapActivity(ps, eaccts, ntxn, ETH_BASE_CURRENCY, ETH_WRAP_CURRENCY, s.logger, s.debug)
 			if actv != nil {
 				// actv.TxnType = sel.TxnType
 				actvs = append(actvs, actv)
 			}
 		default:
-			actv := s.createNormalTxnActivity(ps, eaccts, ntxn, sel)
+			actv := createNormalTxnActivity(ps, eaccts, ntxn, ETH_BASE_CURRENCY, sel, s.logger, s.debug)
 			if actv != nil {
 				// actv.TxnType = sel.TxnType
 				actvs = append(actvs, actv)
@@ -206,7 +214,7 @@ func (s EthereumTransformer) buildActivityFromNormal(
 	case 1:
 		switch sel.Category {
 		case CategoryWrap:
-			actv := s.createErc20WrapActivity(ps, eaccts, tsfrs[0], sel)
+			actv := createErc20WrapActivity(ps, eaccts, tsfrs[0], ETH_WRAP_CURRENCY, sel, s.logger, s.debug)
 			if actv != nil {
 				// actv.TxnType = sel.TxnType
 				actvs = append(actvs, actv)
@@ -214,7 +222,7 @@ func (s EthereumTransformer) buildActivityFromNormal(
 
 		// case CategoryApprove:
 		case CategoryReward, CategoryDeposit, CategoryWithdrawal, CategoryTransfer:
-			actv := s.createErc20Activity(ps, eaccts, tsfrs[0], sel)
+			actv := createErc20Activity(ps, eaccts, tsfrs[0], ETH_BASE_CURRENCY, sel, s.logger, s.debug)
 			if actv != nil {
 				// actv.TxnType = sel.TxnType
 				actvs = append(actvs, actv)
@@ -223,28 +231,28 @@ func (s EthereumTransformer) buildActivityFromNormal(
 	case 2:
 		switch sel.Category {
 		case CategoryTransfer:
-			actv := s.createErc20Activity(ps, eaccts, tsfrs[0], sel)
+			actv := createErc20Activity(ps, eaccts, tsfrs[0], ETH_BASE_CURRENCY, sel, s.logger, s.debug)
 			if actv != nil {
 				// actv.TxnType = sel.TxnType
 				actvs = append(actvs, actv)
 			}
 
 		case CategorySwap, CategoryWrap:
-			actv := s.createErc20TradeActivity(ps, eaccts, tsfrs[0], tsfrs[1], sel)
+			actv := createErc20TradeActivity(ps, eaccts, tsfrs[0], tsfrs[1], sel, s.logger, s.debug)
 			if actv == nil {
-				actv = s.createErc20TradeActivity(ps, eaccts, tsfrs[1], tsfrs[0], sel)
+				actv = createErc20TradeActivity(ps, eaccts, tsfrs[1], tsfrs[0], sel, s.logger, s.debug)
 			}
 			if actv != nil {
 				actvs = append(actvs, actv)
 			}
 		case CategoryMultiToken:
-			mactvs := s.createErcMultiActivity(ps, eaccts, tsfrs)
+			mactvs := createErcMultiActivity(ps, eaccts, tsfrs, ETH_BASE_CURRENCY, s.logger, s.debug)
 			actvs = append(actvs, mactvs...)
 
 			// add normal actvitity only if positive amount
 			amount, _ := crypto.ConvertStringToBaseDecimal(ntxn.Value.Int().String(), TXN_DECIMALS)
 			if amount.IsPositive() {
-				actv := s.createNormalTxnActivity(ps, eaccts, ntxn, sel)
+				actv := createNormalTxnActivity(ps, eaccts, ntxn, ETH_BASE_CURRENCY, sel, s.logger, s.debug)
 				if actv != nil {
 					actv.TxnType = domain.ActivityTypeAddLiquidity
 					actvs = append(actvs, actv)
@@ -257,7 +265,7 @@ func (s EthereumTransformer) buildActivityFromNormal(
 			// hash - 0x3cd0719a3605fcdec3e78d557609eb0c58534b2e72983aeaf908319ef1de63a6
 		}
 	case 3:
-		mactvs := s.createErcMultiActivity(ps, eaccts, tsfrs)
+		mactvs := createErcMultiActivity(ps, eaccts, tsfrs, ETH_BASE_CURRENCY, s.logger, s.debug)
 		actvs = append(actvs, mactvs...)
 
 	default:
@@ -274,12 +282,12 @@ func (s EthereumTransformer) buildActivityFromErc20(
 	actvs := []*domain.Activity{}
 	switch len(tsfrs) {
 	case 1:
-		actv := s.createErc20Activity(ps, eaccts, tsfrs[0], Selector{})
+		actv := createErc20Activity(ps, eaccts, tsfrs[0], ETH_BASE_CURRENCY, Selector{}, s.logger, s.debug)
 		if actv != nil {
 			actvs = append(actvs, actv)
 		}
 	case 2:
-		actv := s.createErc20Activity(ps, eaccts, tsfrs[0], Selector{})
+		actv := createErc20Activity(ps, eaccts, tsfrs[0], ETH_BASE_CURRENCY, Selector{}, s.logger, s.debug)
 		if actv != nil {
 			actvs = append(actvs, actv)
 		}

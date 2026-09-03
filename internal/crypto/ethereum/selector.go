@@ -38,7 +38,6 @@ var knownSelectors = map[string]Selector{
 	"0x782ed90c": {CategoryWithdrawal, domain.ActivityTypeExitLiquidity, "exitLiquidity"},
 	"0x630d8c63": {CategoryWithdrawal, domain.ActivityTypeExitLiquidity, "claimBalance (bancor)"},
 	"0xac9650d8": {CategoryWithdrawal, domain.ActivityTypeExitLiquidity, "multicall"},
-	"0x8d16a14a": {CategoryWithdrawal, domain.ActivityTypeExitLiquidity, "unstakeClaimTokens"},
 
 	"0x3805550f": {CategoryDeposit, domain.ActivityTypeReceive, "exit"},
 	"0x0f6795f2": {CategoryDeposit, domain.ActivityTypeReceive, "processExits"},
@@ -76,7 +75,6 @@ var knownSelectors = map[string]Selector{
 	"0xadc9772e": {CategorySwap, domain.ActivityTypeTrade, "stake"},
 	"0x46ab38f1": {CategorySwap, domain.ActivityTypeTrade, "exitswapPoolAmountIn"},
 	"0x8bdb3913": {CategorySwap, domain.ActivityTypeTrade, "exitPool"},
-	"0xb02f0b73": {CategorySwap, domain.ActivityTypeTrade, "exitPool"},
 
 	"0xe2b39746": {CategorySwap, domain.ActivityTypeTrade, "multihopBatchSwapExactIn"},
 	"0x18cbafe5": {CategorySwap, domain.ActivityTypeTrade, "swapExactTokensForETH"},
@@ -106,11 +104,17 @@ var knownSelectors = map[string]Selector{
 	"0xdb006a75": {CategoryUnknown, "", "redeem"},
 	"0x88316456": {CategoryUnknown, "", "mint"},
 	"0x1aa3a008": {CategoryUnknown, "", "register"},
+	"0x34fcd5be": {CategoryUnknown, "", "unknown-polygon"},
+	"0xa1798512": {CategoryUnknown, "", "unknown-polygon-spam"},
+	"0x18b35fe1": {CategoryUnknown, "", "unknown-polygon-spam"},
+	"0xf97b19f5": {CategoryUnknown, "", "unknown-polygon-spam"},
+	"0x8d16a14a": {CategoryUnknown, "", "unstakeClaimTokens"},
 
 	"0x8aaa8f3b": {CategoryUnknown, "", "spam"},
 
 	// multi tokens
 	"0xf305d719": {CategoryMultiToken, "", "addLiquidityETH"},
+	"0xb02f0b73": {CategoryMultiToken, "", "exitPool"},
 }
 
 func lookupSelector(method string) (Selector, bool) {
