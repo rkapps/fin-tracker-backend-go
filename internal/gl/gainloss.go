@@ -3,7 +3,6 @@ package gl
 import (
 	"context"
 	"fmt"
-	"log"
 	"sort"
 	"strings"
 	"time"
@@ -88,24 +87,27 @@ func (gl *GainLoss) Run(ctx context.Context, actvs []*domain.Activity) (GainLoss
 	//       accumulate lots and GL entries
 	gr := &GainLossResult{}
 	uactvs := []*domain.Activity{}
+
+	// adjustments ethereum receive times based on coinbase send
+	for _, actv := range actvs {
+
+		//adjustments
+		if strings.Compare(actv.ID, "0xb16d3d72068a6ce015c5639987134249fc231eb8aaa2172533c33350fe9465d1") == 0 ||
+			strings.Compare(actv.ID, "0xbaff0a80d1082355707409b59f1bac7544049a736d4a2975a77b12f108b84da8") == 0 ||
+			strings.Compare(actv.ID, "0x32d07bd163fb1cbc6a7ec1b0f7192786a4ddf174c424391c9c8c71c05580ec60") == 0 ||
+			strings.Compare(actv.ID, "0x597c6ee42b604797dfa03a9b5a91a2fa25c82181799aecb088656763a08da059") == 0 ||
+			strings.Compare(actv.ID, "0x5c0999ad603644c239467d1efb8f57bd3112808d65f94f74c2f864316b9d9a11") == 0 {
+			actv.Date = actv.Date.Add(time.Second * 9)
+		}
+	}
+
 	sort.Slice(actvs, func(i, j int) bool {
 		return actvs[i].Date.Before(actvs[j].Date)
 	})
 
-	// sendm := make(map[string]*domain.Activity)
-
 	for i, actv := range actvs {
 		if i > 1000 {
 			// break
-		}
-
-		//adjustments
-		if strings.Compare(actv.ID, "0xb16d3d72068a6ce015c5639987134249fc231eb8aaa2172533c33350fe9465d1") == 0 ||
-			strings.Compare(actv.ID, "0x5c0999ad603644c239467d1efb8f57bd3112808d65f94f74c2f864316b9d9a11") == 0 {
-			actv.Date = actv.Date.Add(time.Second * 8)
-		}
-		if strings.Compare(actv.SentSymbol, "ETH...") == 0 {
-			continue
 		}
 
 		gl.debug = false
@@ -152,10 +154,6 @@ func (gl *GainLoss) Run(ctx context.Context, actvs []*domain.Activity) (GainLoss
 	}
 
 	for _, actv := range gl.transferActivities {
-		// log.Println(actv.Debug())
-		if strings.Compare(actv.ID, "7913bb98-3ec4-5d47-9b05-5459c17fcf65") == 0 {
-			log.Println("Reached")
-		}
 		actv.Orphan = true
 	}
 	gr.Actvs = uactvs
@@ -332,9 +330,24 @@ func (gl *GainLoss) MatchTransfer(ctx context.Context, actv *domain.Activity) ([
 			logger.Debug("MatchLots", "sentSymbol", sentActv.SentSymbol, "rcvSymbol", actv.RcvSymbol)
 			logger.Debug("MatchLots", "sentAmount", sentActv.SentAmount, "rcvAmount", actv.RcvAmount)
 		}
+
+		match := false
 		// this matches the id from the import
 		if (sentActv.RcvAccount == actv.AccountID && sentActv.SentSymbol == actv.RcvSymbol) ||
 			(sentActv.SentSymbol == actv.RcvSymbol && core.AmountsMatch(sentActv.SentAmount, actv.RcvAmount)) {
+			match = true
+		}
+
+		// polygon eth-weth
+		if sentActv.SentSymbol == "ETH" && actv.RcvSymbol == "WETH" && core.AmountsMatch(sentActv.SentAmount, actv.RcvAmount) {
+			match = true
+		}
+		// // polygon matic-pol
+		// if sentActv.SentSymbol == "POL" && actv.RcvSymbol == "POL" && core.AmountsMatch(sentActv.SentAmount, actv.RcvAmount) {
+		// 	match = true
+		// }
+
+		if match {
 			lots := gl.transferLots[id]
 			if gl.debug {
 				logger.Info("MatchLots", "lots", lots)
