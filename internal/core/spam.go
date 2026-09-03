@@ -28,7 +28,7 @@ func (c CryptoSpamService) LoadCryptoSpams() {
 func (c CryptoSpamService) IsSpamSolanaSignature(signature string, blockchain string) bool {
 	spams := c.spamm[blockchain]
 	for _, spam := range spams {
-		if strings.Compare(spam.Source, signature) == 0 {
+		if strings.Compare(strings.ToLower(spam.Source), strings.ToLower(signature)) == 0 {
 			return true
 		}
 	}
@@ -38,7 +38,7 @@ func (c CryptoSpamService) IsSpamSolanaSignature(signature string, blockchain st
 func (c CryptoSpamService) IsSpamEthereumContractAddress(caddress string, blockchain string) bool {
 	spams := c.spamm[blockchain]
 	for _, spam := range spams {
-		if strings.Compare(spam.Caddress, caddress) == 0 {
+		if strings.Compare(strings.ToLower(spam.Caddress), strings.ToLower(caddress)) == 0 {
 			return true
 		}
 	}
@@ -48,7 +48,7 @@ func (c CryptoSpamService) IsSpamEthereumContractAddress(caddress string, blockc
 func (c CryptoSpamService) IsSpamEthereumFromAddress(faddress string, blockchain string) bool {
 	spams := c.spamm[blockchain]
 	for _, spam := range spams {
-		if strings.Compare(spam.Faddress, faddress) == 0 {
+		if strings.Compare(strings.ToLower(spam.Faddress), strings.ToLower(faddress)) == 0 {
 			return true
 		}
 	}
@@ -58,7 +58,7 @@ func (c CryptoSpamService) IsSpamEthereumFromAddress(faddress string, blockchain
 func (c CryptoSpamService) IsSpamEthereumSymbol(symbol string, blockchain string) bool {
 	spams := c.spamm[blockchain]
 	for _, spam := range spams {
-		if strings.Compare(spam.Symbol, symbol) == 0 {
+		if strings.Compare(strings.ToLower(spam.Symbol), strings.ToLower(symbol)) == 0 {
 			return true
 		}
 	}
