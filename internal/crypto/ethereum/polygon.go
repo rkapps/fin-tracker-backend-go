@@ -66,8 +66,7 @@ func (p PolygonTransformer) Transform(ctx context.Context, ps core.PriceService,
 		date := ntxn.TimeStamp.Time()
 		tsfrs := tsfrsm[ntxn.Hash]
 		p.debug = false
-
-		if strings.Compare(ntxn.Hash, "0xfb2be2f61098719943dbcbdd6dd05686fbaec5a973b6b18ac15b49c6c9958234") == 0 {
+		if strings.Compare(ntxn.Hash, "0xbd81a4c587115fd2f99703a75dec7fd678659a960277f77ebd266fac94fa345c") == 0 {
 			// p.debug = true
 		}
 		if i > 100 {
@@ -101,12 +100,13 @@ func (p PolygonTransformer) Transform(ctx context.Context, ps core.PriceService,
 		date := tsfr.TimeStamp.Time()
 
 		p.debug = false
-		if strings.Compare(hash, "0xfb2be2f61098719943dbcbdd6dd05686fbaec5a973b6b18ac15b49c6c9958234") == 0 {
+		if strings.Compare(hash, "0xc93f352ce2e95d7ca0a405cd82d2391c9cd90b7e5d7fee41cf194d5eaa7186c2") == 0 {
 			// p.debug = true
 		}
 		if p.debug {
 			p.logger.Info("Transform")
 			p.logger.Info("Transform", "erc20", hash, "Date", date)
+			p.logger.Info("Transform", "Caddress", tsfr.ContractAddress)
 			p.logger.Info("Transform", "Transfers--", len(tsfrs))
 		}
 
@@ -190,7 +190,7 @@ func (p PolygonTransformer) buildActivityFromNormal(
 		// approve
 	case "0xb95cac28":
 		//liquid activities
-		p.logger.Info("buildActivityFromNormal", method, ntxn.Hash)
+		// p.logger.Info("buildActivityFromNormal", method, ntxn.Hash)
 		mactvs := createErcMultiActivity(ps, eaccts, tsfrs, POLYGON_BASE_CURRENCY, p.logger, p.debug)
 		actvs = append(actvs, mactvs...)
 
