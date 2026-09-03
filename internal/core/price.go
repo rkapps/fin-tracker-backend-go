@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
@@ -22,6 +23,22 @@ func NewPriceService(tstorage storage.TickerStorageService, cstorage storage.Cry
 
 func (ps PriceService) GetCryptoPrice(symbol string, date time.Time) (decimal.Decimal, error) {
 
+	if strings.Compare(symbol, "USDT") == 0 ||
+		strings.Compare(symbol, "USDC") == 0 {
+		return decimal.NewFromFloat(1.0), nil
+	}
+
+	psymbol := symbol
+	if strings.Compare(symbol, "WETH") == 0 || strings.Compare(symbol, "ETH2") == 0 {
+		psymbol = "ETH"
+	}
+	if strings.Compare(symbol, "WPOL") == 0 {
+		psymbol = "POL"
+	}
+	if strings.Compare(symbol, "mSOL") == 0 {
+		psymbol = "SOL"
+	}
+
 	//Truncate date to the nearest hour
 	d := 24 * 60 * time.Minute
 	ndate := date.Truncate(d)
@@ -32,7 +49,7 @@ func (ps PriceService) GetCryptoPrice(symbol string, date time.Time) (decimal.De
 	cp, ok := ps.pm[key]
 
 	if !ok {
-		th, err := ps.tstorage.GetTickerHistoryByDate(symbol, ndate)
+		th, err := ps.tstorage.GetTickerHistoryByDate(psymbol, ndate)
 		if err != nil || th == nil {
 			return decimal.Decimal{}, err
 		}
