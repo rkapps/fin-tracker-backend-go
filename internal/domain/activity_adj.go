@@ -1,13 +1,11 @@
 package domain
 
-import "time"
-
 type ActivityAdj struct {
-	UID     string `json:"-"`
-	ID      string `json:"-"`
-	TxnType string `json:"txnType"`
-	Tag     string
-	Date    *time.Time
+	UID           string `json:"-"`
+	ID            string `json:"-"`
+	TxnType       string `json:"txnType"`
+	Tag           string
+	AdjustSeconds string `bson:"adjust_seconds"`
 }
 
 // Id returns the unique id for the ticker

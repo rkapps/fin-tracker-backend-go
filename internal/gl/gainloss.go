@@ -88,19 +88,6 @@ func (gl *GainLoss) Run(ctx context.Context, actvs []*domain.Activity) (GainLoss
 	gr := &GainLossResult{}
 	uactvs := []*domain.Activity{}
 
-	// adjustments ethereum receive times based on coinbase send
-	for _, actv := range actvs {
-
-		//adjustments
-		if strings.Compare(actv.ID, "0xb16d3d72068a6ce015c5639987134249fc231eb8aaa2172533c33350fe9465d1") == 0 ||
-			strings.Compare(actv.ID, "0xbaff0a80d1082355707409b59f1bac7544049a736d4a2975a77b12f108b84da8") == 0 ||
-			strings.Compare(actv.ID, "0x32d07bd163fb1cbc6a7ec1b0f7192786a4ddf174c424391c9c8c71c05580ec60") == 0 ||
-			strings.Compare(actv.ID, "0x597c6ee42b604797dfa03a9b5a91a2fa25c82181799aecb088656763a08da059") == 0 ||
-			strings.Compare(actv.ID, "0x5c0999ad603644c239467d1efb8f57bd3112808d65f94f74c2f864316b9d9a11") == 0 {
-			actv.Date = actv.Date.Add(time.Second * 9)
-		}
-	}
-
 	sort.Slice(actvs, func(i, j int) bool {
 		return actvs[i].Date.Before(actvs[j].Date)
 	})

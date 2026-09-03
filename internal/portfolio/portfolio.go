@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"sync"
+	"time"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
@@ -211,6 +213,12 @@ func (p Portfolio) AdjustActivities(uid string, actvs []*domain.Activity) {
 		}
 		if len(adjActv.TxnType) > 0 {
 			actv.TxnType = domain.ActivityType(adjActv.TxnType)
+		}
+		p.logger.Info("AdjustActivities", "Actv", actv.Hash, "seonds", adjActv.AdjustSeconds)
+
+		adjSeconds, err := strconv.Atoi(adjActv.AdjustSeconds)
+		if err == nil {
+			actv.Date = actv.Date.Add(time.Second * time.Duration(adjSeconds))
 		}
 	}
 }
