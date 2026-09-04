@@ -106,7 +106,7 @@ func (s EthereumTransformer) Transform(ctx context.Context, ps core.PriceService
 			continue
 		}
 		if spamService.IsSpamEthereumSymbol(tsfr.TokenSymbol, crypto.BLOCKCHAIN_ETHEREUM) {
-			s.logger.Info("Transform", "Spam", fmt.Sprintf("Symbol: %s", tsfr.TokenSymbol))
+			s.logger.Debug("Transform", "Spam", fmt.Sprintf("Symbol: %s", tsfr.TokenSymbol))
 			continue
 		}
 
