@@ -179,18 +179,23 @@ func (s SolanaActivity) ProcessTransaction() []*domain.Activity {
 
 		iactvs := []*domain.Activity{}
 		innerInstruction := instructionsm[z]
+		stake := false
 		for i, inner := range innerInstruction.Instructions {
 
 			if s.debug {
-				s.logger.Info("ProcessTransaction", "", fmt.Sprintf("Inner #%d", i))
+				s.logger.Info("ProcessTransaction", "", fmt.Sprintf("Inner #%d program: %s", i, inner.ProgramId))
+				// log.Println(inner)
 				// s.logger.Debug("ProcessTransaction", "Account", parsed.Info.Account)
 				// s.logger.Debug("ProcessTransaction", "Mint", parsed.Info.Mint)
+			}
+			if strings.Compare(inner.ProgramId, PGM_STAKE_ACCOUNT) == 0 {
+				stake = true
 			}
 			iactv := s.processSingleInnerInstruction(inner, acctsm)
 			if iactv != nil {
 
 				// update txntype and notes
-				s.updateActivityDetails(instruction, iactv)
+				s.updateActivityDetails(instruction, iactv, stake)
 				if len(actvs) > 0 {
 					iactv.ID = fmt.Sprintf("%s-%d", iactv.ID, actvCount)
 					actvCount++
@@ -308,7 +313,6 @@ func (s SolanaActivity) processOuterInstruction(
 		}
 
 	}
-
 	return nil
 }
 
@@ -429,34 +433,6 @@ func (s SolanaActivity) processSingleInnerInstruction(
 				}
 			}
 
-		} else if strings.Compare(parsed.Type, "merge") == 0 {
-
-			s.logger.Error("InnerInstruction", "Error", "Not implemented")
-			// sig := s.repo.GetSignature(ctx, result.Acct_Id, result.Signature)
-			// if sig != nil && strings.Compare(sig.Address, info.Destination) == 0 {
-			// 	account := ""
-			// 	accountIndex := 0
-			// 	for i, accountKey := range result.Transaction.Message.AccountKeys {
-			// 		if strings.Compare(accountKey.Pubkey, sig.Address) == 0 {
-			// 			account = accountKey.Pubkey
-			// 			accountIndex = i
-			// 		}
-			// 	}
-
-			// 	if debug {
-			// 		log.Printf("          Account: %s", result.Acct_Id)
-			// 		log.Printf("          Account: %s Index: %d", account, accountIndex)
-			// 	}
-			// 	if len(account) > 0 {
-
-			// 		tAddrAcct = acct
-			// 		mergeBal = result.Meta.PostBalances[accountIndex] - result.Meta.PreBalances[accountIndex]
-			// 		if debug {
-			// 			log.Printf("          Balance: %v", mergeBal)
-			// 		}
-			// 	}
-
-			// }
 		} else {
 			// log.Println(parsed.Type)
 		}
@@ -558,7 +534,19 @@ func (s SolanaActivity) createInstructionActivity(
 	return actv
 }
 
-func (s SolanaActivity) updateActivityDetails(instruction SolanaParsedInstruction, actv *domain.Activity) {
+func (s SolanaActivity) updateActivityDetails(instruction SolanaParsedInstruction, actv *domain.Activity, stake bool) {
+
+	if stake {
+		if s.debug {
+			s.logger.Info("updateActivityDetails", "Actv", actv.ID, "TxnType", actv.TxnType)
+		}
+		switch actv.TxnType {
+		case domain.ActivityTypeSend:
+			actv.TxnType = domain.ActivityTypeStake
+		case domain.ActivityTypeReceive:
+			actv.TxnType = domain.ActivityTypeUnStake
+		}
+	}
 
 	if strings.Compare(instruction.ProgramId, "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL") == 0 {
 		// actv.TxnType = activities.TXN_TYPE_OTHER_FEE
