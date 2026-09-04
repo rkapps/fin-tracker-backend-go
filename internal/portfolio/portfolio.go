@@ -214,7 +214,7 @@ func (p Portfolio) AdjustActivities(uid string, actvs []*domain.Activity) {
 		if len(adjActv.TxnType) > 0 {
 			actv.TxnType = domain.ActivityType(adjActv.TxnType)
 		}
-		p.logger.Info("AdjustActivities", "Actv", actv.Hash, "seonds", adjActv.AdjustSeconds)
+		p.logger.Debug("AdjustActivities", "Actv", actv.Hash, "seonds", adjActv.AdjustSeconds)
 
 		adjSeconds, err := strconv.Atoi(adjActv.AdjustSeconds)
 		if err == nil {
