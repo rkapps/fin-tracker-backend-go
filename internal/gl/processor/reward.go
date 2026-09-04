@@ -27,14 +27,13 @@ func (p RewardActivityProcessor) Process(ctx context.Context, actv *domain.Activ
 	pr := NewProcessResult()
 
 	// Create the lot of the asset
-	lm.CreateAssetLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount, actv.SentAmount.Add(actv.Fee))
+	lot := lm.CreateAssetLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount, actv.SentAmount)
+	err := lm.CreateGLIncome(newctx, lot, actv)
+	if err != nil {
+		return nil, err
+	}
 
-	// err = lm.CreateGLIncome(newctx, lot, actv)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	pr.Value = actv.RcvAmount
+	pr.Value = actv.SentAmount
 	p.logger.Debug("Process", "RcvValue", actv.RcvAmount)
 
 	return pr, nil
