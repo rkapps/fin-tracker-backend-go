@@ -329,6 +329,16 @@ func (gl *GainLoss) MatchTransfer(ctx context.Context, actv *domain.Activity) ([
 		if sentActv.SentSymbol == "ETH" && actv.RcvSymbol == "WETH" && core.AmountsMatch(sentActv.SentAmount, actv.RcvAmount) {
 			match = true
 		}
+
+		// polygon usdc- usdc.e
+		if sentActv.SentSymbol == "USDC.e" && actv.RcvSymbol == "USDC" && core.AmountsMatch(sentActv.SentAmount, actv.RcvAmount) {
+			match = true
+		}
+		// polygon eth-weth
+		if sentActv.SentSymbol == "USDC" && actv.RcvSymbol == "USDC.e" && core.AmountsMatch(sentActv.SentAmount, actv.RcvAmount) {
+			match = true
+		}
+
 		// // polygon matic-pol
 		// if sentActv.SentSymbol == "POL" && actv.RcvSymbol == "POL" && core.AmountsMatch(sentActv.SentAmount, actv.RcvAmount) {
 		// 	match = true
