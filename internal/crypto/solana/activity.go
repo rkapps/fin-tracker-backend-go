@@ -3,6 +3,7 @@ package solana
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
@@ -196,12 +197,18 @@ func (s SolanaActivity) ProcessTransaction() []*domain.Activity {
 
 				// update txntype and notes
 				s.updateActivityDetails(instruction, iactv, stake)
-				if len(actvs) > 0 {
+				if len(iactvs) > 0 {
 					iactv.ID = fmt.Sprintf("%s-%d", iactv.ID, actvCount)
+					// this fix is only so tradein go in first
+					if iactv.TxnType == domain.ActivityTypeTradeIn {
+						iactv.Date = iactv.Date.Add(time.Second * 1)
+					}
+
 					actvCount++
 				}
 				iactvs = append(iactvs, iactv)
 				if s.debug {
+					s.logger.Info("ProcessTransaction", "", iactv.ID)
 					s.logger.Info("ProcessTransaction", "", fmt.Sprintf("---%s---", iactv.TxnType))
 				}
 				// s.logger.Info("ProcessTransaction", "", iactv.GetSendReceiveInfo())
