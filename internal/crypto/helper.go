@@ -54,7 +54,7 @@ func EvaluateRewardValue(ps core.PriceService, symbol string, amount decimal.Dec
 		// No price data — can't confirm this is negligible. Keep it.
 		return decimal.Zero, false
 	}
-	value = amount.Mul(price)
+	value = amount.Mul(price).Round(int32(MAX_DECIMALS))
 	if value.Abs().LessThan(minRewardAmountDecimal) {
 		return value, true
 	}
