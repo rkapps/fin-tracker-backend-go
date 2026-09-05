@@ -129,7 +129,7 @@ const (
 )
 
 func (a Activity) IsIncome() bool {
-	return a.TxnType == ActivityTypeDividend || a.TxnType == ActivityTypeInterest
+	return a.TxnType == ActivityTypeDividend || a.TxnType == ActivityTypeInterest || a.TxnType == ActivityTypeReward
 }
 
 func (a Activity) IsDeposit() bool {
