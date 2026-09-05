@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
@@ -42,8 +41,6 @@ func (p Portfolio) SyncUserAccounts(ctx context.Context, uid string) error {
 
 	for provider, providerAccounts := range acreds {
 		p.logger.Info("SyncUserAccounts", "Provider", provider, "Accounts", len(providerAccounts))
-		// providerAccounts := providerAccounts
-		// provider := provider
 		g.Go(func() error {
 			syncer, err := ResolveBatchSyncer(p.syncRegistry, provider, p.logConfig, p.logger)
 			if err != nil {
@@ -95,13 +92,12 @@ type accountSyncProvider struct {
 func (s *accountSyncProvider) Sync(ctx context.Context, providerStorage storage.ProviderStorageService, acreds []domain.AccountWithCredential) error {
 	var errs []error
 
-	// s.logger.Info("Sync", "Accounts", len(acreds))
 	if global, ok := s.syncProvider.(core.GlobalSyncProvider); ok {
 		s.logger.Debug("Sync", "GlobalProvider", s.syncProvider.Name(), "Stream", global.GlobalStreams())
 		for _, stream := range global.GlobalStreams() {
-			if strings.Compare("polygon", s.syncProvider.Name()) != 0 {
-				continue
-			}
+			// if strings.Compare("ethereum", s.syncProvider.Name()) != 0 {
+			// 	continue
+			// }
 			if err := s.syncGlobalStream(ctx, providerStorage, global, stream); err != nil {
 				errs = append(errs, fmt.Errorf("%s/global/%s: %w", s.syncProvider.Name(), stream, err))
 			}
@@ -110,9 +106,9 @@ func (s *accountSyncProvider) Sync(ctx context.Context, providerStorage storage.
 
 	for _, acred := range acreds { // serial: shared rate limit / nonce per provider
 		s.logger.Debug("Sync", "Account", acred.Account.ID)
-		if strings.Compare("polygon", s.syncProvider.Name()) != 0 {
-			continue
-		}
+		// if strings.Compare("ethereum", s.syncProvider.Name()) != 0 {
+		// 	continue
+		// }
 		for _, stream := range s.syncProvider.Streams() {
 			s.logger.Debug("Sync", "Provider-Stream", fmt.Sprintf("%s-%s", s.syncProvider.Name(), stream))
 			if err := s.syncStream(ctx, providerStorage, acred, stream); err != nil {
