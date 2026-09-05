@@ -11,6 +11,7 @@ import (
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/core"
+	"github.com/rkapps/fin-tracker-backend-go/internal/crypto"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 	"github.com/rkapps/fin-tracker-backend-go/internal/utils"
 )
@@ -151,6 +152,9 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 						strings.Compare(txn.From.Name, "Coinbase Earn") == 0 ||
 						strings.Compare(txn.From.Name, "Coinbase Rewards") == 0 {
 
+						if crypto.ShouldSkipDustReward(namount) {
+							continue
+						}
 						actv.TxnType = domain.ActivityTypeReward
 						actv.Value = namount
 					}
@@ -237,6 +241,11 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 				} else {
 					actv.TxnType = domain.ActivityTypeInterest
 				}
+
+				if crypto.ShouldSkipDustReward(namount) {
+					continue
+				}
+
 				actv.RcvAccountID = acred.Account.ID
 				actv.RcvAmount = amount.Abs()
 				actv.RcvSymbol = symbol

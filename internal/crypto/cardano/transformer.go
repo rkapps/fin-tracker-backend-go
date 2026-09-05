@@ -147,27 +147,28 @@ func (c CardanoAccountTransformer) handleRewards(
 			if epoch.Epoch == 0 {
 				continue
 			}
+
+			tm := time.Unix(epoch.StartTime, 10)
+			amount, _ := crypto.ConvertStringToBaseDecimal(reward.Amount, TXN_DECIMALS)
+			value, skip := crypto.EvaluateRewardValue(ps, BASE_CURRENCY, amount, tm)
+			if skip {
+				continue
+			}
+
 			actv := &domain.Activity{}
 			actv.UID = acred.Account.UID
 			actv.AccountID = acred.Account.ID
 			actv.ID = fmt.Sprintf("%s-%v", acred.Account.ID, epoch.Epoch)
-			tm := time.Unix(epoch.StartTime, 10)
 			actv.Date = tm
 			actv.TxnType = domain.ActivityTypeReward
 			actv.RcvAccountID = acred.Account.ID
-			actv.RcvSymbol = "ADA"
-			amount, _ := crypto.ConvertStringToBaseDecimal(reward.Amount, TXN_DECIMALS)
+			actv.RcvSymbol = BASE_CURRENCY
 			actv.RcvAmount = amount
-			price, err := ps.GetCryptoPrice(actv.RcvSymbol, actv.Date)
-			if err != nil {
-				// k.logger.Error("Transform", "Ledger", ledger.Debug(), "Error", err)
-				// continue
-			}
-			actv.SentAmount = amount.Mul(price)
+			actv.SentAmount = value
 			actv.SentSymbol = "USD"
 
-			// if epoch.Epoch >= 215 && epoch.Epoch <= 220 {
-			// 	c.logger.Info("Transform", "Date", actv.Date, "Reward", fmt.Sprintf("%s-%v-%v-%v", actv.RcvSymbol, actv.RcvAmount, price, actv.SentAmount))
+			// if epoch.Epoch >= 649 && epoch.Epoch <= 650 {
+			// 	c.logger.Info("Transform", "Reward", fmt.Sprintf("%s-%v-%v", actv.RcvSymbol, actv.RcvAmount, actv.SentAmount), "Date", actv.Date)
 			// }
 			actv.Notes = fmt.Sprintf("Epoch: %v", epoch.Epoch)
 			actvs = append(actvs, actv)

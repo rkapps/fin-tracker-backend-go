@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
+	"github.com/rkapps/fin-tracker-backend-go/internal/core"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 	"github.com/rkapps/fin-tracker-backend-go/internal/utils"
 	"github.com/shopspring/decimal"
@@ -14,6 +15,10 @@ var (
 	base         = decimal.NewFromInt(10)
 	MAX_DECIMALS = 8
 )
+
+const minRewardAmount = "0.25"
+
+var minRewardAmountDecimal = decimal.RequireFromString(minRewardAmount)
 
 func ConvertFloatToTime(curtime float64) (*time.Time, error) {
 	var i (int64) = int64(curtime)
@@ -40,6 +45,24 @@ func ConvertInt64ToBaseDecimal(quantity int64, dec decimal.Decimal) (decimal.Dec
 	qty := decimal.NewFromUint64(uint64(quantity))
 	qty = qty.Div(base.Pow(dec))
 	return qty, nil
+}
+
+// evaluate crypto price and return the value and bool
+func EvaluateRewardValue(ps core.PriceService, symbol string, amount decimal.Decimal, date time.Time) (value decimal.Decimal, skip bool) {
+	price, err := ps.GetCryptoPrice(symbol, date)
+	if err != nil {
+		// No price data — can't confirm this is negligible. Keep it.
+		return decimal.Zero, false
+	}
+	value = amount.Mul(price)
+	if value.Abs().LessThan(minRewardAmountDecimal) {
+		return value, true
+	}
+	return value, false
+}
+
+func ShouldSkipDustReward(amount decimal.Decimal) bool {
+	return amount.LessThan(minRewardAmountDecimal)
 }
 
 // Get the account for the address

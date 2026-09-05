@@ -150,16 +150,16 @@ func (k KrakenAccountTransformer) Transform(ctx context.Context, ps core.PriceSe
 				actv.RcvSymbol = symbol
 				actv.RcvAmount = amount
 			case "staking":
+
+				value, skip := crypto.EvaluateRewardValue(ps, symbol, amount, actv.Date)
+				if skip {
+					continue
+				}
 				actv.TxnType = domain.ActivityTypeReward
 				actv.RcvAccountID = actv.AccountID
 				actv.RcvSymbol = symbol
 				actv.RcvAmount = amount
-				price, err := ps.GetCryptoPrice(symbol, actv.Date)
-				if err != nil {
-					k.logger.Error("Transform", "Ledger", ledger.Debug(), "Error", err)
-					// continue
-				}
-				actv.SentAmount = amount.Mul(price)
+				actv.SentAmount = value
 				actv.SentSymbol = "USD"
 
 			default:
