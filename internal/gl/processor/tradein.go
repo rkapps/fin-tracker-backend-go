@@ -27,8 +27,7 @@ func (p TradeInActivityProcessor) Process(ctx context.Context, actv *domain.Acti
 
 	// Reduce the lot of the asset and get the costvalue for the gl
 	touched, value, _ := lm.ReduceLotQty(newctx, actv, actv.SentAmount)
-	lm.CreateGLDisposal(newctx, touched, actv)
-
+	// lm.CreateGLDisposal(newctx, touched, actv)
 	gl := lm.CreateGLDisposal(newctx, touched, actv)
 	actv.GlAmount = gl
 	pr.Value = value
