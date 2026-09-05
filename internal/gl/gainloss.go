@@ -99,7 +99,7 @@ func (gl *GainLoss) Run(ctx context.Context, actvs []*domain.Activity) (GainLoss
 
 		gl.debug = false
 		if //strings.Compare(actv.AccountID, "Solana-Fa8jM") == 0 ||
-		strings.Compare(actv.ID, "0xb16d3d72068a6ce015c5639987134249fc231eb8aaa2172533c33350fe9465d1") == 0 {
+		strings.Compare(actv.ID, "06d28ab1245bec95fe9f850602b2393decdcdbdb") == 0 {
 			// gl.debug = true
 		}
 		if gl.debug {
@@ -191,11 +191,13 @@ func (gl *GainLoss) CreateGLDisposal(ctx context.Context, lots []*domain.Activit
 
 	tgainLoss := decimal.Zero
 	acct := gl.acctsm[activity.AccountID]
-	logger.Debug("CreateGLDisposal", "Amount", fmt.Sprintf("%v--%v", activity.RcvAmount, activity.SentAmount))
+	if gl.debug {
+		logger.Info("CreateGLDisposal", "Amount", fmt.Sprintf("%v--%v", activity.RcvAmount, activity.SentAmount))
+	}
 
 	for _, lot := range lots {
 		price := activity.RcvAmount.Div(activity.SentAmount)
-		proceeds := lot.Amount.Mul(price)
+		proceeds := lot.Amount.Mul(price).Round(MAX_DECIMALS)
 		gainLoss := proceeds.Sub(lot.CostValue)
 		tgainLoss = tgainLoss.Add(gainLoss)
 
@@ -231,10 +233,13 @@ func (gl *GainLoss) CreateGLDisposal(ctx context.Context, lots []*domain.Activit
 			TaxDate:    activity.Date,
 		}
 		gl.GLEntries = append(gl.GLEntries, glEntry)
-		logger.Debug("CreateGlDisposal", "gainloss", gainLoss, "proceeds", proceeds, "costvalue", lot.CostValue)
+		if gl.debug {
+			logger.Info("CreateGlDisposal", "Lot", fmt.Sprintf("Qty: %v CostValue: %v Proceeds: %v", lot.Amount, lot.CostValue, proceeds), "gainloss", gainLoss)
+		}
 	}
-
-	logger.Debug("CreateGlDisposal", "tgainloss", tgainLoss)
+	if gl.debug {
+		logger.Info("CreateGlDisposal", "tgainloss", tgainLoss)
+	}
 
 	return tgainLoss
 }
