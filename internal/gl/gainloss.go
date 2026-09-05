@@ -99,7 +99,7 @@ func (gl *GainLoss) Run(ctx context.Context, actvs []*domain.Activity) (GainLoss
 
 		gl.debug = false
 		if //strings.Compare(actv.AccountID, "Solana-Fa8jM") == 0 ||
-		strings.Compare(actv.ID, "06d28ab1245bec95fe9f850602b2393decdcdbdb") == 0 {
+		strings.Compare(actv.ID, "3e13b76a85dc5f4784542899963b3d16d0e06541") == 0 {
 			// gl.debug = true
 		}
 		if gl.debug {
@@ -142,6 +142,10 @@ func (gl *GainLoss) Run(ctx context.Context, actvs []*domain.Activity) (GainLoss
 
 	for _, actv := range gl.transferActivities {
 		actv.Orphan = true
+		if //strings.Compare(actv.AccountID, "Solana-Fa8jM") == 0 ||
+		strings.Compare(actv.ID, "3e13b76a85dc5f4784542899963b3d16d0e06541") == 0 {
+			// gl.logger.Info("---Run---", "Activity", actv.Debug(), "orphan", actv.Orphan)
+		}
 	}
 	gr.Actvs = uactvs
 	gr.GLEntries = gl.GLEntries
@@ -344,10 +348,10 @@ func (gl *GainLoss) MatchTransfer(ctx context.Context, actv *domain.Activity) ([
 			match = true
 		}
 
-		// // polygon matic-pol
-		// if sentActv.SentSymbol == "POL" && actv.RcvSymbol == "POL" && core.AmountsMatch(sentActv.SentAmount, actv.RcvAmount) {
-		// 	match = true
-		// }
+		// polygon matic-pol
+		if sentActv.SentSymbol == "MATIC" && actv.RcvSymbol == "POL" && core.AmountsMatch(sentActv.SentAmount, actv.RcvAmount) {
+			match = true
+		}
 
 		if match {
 			lots := gl.transferLots[id]
