@@ -78,7 +78,7 @@ func (s FinTrackerMongoStorage) SummaryTransactions(uid string, startDate time.T
 		}
 	}
 
-	tf1c := bson.M{"$cond": []interface{}{bson.M{"$eq": []interface{}{"$dbcr", "credit"}}, "$amount", bson.D{{"$multiply", bson.A{"$amount", -1}}}}}
+	tf1c := bson.M{"$cond": []interface{}{bson.M{"$eq": []interface{}{"$dbcr", "C"}}, "$amount", bson.D{{Key: "$multiply", Value: bson.A{"$amount", -1}}}}}
 
 	query := bson.M{
 		"_id": bson.M{
