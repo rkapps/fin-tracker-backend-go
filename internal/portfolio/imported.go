@@ -99,6 +99,8 @@ func (r ImportedAccountRefresher) Refresh(ctx context.Context, ps core.PriceServ
 				actv.SentAmount = iactv.SentAmount
 				actv.SentAccountID = account.ID
 				actv.Status = domain.ActivityStatusPending
+				actv.Fee = iactv.Fee
+				actv.FeeCurrency = iactv.FeeCurrency
 
 			case string(domain.ActivityTypeBuy):
 				actv.RcvAmount = iactv.RcvAmount
@@ -145,6 +147,8 @@ func (r ImportedAccountRefresher) Refresh(ctx context.Context, ps core.PriceServ
 				price, _ := ps.GetCryptoPrice(actv.SentSymbol, actv.Date)
 				actv.RcvAmount = actv.SentAmount.Mul(price)
 				actv.RcvSymbol = "USD"
+				actv.Fee = iactv.Fee
+				actv.FeeCurrency = iactv.FeeCurrency
 				actv.Status = domain.ActivityStatusPending
 
 			case string(domain.ActivityTypeAdjustment):
