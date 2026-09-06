@@ -2,6 +2,8 @@ package domain
 
 import (
 	"context"
+
+	"github.com/shopspring/decimal"
 )
 
 type ctxToken int
@@ -12,9 +14,11 @@ const (
 )
 
 type User struct {
-	ID           string `json:"id" bson:"id"`
-	CurrencyCode string `json:"currency"`
-	Country      string `json:"country"`
+	ID                   string          `json:"id" bson:"id"`
+	CurrencyCode         string          `json:"currency"`
+	Country              string          `json:"country"`
+	MinAccountBalance    decimal.Decimal `json:"minAccountBalance" bson:"minAccountBalance"`
+	ShowInactiveAccounts bool            `json:"showInactiveAccounts" bson:"showInactiveAccounts"`
 }
 
 func (u *User) Id() string {

@@ -63,6 +63,11 @@ func (p PortfolioService) GetHoldings(uid string, category string, atype string,
 
 	hldgs := []*dto.HoldingResponse{}
 	var err error
+	user, err := p.userStorage.GetUser(uid)
+	if err != nil {
+		return hldgs, nil
+	}
+
 	accts, err := p.accountsStorage.GetAccounts(uid)
 	if err != nil {
 		return hldgs, nil
@@ -73,7 +78,15 @@ func (p PortfolioService) GetHoldings(uid string, category string, atype string,
 		return hldgs, nil
 	}
 	p.logger.Info("GetHoldings", "lots", len(lots), "ticker storage", p.tickersService.storage)
-	return core.GetHoldings(p.tickersService.storage, p.logger, false, accts, acctIds, lots)
+	ahldgs, err := core.GetHoldings(p.tickersService.storage, p.logger, false, accts, acctIds, lots)
+	for _, hldg := range ahldgs {
+		if hldg.MktValue.LessThan(user.MinAccountBalance) {
+			continue
+		}
+		hldgs = append(hldgs, hldg)
+	}
+
+	return hldgs, err
 
 }
 
@@ -147,7 +160,7 @@ func (p PortfolioService) GetActivities(uid string, category string, atype strin
 		ractvs = append(ractvs, ractv)
 	}
 
-	p.logger.Debug("GetActivities", "Actvs", len(ractvs))
+	p.logger.Info("GetActivities", "Actvs", len(ractvs))
 
 	return ractvs, nil
 }
