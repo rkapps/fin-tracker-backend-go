@@ -136,10 +136,13 @@ func createErc20Activity(
 	actv.Hash = tsfr.Hash
 	actv.Date = tsfr.TimeStamp.Time()
 
-	fee, _ := crypto.ConvertInt64ToBaseDecimal(int64(tsfr.Gas)*int64(tsfr.GasUsed), TXN_DECIMALS)
-	actv.Fee = fee
+	fee, _ := crypto.ConvertInt64ToBaseDecimal(int64(tsfr.GasPrice.Int().Int64())*int64(tsfr.GasUsed), TXN_DECIMALS)
+	actv.Fee = fee.Round(int32(crypto.MAX_DECIMALS))
 	actv.FeeCurrency = baseSymbol
-
+	if debug {
+		logger.Info("createErc20Activity", "", fmt.Sprintf("Fee %v-%v", tsfr.GasPrice, tsfr.GasUsed))
+		logger.Info("createErc20Activity", "", fmt.Sprintf("Fee %s-%v", actv.FeeCurrency, actv.Fee))
+	}
 	// decExp := decimal.NewFromInt(int64(tsfr.TokenDecimal))
 	// amount, _ := crypto.ConvertStringToBaseDecimal(tsfr.Value.Int().String(), decExp)
 	amount, _ := ConvertERC20Value(tsfr.Value.Int().String(), tsfr.TokenDecimal)
