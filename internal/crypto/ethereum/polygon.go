@@ -66,7 +66,7 @@ func (p PolygonTransformer) Transform(ctx context.Context, ps core.PriceService,
 		date := ntxn.TimeStamp.Time()
 		tsfrs := tsfrsm[ntxn.Hash]
 		p.debug = false
-		if strings.Compare(ntxn.Hash, "0xbd81a4c587115fd2f99703a75dec7fd678659a960277f77ebd266fac94fa345c") == 0 {
+		if strings.Compare(ntxn.Hash, "0x80ead27ece0c2d9e5b3968615e27fa7293a316d109797fe37684b323146cbde5") == 0 {
 			// p.debug = true
 		}
 		if i > 100 {
@@ -100,7 +100,7 @@ func (p PolygonTransformer) Transform(ctx context.Context, ps core.PriceService,
 		date := tsfr.TimeStamp.Time()
 
 		p.debug = false
-		if strings.Compare(hash, "0xc93f352ce2e95d7ca0a405cd82d2391c9cd90b7e5d7fee41cf194d5eaa7186c2") == 0 {
+		if strings.Compare(hash, "0x80ead27ece0c2d9e5b3968615e27fa7293a316d109797fe37684b323146cbde5") == 0 {
 			// p.debug = true
 		}
 		if p.debug {
@@ -270,6 +270,9 @@ func (p PolygonTransformer) marshalData(rawsm map[string][]domain.RawItem,
 	itxnsm := make(map[string]string)
 	ntxnsm := make(map[string]string)
 
+	// if the transfer records are identical - hash and from and to are the same we need to skip them.
+	tsfrsim := make(map[string]string)
+
 	for _, raws := range rawsm {
 		for _, raw := range raws {
 
@@ -282,6 +285,12 @@ func (p PolygonTransformer) marshalData(rawsm map[string][]domain.RawItem,
 				if err == nil {
 					err = json.Unmarshal(bytes, &tsfr)
 				}
+				var key = fmt.Sprintf("%s-%s-%s", tsfr.Hash, tsfr.From, tsfr.To)
+				// skip identical transfers
+				if _, ok := tsfrsim[key]; ok {
+					continue
+				}
+				tsfrsim[key] = key
 				tsfrsm[tsfr.Hash] = append(tsfrsm[tsfr.Hash], tsfr)
 
 			case "internal":

@@ -67,7 +67,7 @@ func (s EthereumTransformer) Transform(ctx context.Context, ps core.PriceService
 		tsfrs := tsfrsm[ntxn.Hash]
 		s.debug = false
 
-		if strings.Compare(ntxn.Hash, "0xe4a72d11a8736326ce4940b3facb5a00a07c11cf700886e26a10f28bec999134") == 0 {
+		if strings.Compare(ntxn.Hash, "0x1295930e3dd0844acef789ee6eb5f99c4f8b7cf874083ec7c3040e2d57929f25") == 0 {
 			// s.debug = true
 		}
 		if i > 100 {
@@ -82,8 +82,10 @@ func (s EthereumTransformer) Transform(ctx context.Context, ps core.PriceService
 		}
 
 		nactvs := s.buildActivityFromNormal(ps, eaccts, ntxn, tsfrs)
-		actvs = append(actvs, nactvs...)
-		hashProcessed[ntxn.Hash] = ntxn.Hash
+		if len(nactvs) > 0 {
+			actvs = append(actvs, nactvs...)
+			hashProcessed[ntxn.Hash] = ntxn.Hash
+		}
 		if i > 120 {
 			// break
 		}
@@ -307,6 +309,9 @@ func (s EthereumTransformer) marshalData(rawsm map[string][]domain.RawItem,
 	itxnsm := make(map[string]string)
 	ntxnsm := make(map[string]string)
 
+	// if the transfer records are identical - hash and from and to are the same we need to skip them.
+	tsfrsim := make(map[string]string)
+
 	for _, raws := range rawsm {
 		for _, raw := range raws {
 
@@ -319,6 +324,12 @@ func (s EthereumTransformer) marshalData(rawsm map[string][]domain.RawItem,
 				if err == nil {
 					err = json.Unmarshal(bytes, &tsfr)
 				}
+				var key = fmt.Sprintf("%s-%s-%s-%s", tsfr.Hash, tsfr.From, tsfr.To, tsfr.TokenSymbol)
+				// skip identical transfers
+				if _, ok := tsfrsim[key]; ok {
+					continue
+				}
+				tsfrsim[key] = key
 				tsfrsm[tsfr.Hash] = append(tsfrsm[tsfr.Hash], tsfr)
 
 			case "internal":
