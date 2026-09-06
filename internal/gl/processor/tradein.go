@@ -29,6 +29,10 @@ func (p TradeInActivityProcessor) Process(ctx context.Context, actv *domain.Acti
 	touched, value, _ := lm.ReduceLotQty(newctx, actv, actv.SentAmount)
 	// lm.CreateGLDisposal(newctx, touched, actv)
 	gl := lm.CreateGLDisposal(newctx, touched, actv)
+
+	// update feelot
+	lm.UpdateFeeLot(ctx, actv)
+
 	actv.GlAmount = gl
 	pr.Value = value
 

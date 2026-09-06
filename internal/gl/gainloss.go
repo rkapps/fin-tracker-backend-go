@@ -587,10 +587,12 @@ func (gl GainLoss) UpdateFeeLot(ctx context.Context, actv *domain.Activity) deci
 	if strings.Compare(actv.FeeCurrency, "USD") == 0 {
 
 		switch actv.TxnType {
-		case domain.ActivityTypeDeposit, domain.ActivityTypeBuy:
-			gl.UpdateCashLot(ctx, actv, actv.AccountID, actv.FeeCurrency, actv.Fee)
 		case domain.ActivityTypeWithdraw, domain.ActivityTypeSell:
 			gl.UpdateCashLot(ctx, actv, actv.AccountID, actv.FeeCurrency, actv.Fee.Neg())
+		// case domain.ActivityTypeDeposit, domain.ActivityTypeBuy:
+		default:
+			gl.UpdateCashLot(ctx, actv, actv.AccountID, actv.FeeCurrency, actv.Fee)
+
 		}
 
 		value = actv.Fee

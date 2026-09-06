@@ -30,5 +30,9 @@ func (p TradeOutActivityProcessor) Process(ctx context.Context, actv *domain.Act
 	if lot != nil {
 		pr.Value = lot.CostValue
 	}
+
+	// update feelot
+	lm.UpdateFeeLot(ctx, actv)
+
 	return pr, nil
 }
