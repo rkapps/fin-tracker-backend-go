@@ -105,6 +105,7 @@ func (s SolanaActivity) ProcessTransaction() []*domain.Activity {
 	acctsm := make(map[string]SolanaParsedInstructionInfo)
 	sacctsm := make(map[string]SolanaParsedInstructionInfo)
 	actvCount := 1
+	iactvs := []*domain.Activity{}
 
 	for z, instruction := range outerInstructions {
 
@@ -178,7 +179,6 @@ func (s SolanaActivity) ProcessTransaction() []*domain.Activity {
 			// core.PrintActivity(debug, actv)
 		}
 
-		iactvs := []*domain.Activity{}
 		innerInstruction := instructionsm[z]
 		stake := false
 		for i, inner := range innerInstruction.Instructions {
@@ -215,8 +215,9 @@ func (s SolanaActivity) ProcessTransaction() []*domain.Activity {
 			}
 		}
 
-		actvs = append(actvs, iactvs...)
 	}
+
+	actvs = append(actvs, iactvs...)
 
 	if s.debug && len(actvs) > 0 {
 		s.logger.Info("ProcessTransaction")
