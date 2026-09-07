@@ -52,7 +52,11 @@ func (ps PriceService) GetCryptoPrice(symbol string, date time.Time) (decimal.De
 	if !ok {
 		th, err := ps.tstorage.GetTickerHistoryByDate(psymbol, ndate)
 		if err != nil || th == nil {
-			return decimal.Decimal{}, err
+			ldate := ndate.Add(time.Second * 60 * 24 * -1)
+			th, err = ps.tstorage.GetTickerHistoryByDate(psymbol, ldate)
+			if err != nil || th == nil {
+				return decimal.Decimal{}, err
+			}
 		}
 		cp = &domain.CryptoPrice{}
 		cp.Symbol = symbol
