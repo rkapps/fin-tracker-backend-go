@@ -341,7 +341,8 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 				actv.RcvSymbol = "ETH"
 				actv.RcvAmount = actv.SentAmount
 
-			case "retail_simple_dust", "incentives_rewards_payout", "raise_offering_pooling", "tx", "unstaking_transfer":
+			case "retail_simple_dust", "incentives_rewards_payout", "raise_offering_pooling", "tx",
+				"unstaking_transfer", "retail_instant_unstaking":
 				//ignore this --- value too low
 				continue
 
