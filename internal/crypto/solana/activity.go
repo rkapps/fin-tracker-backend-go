@@ -168,7 +168,7 @@ func (s SolanaActivity) ProcessTransaction() []*domain.Activity {
 						ractv.RcvSymbol = actv.RcvSymbol
 						ractv.RcvAmount = rewardAmount
 						price, _ := s.ps.GetCryptoPrice(ractv.RcvSymbol, ractv.Date)
-						ractv.SentAmount = rewardAmount.Mul(price)
+						ractv.SentAmount = rewardAmount.Mul(price).Round(crypto.MAX_DECIMALS)
 						actvs = append(actvs, ractv)
 						if s.debug {
 							s.logger.Info("ProcessTransaction", "", fmt.Sprintf("Price: %v Value: %v", price, ractv.SentAmount))

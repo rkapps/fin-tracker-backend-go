@@ -11,13 +11,12 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-var (
-	base         = decimal.NewFromInt(10)
-	MAX_DECIMALS = 8
+const (
+	minRewardAmount = "0.25"
+	MAX_DECIMALS    = 8
 )
 
-const minRewardAmount = "0.25"
-
+var base = decimal.NewFromInt(10)
 var minRewardAmountDecimal = decimal.RequireFromString(minRewardAmount)
 
 func ConvertFloatToTime(curtime float64) (*time.Time, error) {
