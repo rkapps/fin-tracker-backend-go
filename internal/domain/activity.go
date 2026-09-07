@@ -87,9 +87,10 @@ const (
 	// income
 	ActivityTypeDividend ActivityType = "dividend"
 	ActivityTypeInterest ActivityType = "interest"
-	ActivityTypeIncome   ActivityType = "income" // staking, rewards, cashback
-	ActivityTypeReward   ActivityType = "reward" // staking, rewards, cashback
-	ActivityTypeRebate   ActivityType = "rebate" // rebate
+	ActivityTypeIncome   ActivityType = "income"  // staking, rewards, cashback
+	ActivityTypeReward   ActivityType = "reward"  // staking, rewards, cashback
+	ActivityTypeRebate   ActivityType = "rebate"  // rebate
+	ActivityTypeAirdrop  ActivityType = "airdrop" // airdrop
 
 	// corporate actions
 	ActivityTypeSplit   ActivityType = "split"

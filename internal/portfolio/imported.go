@@ -91,6 +91,15 @@ func (r ImportedAccountRefresher) Refresh(ctx context.Context, ps core.PriceServ
 				actv.SentAmount = iactv.SentAmount
 				actv.Status = domain.ActivityStatusPending
 
+			case string(domain.ActivityTypeAirdrop):
+				actv.RcvAmount = iactv.RcvAmount
+				actv.RcvSymbol = iactv.RcvCurrency
+				actv.RcvAccountID = account.ID
+				price, _ := ps.GetCryptoPrice(actv.RcvSymbol, actv.Date)
+				actv.SentAmount = actv.RcvAmount.Mul(price)
+				actv.SentSymbol = "USD"
+				actv.Status = domain.ActivityStatusPending
+
 			case string(domain.ActivityTypeTrade):
 				actv.RcvAmount = iactv.RcvAmount
 				actv.RcvSymbol = iactv.RcvCurrency

@@ -32,7 +32,9 @@ func ResolveProcessor(actv domain.Activity, lm processor.LotManager, logConfig *
 		return processor.NewTradeActivityProcessor(logConfig), nil
 	case domain.ActivityTypeDividend, domain.ActivityTypeIncome, domain.ActivityTypeInterest:
 		return processor.NewIncomeActivityProcessor(logConfig), nil
-	case domain.ActivityTypeReward, domain.ActivityTypeRebate:
+
+	// rewards, rebates and airdrops
+	case domain.ActivityTypeReward, domain.ActivityTypeRebate, domain.ActivityTypeAirdrop:
 		return processor.NewRewardActivityProcessor(logConfig), nil
 	case domain.ActivityTypeDelegation:
 		return processor.NewDelegationActivityProcessor(logConfig), nil
