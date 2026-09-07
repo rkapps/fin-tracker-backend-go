@@ -171,6 +171,7 @@ func (s SolanaActivity) ProcessTransaction() []*domain.Activity {
 						ractv.SentAmount = rewardAmount.Mul(price)
 						actvs = append(actvs, ractv)
 						if s.debug {
+							s.logger.Info("ProcessTransaction", "", fmt.Sprintf("Price: %v Value: %v", price, ractv.SentAmount))
 							s.logger.Info("ProcessTransaction", "", fmt.Sprintf("---%s---", ractv.TxnType))
 						}
 					}
