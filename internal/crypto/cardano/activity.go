@@ -197,6 +197,11 @@ func (a *AccountActivity) getActivity() ([]*domain.Activity, error) {
 					}
 				}
 
+				if len(mtxnType) > 0 {
+					actv.TxnType = domain.ActivityType(mtxnType)
+					actv.Notes = mnotes
+				}
+
 				// default to fee if amount is zero
 				if actv.SentAmount.IsZero() {
 					actv.TxnType = domain.ActivityTypeFee
@@ -237,11 +242,36 @@ func (a *AccountActivity) getTxnTypeFromMetadata(metadata []TransactionMetadata)
 				txnType := ""
 				if strings.Contains(notes, "Voter rewards") {
 					txnType = string(domain.ActivityTypeReward)
+				} else if strings.Contains(notes, "[SSP: Deposit Request]") ||
+					strings.Contains(notes, "[Minswap: Market Order]") ||
+					strings.Contains(notes, "[Minswap: Stake liquidity]") ||
+					strings.Contains(notes, "[Minswap: Farm Migration]") ||
+					strings.Contains(notes, "[Minswap: Deposit Order]") {
+					txnType = string(domain.ActivityTypeAddLiquidity)
+				} else if strings.Contains(notes, "[Minswap: MasterChef]") {
+					txnType = string(domain.ActivityTypeReward)
+				} else if strings.Contains(notes, "[Minswap: Order Executed]") {
+					txnType = string(domain.ActivityTypeExitLiquidity)
+				} else if strings.Contains(notes, "[Minswap: Routing Order]") {
+					txnType = string(domain.ActivityTypeTradeIn)
+				} else if strings.Contains(notes, "[Minswap: Swap Exact Out Order]") {
+					txnType = string(domain.ActivityTypeSell)
+				} else if strings.Contains(notes, "[Minswap: V2 Withdraw liquidity]") ||
+					strings.Contains(notes, "[Minswap: Withdraw Order]") {
+					txnType = string(domain.ActivityTypeFee)
+				} else if strings.Contains(notes, "[Minswap: V2 Stake liquidity]") {
+					txnType = string(domain.ActivityTypeStakeFee)
+				} else if strings.Contains(notes, "Harvest reward") {
+					txnType = string(domain.ActivityTypeFee)
 				}
+
 				if a.debug {
 					a.logger.Info("getTxnFromMetadata", "notes", notes, "TxnType", txnType)
 				}
-				return notes, txnType
+				if len(txnType) > 0 {
+					return notes, txnType
+				}
+
 			}
 		}
 	}
