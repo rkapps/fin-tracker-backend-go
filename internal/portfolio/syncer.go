@@ -25,8 +25,10 @@ func (p Portfolio) SyncUserAccounts(ctx context.Context, uid string) error {
 	// get syncable accounts
 	saccts := domain.Accounts{}
 	for _, acct := range accts {
+		if !acct.Active {
+			continue
+		}
 		saccts = append(saccts, acct)
-
 		// astate, _ := p.accountsStorage.GetAccountSyncState(acct.UID, acct.ID)
 		// if astate != nil && astate.Refresh {
 		// 	saccts = append(saccts, acct)
