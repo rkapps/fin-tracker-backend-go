@@ -188,6 +188,7 @@ func (p PortfolioService) GetIncome(uid string, category string, atype string,
 	}
 	var filter bool
 	incomes := []dto.IncomeResponse{}
+	incomerm := map[string]*dto.IncomeResponse{}
 
 	for _, actv := range actvs {
 
@@ -212,26 +213,44 @@ func (p PortfolioService) GetIncome(uid string, category string, atype string,
 			continue
 		}
 
-		income := dto.IncomeResponse{}
-		income.Category = string(acct.Category)
-		income.Type = string(acct.Type)
-		income.AcctountID = acct.ID
-		income.AccountName = acct.Name
-		income.Blockchain = acct.Blockchain()
+		var amount decimal.Decimal
+		var symbol string
 
-		income.Date = actv.Date
-		income.Symbol = actv.RcvSymbol
-		income.Qty = actv.RcvAmount
-		income.CostValue = actv.SentAmount
-		income.Cost = income.CostValue.Div(income.Qty)
+		// 1. Determine amount and symbol directly from activity data
 		if actv.TxnType == domain.ActivityTypeDividend || actv.TxnType == domain.ActivityTypeInterest {
-			income.Symbol = actv.SentSymbol
-			income.Qty = decimal.NewFromFloat(1.0)
-			income.Cost = actv.RcvAmount
-			income.CostValue = actv.RcvAmount
+			symbol = actv.SentSymbol
+			amount = actv.RcvAmount
+		} else {
+			symbol = actv.RcvSymbol
+			amount = actv.SentAmount
 		}
 
-		incomes = append(incomes, income)
+		category := string(acct.Category)
+		accType := string(acct.Type)
+		blockchain := acct.Blockchain()
+		year := actv.Date.Year()
+		month := actv.Date.Month()
+
+		// 2. Build the unique map key
+		key := fmt.Sprintf("%s-%s-%s-%s-%s-%d", category, accType, blockchain, acct.ID, symbol, year)
+
+		// 3. Fetch or instantiate the pointer record
+		nincome := incomerm[key]
+		if nincome == nil {
+			nincome = &dto.IncomeResponse{
+				Category:   category,
+				Type:       accType,
+				Blockchain: blockchain,
+				AccountId:  acct.ID,
+				Year:       year,
+				Symbol:     symbol,
+				Values:     make([]decimal.Decimal, 12),
+			}
+			incomerm[key] = nincome
+			incomes = append(incomes, *nincome)
+		}
+
+		nincome.Values[month-1] = nincome.Values[month-1].Add(amount)
 	}
 	return incomes, nil
 }
