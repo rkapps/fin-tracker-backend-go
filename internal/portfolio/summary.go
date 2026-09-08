@@ -37,8 +37,6 @@ func (p Portfolio) summarizeData(uid string,
 		if asummary == nil {
 			asummary = &domain.AccountSummary{}
 			asummary.AccountID = actv.AccountID
-			asummary.AccountName = acct.Name
-			asummary.AccountDisplayName = acct.ID
 			asummary.UID = uid
 			asummary.Date = time.Now()
 			asummary.ID = uuid.New().String()
@@ -82,11 +80,7 @@ func (p Portfolio) summarizeData(uid string,
 		asummary.Category = string(acct.Category)
 		asummary.Type = string(acct.Type)
 		asummary.AccountID = hldg.AcctountID
-		// asummary.AccountDisplayName = hldg.AccountDisplayName
-		// asummary.ParentAccountName = hldg.ParentAccountName
-
 		if hldg.Symbol == user.CurrencyCode {
-			p.logger.Debug("Cash", "account", hldg.AccountName)
 			asummary.Cash = asummary.Cash.Add(hldg.CostValue)
 		} else {
 

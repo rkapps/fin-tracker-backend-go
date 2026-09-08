@@ -109,9 +109,7 @@ func GetHoldings(storage storage.TickerStorageService, logger *logger.Logger, by
 			h = &dto.HoldingResponse{}
 			h.Category = string(acct.Category)
 			h.Type = string(acct.Type)
-			h.AccountName = acct.Name
 			h.Blockchain = acct.Blockchain()
-			// h.AccountDisplayName = acct.ID
 			h.AcctountID = lot.AccountID
 			h.Symbol = lot.Symbol
 			h.AssetType = ticker.AssetType

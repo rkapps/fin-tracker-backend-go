@@ -8,14 +8,11 @@ import (
 
 // Holding represents a security holding
 type HoldingResponse struct {
-	Category   string `json:"category"`
-	Type       string `json:"type"`
-	AcctountID string `json:"accountId"`
-	// ParentAccountName  string          `json:"parentAccountName"`
-	AccountName string `json:"accountName"`
-	// AccountDisplayName string          `json:"accountDisplayName"`
-	AssetType  string          `json:"asset_type" bson:"asset_type"`
+	Category   string          `json:"category"`
+	Type       string          `json:"type"`
 	Blockchain string          `json:"blockchain"`
+	AcctountID string          `json:"accountId"`
+	AssetType  string          `json:"asset_type" bson:"asset_type"`
 	Sector     string          `json:"sector"`
 	Industry   string          `json:"industry"`
 	Symbol     string          `json:"symbol"`
