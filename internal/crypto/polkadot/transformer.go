@@ -32,14 +32,38 @@ func (p PolkadotTransformer) Transform(ctx context.Context, ps core.PriceService
 ) ([]*domain.Activity, error) {
 
 	actvs := []*domain.Activity{}
+
+	// gather the polkadot accounts
+	paccts := []domain.Account{}
+	for _, acred := range acreds {
+		paccts = append(paccts, acred.Account)
+	}
+
 	rewards, tsfrs := p.marshalData(rawsm)
 
 	for _, reward := range rewards {
-		p.logger.Info("Transform", "Reward", fmt.Sprintf("%s %v", reward.Event_Index, reward.Amount))
+		p.logger.Debug("Transform", "Reward", fmt.Sprintf("%s %v", reward.Event_Index, reward.Amount))
+		actv := p.createRewardActivity(ps, reward)
+		if actv != nil {
+			actvs = append(actvs, actv)
+		}
 	}
+
+	tsfrm := make(map[string]PolkadotTransfer)
 	for _, tsfr := range tsfrs {
-		p.logger.Info("Transform", "Transfer", tsfr.Hash)
+		if _, ok := tsfrm[tsfr.Hash]; ok {
+			continue
+		}
+		tsfrm[tsfr.Hash] = tsfr
+		actv := p.createTransferActivity(ps, paccts, tsfr)
+		if actv != nil {
+			actvs = append(actvs, actv)
+		}
+		p.logger.Debug("Transform", "Transfer", tsfr.Hash)
 	}
+
+	p.logger.Info("Transform", "Provider", p.Name(), "Activities", len(actvs))
+
 	return actvs, nil
 }
 
@@ -65,11 +89,11 @@ func (p PolkadotTransformer) marshalData(rawsm map[string][]domain.RawItem,
 			switch raw.Stream {
 			case "rewards":
 				pr := PolkadotReward{}
+				err = json.Unmarshal(bytes, &pr)
 				pr.UID = raw.UID
 				pr.AccountId = raw.AccountID
-				err = json.Unmarshal(bytes, &pr)
 				rewards = append(rewards, pr)
-			case "tsfrs":
+			case "transfers":
 
 				tsfr := PolkadotTransfer{}
 				err = json.Unmarshal(bytes, &tsfr)

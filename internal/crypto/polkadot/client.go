@@ -14,15 +14,17 @@ import (
 type Client struct {
 	httpClient *http.Client
 	baseURL    string
+	apiKey     string
 }
 
 // compile-time check this satisfies the interface — also self-documenting
 var _ API = (*Client)(nil)
 
-func NewPolkadotHttpClient() *Client {
+func NewPolkadotHttpClient(apiKey string) *Client {
 	return &Client{
-		httpClient: &http.Client{Timeout: 10 * time.Second},
-		baseURL:    "https://api.pubfi.ai/v1/gateway/subscan/polkadot/api/scan",
+		httpClient: &http.Client{Timeout: 45 * time.Second},
+		baseURL:    "https://api.pubfi.ai/v1/gateway/subscan/polkadot/api/v2/scan",
+		apiKey:     apiKey,
 	}
 }
 
@@ -41,10 +43,10 @@ func (c *Client) GetRewards(address string, page int, row int) (*PolkadotRewardD
 		return nil, err
 	}
 
-	url := fmt.Sprintf("%s/account/reward_slash", c.baseURL)
+	url := fmt.Sprintf("%s/account/reward_slash:free", c.baseURL)
 	dotRewardData := &PolkadotRewardData{}
-	_, err = core.DoHttpRequest(url, http.MethodGet, c.getPolkadotHeaders(), nil, body, &dotRewardData)
-	// log.Println(body)
+	body1, _ := core.DoHttpRequest(url, http.MethodPost, c.getPolkadotHeaders(), nil, body, &dotRewardData)
+	log.Println(body1)
 	return dotRewardData, err
 }
 
@@ -64,7 +66,7 @@ func (c *Client) GetTransfers(address string, page int, row int) (*PolkadotTrans
 	}
 
 	dotData := PolkadotTransferData{}
-	url := fmt.Sprintf("%s/transfers", c.baseURL)
+	url := fmt.Sprintf("%s/transfers:free", c.baseURL)
 	log.Println(url)
 	body1, err := core.DoHttpRequest(url, http.MethodPost, c.getPolkadotHeaders(), nil, body, &dotData)
 	log.Println(body1)
@@ -72,10 +74,9 @@ func (c *Client) GetTransfers(address string, page int, row int) (*PolkadotTrans
 }
 
 func (c *Client) getPolkadotHeaders() url.Values {
+	log.Println(c.apiKey)
 	headers := url.Values{}
-	// headers.Add("User-Agent", "Apidog/1.0.0 (https://apidog.com)")
 	headers.Add("Content-Type", "application/json")
-	headers.Add("Authorization", fmt.Sprintf("Bearer %s", "pf_sk_v1_production_DMmuVKZzG-GXwetmyvFfHi5AumPyz2S0rttMuMCDZFU"))
-	// headers.Add("x-api-key", "pf_sk_v1_production_DMmuVKZzG-GXwetmyvFfHi5AumPyz2S0rttMuMCDZFU")
+	headers.Add("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
 	return headers
 }

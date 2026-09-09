@@ -1,9 +1,5 @@
 package polkadot
 
-import (
-	"time"
-)
-
 // coinbase.Provider only knows this:
 type API interface {
 	GetRewards(address string, page int, row int) (*PolkadotRewardData, error)
@@ -43,7 +39,6 @@ type PolkadotTransfer struct {
 	Hash                 string
 	Block_Num            int64
 	Block_Timestamp      int64
-	Date                 *time.Time
 	Amount               string
 	Asset_Symbol         string
 	Asset_Unique_Id      string
@@ -92,5 +87,4 @@ type PolkadotReward struct {
 	Event_Index     string
 	Amount          string
 	Block_Timestamp int64
-	Date            *time.Time
 }

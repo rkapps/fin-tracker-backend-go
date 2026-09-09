@@ -4,4 +4,5 @@ const (
 	BLOCKCHAIN_SOLANA   = "Solana"
 	BLOCKCHAIN_ETHEREUM = "Ethereum"
 	BLOCKCHAIN_POLYGON  = "Polygon"
+	BLOCKCHAIN_POLKDOT  = "Pokadot"
 )

@@ -25,7 +25,11 @@ var _ core.GlobalSyncProvider = (*Provider)(nil)
 
 func New(api API, logConfig *logger.Config) *Provider {
 	slog := logConfig.For("syncer.polkadot")
-	return &Provider{HTTP: api, Limiter: rate.NewLimiter(rate.Limit(10), 10), logger: slog}
+	return &Provider{
+		HTTP:    api,
+		Limiter: rate.NewLimiter(rate.Every(600*time.Millisecond), 1), // ~1.67/sec, safe margin under the 2/sec limit
+		logger:  slog,
+	}
 }
 
 // Name implements [provider.SyncSourceProvider].
@@ -62,7 +66,7 @@ func (p *Provider) FetchRaw(ctx context.Context,
 	case "rewards":
 		return p.fetchRewards(acred.Account, stream, cursor)
 	case "transfers":
-		// return p.fetchTransfers(acred.Account, stream, cursor)
+		return p.fetchTransfers(acred.Account, stream, cursor)
 	}
 	return core.SyncPage{}, nil
 }

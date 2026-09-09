@@ -11,6 +11,7 @@ import (
 	"github.com/rkapps/fin-tracker-backend-go/internal/crypto/coinbase"
 	"github.com/rkapps/fin-tracker-backend-go/internal/crypto/ethereum"
 	"github.com/rkapps/fin-tracker-backend-go/internal/crypto/kraken"
+	"github.com/rkapps/fin-tracker-backend-go/internal/crypto/polkadot"
 	"github.com/rkapps/fin-tracker-backend-go/internal/crypto/solana"
 	"github.com/rkapps/fin-tracker-backend-go/internal/services"
 	"github.com/rkapps/fin-tracker-backend-go/internal/storage/mongo"
@@ -129,12 +130,14 @@ func getSyncProviderRegistry(logConfig *logger.Config) core.SyncRegistry {
 	blockfrost_project_id := os.Getenv("CARDANO_BLOCKFROST_PROJECT_ID")
 	alchemy_api_key := os.Getenv("SOLANA_ALCHEMY_API_KEY")
 	etherscan_api_key := os.Getenv("ETHERSCAN_API_KEY")
+	polkadot_api_key := os.Getenv("POLKADOT_API_KEY")
 
 	registry := core.NewSyncRegistry()
 	registry.Register(coinbase.New(coinbase.NewHTTPClient(), logConfig))
 	registry.Register(cardano.New(cardano.NewBlockFrostHTTPClient(blockfrost_project_id), logConfig))
 	registry.Register(kraken.New(kraken.NewHTTPClient(), logConfig))
 	registry.Register(solana.New(solana.NewAlchemyHTTPClient(alchemy_api_key), logConfig))
+	registry.Register(polkadot.New(polkadot.NewPolkadotHttpClient(polkadot_api_key), logConfig))
 
 	//ethereum
 	registry.Register(ethereum.NewEthereum(ethereum.NewEtherscanClient(etherscan_api_key), logConfig))
@@ -149,6 +152,7 @@ func getTransformerRegistry(logConfig *logger.Config) core.TransformerRegistry {
 	registry.Register(kraken.NewKrakenAccountTransformer(logConfig))
 	registry.Register(cardano.NewCardanoAccountTransformer(logConfig))
 	registry.Register(solana.NewSolanaAccountTransformer(logConfig))
+	registry.Register(polkadot.NewPolkadotTransformer(logConfig))
 
 	//ethereum
 	registry.Register(ethereum.NewEthereumTransformer(logConfig))
