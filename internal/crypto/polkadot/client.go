@@ -59,16 +59,15 @@ func (c *Client) GetTransfers(address string, page int, row int) (*PolkadotTrans
 	tsfrinput.Row = row
 
 	body, err := json.Marshal(tsfrinput)
-	// log.Println(string(body))
 	if err != nil {
 		return nil, err
 	}
 
 	dotData := PolkadotTransferData{}
-	url := fmt.Sprintf("%s/account/transfers:free", c.baseURL)
+	url := fmt.Sprintf("%s/transfers:free", c.baseURL)
 	log.Println(url)
-	body1, err := core.DoHttpRequest(url, http.MethodPost, c.getPolkadotHeaders(), nil, body, &dotData)
-	log.Println(body1)
+	_, err = core.DoHttpRequest(url, http.MethodPost, c.getPolkadotHeaders(), nil, body, &dotData)
+	// log.Println(body1)
 	return &dotData, err
 }
 
