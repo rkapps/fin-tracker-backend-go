@@ -1,7 +1,9 @@
 package cardano
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"testing"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
@@ -35,4 +37,25 @@ func TestTransaction(t *testing.T) {
 	metadata, _ := provider.HTTP.GetTransactionMetadata(txHash)
 	log.Println(metadata)
 	provider.HTTP.GetTransactionDelegations(txHash)
+}
+
+func TestRewards(t *testing.T) {
+
+	logConfig := logger.New()
+	slog := logConfig.For("test")
+
+	blockfrost_project_id := os.Getenv("CARDANO_BLOCKFROST_PROJECT_ID")
+	cardano_test_address := os.Getenv("CARDANO_TEST_ADDRESS")
+
+	provider := New(NewBlockFrostHTTPClient(blockfrost_project_id), logConfig)
+	data, err := provider.HTTP.GetAccountRewards(t.Context(), cardano_test_address, 44, 10)
+	if err != nil {
+		slog.Error("TestRewards", "Error", err)
+	}
+	if len(data) == 0 {
+		t.Errorf("Address has zero rewards")
+	}
+	for _, entry := range data {
+		slog.Logger.Info("TestRewards", "Reward", fmt.Sprintf("Epoch: %v Reward: %v", entry.Epoch, entry.Amount))
+	}
 }
