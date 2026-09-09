@@ -106,6 +106,11 @@ func (p PortfolioService) GetActivities(uid string, category string, atype strin
 	}
 	acctsm := make(map[string]*domain.Account)
 	for _, acct := range accts {
+		if len(acctIdsm) > 0 {
+			if _, ok := acctIdsm[acct.ID]; !ok {
+				continue
+			}
+		}
 		acctsm[acct.ID] = acct
 	}
 
@@ -119,7 +124,7 @@ func (p PortfolioService) GetActivities(uid string, category string, atype strin
 
 		acct := acctsm[actv.AccountID]
 		if acct == nil {
-			p.logger.Error("GetHoldings - Account not found", "AccountId", actv.AccountID, "AcvitityId", actv.ID)
+			// p.logger.Error("GetHoldings - Account not found", "AccountId", actv.AccountID, "AcvitityId", actv.ID)
 			// log.Println(lot)
 			continue
 		}

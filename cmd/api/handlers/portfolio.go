@@ -87,7 +87,7 @@ func (p *PortfolioHandler) GetActivities(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	ids := c.Query("acctIds")
+	ids := c.Query("accountIds")
 	var acctIds []string
 	if len(ids) > 0 {
 		ids = utils.TrimCommas(ids)
@@ -122,7 +122,7 @@ func (p *PortfolioHandler) GetIncome(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	ids := c.Query("acctIds")
+	ids := c.Query("accountIds")
 	var acctIds []string
 	if len(ids) > 0 {
 		ids = utils.TrimCommas(ids)
@@ -163,7 +163,7 @@ func (p *PortfolioHandler) GetGainLoss(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	ids := c.Query("acctIds")
+	ids := c.Query("accountIds")
 	var acctIds []string
 	if len(ids) > 0 {
 		ids = utils.TrimCommas(ids)
