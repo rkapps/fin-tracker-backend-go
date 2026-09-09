@@ -3,7 +3,6 @@ package polkadot
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -65,7 +64,6 @@ func (c *Client) GetTransfers(address string, page int, row int) (*PolkadotTrans
 
 	dotData := PolkadotTransferData{}
 	url := fmt.Sprintf("%s/transfers:free", c.baseURL)
-	log.Println(url)
 	_, err = core.DoHttpRequest(url, http.MethodPost, c.getPolkadotHeaders(), nil, body, &dotData)
 	// log.Println(body1)
 	return &dotData, err
