@@ -16,7 +16,7 @@ func TestRewards(t *testing.T) {
 	polkadot_test_address := os.Getenv("POLKADOT_TEST_ADDRESS")
 
 	provider := New(NewPolkadotHttpClient(polkadot_api_key), logConfig)
-	data, err := provider.HTTP.GetRewards(polkadot_test_address, 1, 10)
+	data, err := provider.HTTP.GetRewards(polkadot_test_address, 100, 10)
 	if err != nil {
 		slog.Error("TestRewards", "Error", err)
 	}

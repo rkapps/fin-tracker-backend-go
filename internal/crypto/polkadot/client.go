@@ -45,8 +45,7 @@ func (c *Client) GetRewards(address string, page int, row int) (*PolkadotRewardD
 
 	url := fmt.Sprintf("%s/account/reward_slash:free", c.baseURL)
 	dotRewardData := &PolkadotRewardData{}
-	body1, _ := core.DoHttpRequest(url, http.MethodPost, c.getPolkadotHeaders(), nil, body, &dotRewardData)
-	log.Println(body1)
+	core.DoHttpRequest(url, http.MethodPost, c.getPolkadotHeaders(), nil, body, &dotRewardData)
 	return dotRewardData, err
 }
 
@@ -66,7 +65,7 @@ func (c *Client) GetTransfers(address string, page int, row int) (*PolkadotTrans
 	}
 
 	dotData := PolkadotTransferData{}
-	url := fmt.Sprintf("%s/transfers:free", c.baseURL)
+	url := fmt.Sprintf("%s/account/transfers:free", c.baseURL)
 	log.Println(url)
 	body1, err := core.DoHttpRequest(url, http.MethodPost, c.getPolkadotHeaders(), nil, body, &dotData)
 	log.Println(body1)
@@ -74,7 +73,6 @@ func (c *Client) GetTransfers(address string, page int, row int) (*PolkadotTrans
 }
 
 func (c *Client) getPolkadotHeaders() url.Values {
-	log.Println(c.apiKey)
 	headers := url.Values{}
 	headers.Add("Content-Type", "application/json")
 	headers.Add("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
