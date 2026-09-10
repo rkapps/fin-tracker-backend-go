@@ -151,6 +151,7 @@ func (k KrakenAccountTransformer) Transform(ctx context.Context, ps core.PriceSe
 				actv.RcvAmount = amount
 			case "staking":
 
+				amount = amount.Sub(fee)
 				value, skip := crypto.EvaluateRewardValue(ps, symbol, amount, actv.Date)
 				if skip {
 					continue
