@@ -3,6 +3,7 @@ package gl
 import (
 	"context"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 	"time"
@@ -99,8 +100,8 @@ func (gl *GainLoss) Run(ctx context.Context, actvs []*domain.Activity) (GainLoss
 
 		gl.debug = false
 		if //strings.Compare(actv.AccountID, "Solana-Fa8jM") == 0 ||
-		strings.Compare(actv.ID, "3e13b76a85dc5f4784542899963b3d16d0e06541") == 0 {
-			// gl.debug = true
+		strings.Compare(actv.ID, "ee179a8022ea0cb3347d181f0cbaafc8b1bb1c55") == 0 {
+			gl.debug = true
 		}
 		if gl.debug {
 			gl.logger.Info("---Run---", "Activity", actv.Debug(), "Date", actv.Date)
@@ -529,12 +530,12 @@ func (gl GainLoss) UpdateBankLot(ctx context.Context, actv *domain.Activity) (*d
 		amount = actv.SentAmount.Add(actv.Fee)
 	case domain.ActivityTypeDeposit:
 		acctId = actv.SentAccountID
-		symbol = actv.RcvSymbol
-		amount = actv.RcvAmount
-	case domain.ActivityTypeWithdraw:
-		acctId = actv.RcvAccountID
 		symbol = actv.SentSymbol
 		amount = actv.SentAmount
+	case domain.ActivityTypeWithdraw:
+		acctId = actv.RcvAccountID
+		symbol = actv.RcvSymbol
+		amount = actv.RcvAmount
 	case domain.ActivityTypeSell:
 		acctId = actv.RcvAccountID
 		symbol = actv.RcvSymbol
@@ -588,6 +589,7 @@ func (gl GainLoss) UpdateFeeLot(ctx context.Context, actv *domain.Activity) deci
 
 		switch actv.TxnType {
 		case domain.ActivityTypeWithdraw, domain.ActivityTypeSell:
+			log.Println(actv.Fee)
 			gl.UpdateCashLot(ctx, actv, actv.AccountID, actv.FeeCurrency, actv.Fee.Neg())
 		// case domain.ActivityTypeDeposit, domain.ActivityTypeBuy:
 		default:

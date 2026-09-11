@@ -107,6 +107,9 @@ func (r ImportedAccountRefresher) Refresh(ctx context.Context, ps core.PriceServ
 				actv.SentSymbol = iactv.SentCurrency
 				actv.SentAmount = iactv.SentAmount
 				actv.SentAccountID = account.ID
+				price, _ := ps.GetCryptoPrice(actv.SentSymbol, actv.Date)
+				actv.SentPrice = price
+
 				actv.Status = domain.ActivityStatusPending
 				actv.Fee = iactv.Fee
 				actv.FeeCurrency = iactv.FeeCurrency
@@ -175,15 +178,15 @@ func (r ImportedAccountRefresher) Refresh(ctx context.Context, ps core.PriceServ
 				actv.RcvAmount = iactv.RcvAmount
 				actv.RcvAccount = iactv.RcvAccount
 				actv.RcvPrice = decimal.NewFromFloat(1.0)
-				actv.SentSymbol = iactv.RcvCurrency
+				actv.SentSymbol = iactv.SentCurrency
 				actv.SentAccount = iactv.SentAccount
 				actv.SentPrice = decimal.NewFromFloat(1.0)
 				actv.SentAmount = iactv.RcvAmount
 				actv.Status = domain.ActivityStatusPending
 
 			case string(domain.ActivityTypeWithdraw):
-				actv.RcvSymbol = iactv.SentCurrency
-				actv.RcvAmount = iactv.SentAmount
+				actv.RcvSymbol = iactv.RcvCurrency
+				actv.RcvAmount = iactv.RcvAmount
 				actv.RcvAccount = iactv.RcvAccount
 				actv.RcvPrice = decimal.NewFromFloat(1.0)
 				actv.SentAmount = iactv.SentAmount
