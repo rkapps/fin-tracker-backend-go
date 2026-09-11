@@ -196,10 +196,13 @@ func (r ImportedAccountRefresher) Refresh(ctx context.Context, ps core.PriceServ
 				actv.Status = domain.ActivityStatusPending
 
 			case string(domain.ActivityTypeFee):
-				actv.SentAmount = iactv.SentAmount
-				actv.SentSymbol = iactv.SentCurrency
-				actv.SentAccount = iactv.SentAccount
-				actv.SentPrice = decimal.NewFromFloat(1.0)
+
+				actv.Fee = iactv.Fee
+				actv.FeeCurrency = iactv.FeeCurrency
+				// actv.SentAmount = iactv.SentAmount
+				// actv.SentSymbol = iactv.SentCurrency
+				// actv.SentAccount = iactv.SentAccount
+				// actv.SentPrice = decimal.NewFromFloat(1.0)
 				actv.Status = domain.ActivityStatusPending
 
 			default:

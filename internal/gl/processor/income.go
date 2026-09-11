@@ -27,7 +27,7 @@ func (p IncomeActivityProcessor) Process(ctx context.Context, actv *domain.Activ
 	pr := NewProcessResult()
 
 	// update the cash lot
-	lot, err := lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount)
+	lot, err := lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount.Neg())
 	if err != nil {
 		return nil, err
 	}
