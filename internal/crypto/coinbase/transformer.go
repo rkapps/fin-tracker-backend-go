@@ -92,8 +92,21 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 				continue
 			}
 			switch txn.Type {
-			case "buy", "raise_offering_distribution":
+			case "raise_offering_distribution":
 
+				total, _ := utils.ConvertStringToDecimal(txn.Amount.Amount)
+				subtotal, _ := utils.ConvertStringToDecimal(txn.Native_Amount.Amount)
+
+				actv.TxnType = domain.ActivityTypeBuy
+				actv.RcvAccountID = acred.Account.ID
+				actv.RcvAmount = total
+				actv.RcvSymbol = symbol
+				actv.SentAmount = subtotal
+				actv.SentSymbol = nsymbol
+				actv.SentAccountID = acred.Account.ID
+				actv.RcvPrice = actv.SentAmount.Div(actv.RcvAmount)
+
+			case "buy":
 				buy := txn.Buy
 				total, _ := utils.ConvertStringToDecimal(buy.Total.Amount)
 				subtotal, _ := utils.ConvertStringToDecimal(buy.Subtotal.Amount)
@@ -127,10 +140,27 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 				actv.SentAccountID = acred.Account.ID
 				actv.SentAmount = amount.Abs()
 				actv.SentSymbol = symbol
-				actv.RcvAmount = total
+				actv.RcvAmount = subtotal
 				actv.RcvSymbol = nsymbol
 				actv.RcvAccountID = acred.Account.ID
 				actv.SentPrice = actv.RcvAmount.Div(actv.SentAmount)
+
+				if len(txn.Sell.Payment_Method_Name) > 0 {
+
+					bacct := core.GetBankAccount(gaccts, txn.Sell.Payment_Method_Name)
+					r.logger.Debug("Transform", "Payment", txn.Sell.Payment_Method_Name, "Account", bacct)
+					if bacct != nil {
+						actv.RcvAccountID = bacct.ID
+						actv.TxnType = domain.ActivityTypeWithdraw
+					} else if strings.Compare(txn.Sell.Payment_Method_Name, "BANK_ACCOUNT") == 0 {
+						racct := core.GetFirstBankAccount(gaccts)
+						if racct != nil {
+							actv.RcvAccountID = racct.ID
+							actv.TxnType = domain.ActivityTypeWithdraw
+						}
+
+					}
+				}
 
 				actv.Fee = subtotal.Sub(total)
 				actv.FeeCurrency = sell.Fee.Currency

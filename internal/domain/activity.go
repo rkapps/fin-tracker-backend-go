@@ -18,22 +18,14 @@ type Activity struct {
 	Date    time.Time      `json:"date"     bson:"date"`
 	Status  ActivityStatus `json:"status" bson:"status"` // pending, settled, cancelled
 	Hash    string         `json:"hash" bson:"hash"`
-	// source traceability
-	SourceID   string `json:"sourceId"   bson:"sourceId"`   // ID from broker/exchange/chain
-	SourceType string `json:"sourceType" bson:"sourceType"` // "import", "api", "manual"
 
-	// asset — what was transacted
-	RcvSymbol string `json:"rcvSymbol"   bson:"rcvSymbol"`
-	// RcvQuantity decimal.Decimal `json:"rcvQuantity" bson:"rcvQuantity"`
+	RcvSymbol  string          `json:"rcvSymbol"   bson:"rcvSymbol"`
 	RcvPrice   decimal.Decimal `json:"rcvPrice"    bson:"rcvPrice"`  // price per unit at time of txn
 	RcvAmount  decimal.Decimal `json:"rcvAmount"   bson:"rcvAmount"` // quantity * price
 	RcvAccount string          `json:"rcvAccount,omitempty" bson:"rcvAccount,omitempty"`
 	RcvBalance decimal.Decimal `json:"rcvBalance"   bson:"rcvBalance"` // quantity * price
 
-	// consideration — what was exchanged
-	// for buy: cash out. for sell: cash in. for trade: asset exchanged
-	SentSymbol string `json:"sentSymbol"   bson:"sentSymbol"`
-	// SentQuantity decimal.Decimal `json:"sentQuantity" bson:"sentQuantity"`
+	SentSymbol  string          `json:"sentSymbol"   bson:"sentSymbol"`
 	SentPrice   decimal.Decimal `json:"sentPrice"    bson:"sentPrice"`
 	SentAmount  decimal.Decimal `json:"sentAmount"   bson:"sentAmount"`
 	SentBalance decimal.Decimal `json:"sentBalance"   bson:"sentBalance"` // quantity * price
@@ -45,20 +37,14 @@ type Activity struct {
 	// costs
 	Fee         decimal.Decimal `json:"fee"            bson:"fee"`
 	FeeCurrency string          `json:"feeCurrency"    bson:"feeCurrency"`
-	Commission  decimal.Decimal `json:"commission"     bson:"commission"`
-	Tax         decimal.Decimal `json:"tax"            bson:"tax"` // foreign tax, withholding
-	TaxCurrency string          `json:"taxCurrency"    bson:"taxCurrency"`
 
 	// transfer routing — for internal account movements
 	RcvAccountID  string `json:"rcvAccountId" bson:"rcvAccountId"`
 	SentAccountID string `json:"sentAccountId"   bson:"sentAccountId"`
 
-	// type-specific detail
-	Detail   ActivityDetail  `json:"detail,omitempty"  bson:"detail,omitempty"`
 	GlAmount decimal.Decimal `json:"glAmount" bson:"glAmount"`
-
-	Orphan bool   `json:"orphan" bson:"orphan"`
-	Notes  string `json:"notes" bson:"notes"`
+	Orphan   bool            `json:"orphan" bson:"orphan"`
+	Notes    string          `json:"notes" bson:"notes"`
 }
 
 // Id returns the unique id for the ticker

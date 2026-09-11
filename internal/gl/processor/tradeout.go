@@ -25,8 +25,10 @@ func (p TradeOutActivityProcessor) Process(ctx context.Context, actv *domain.Act
 	newctx := logger.WithContext(ctx, p.logger)
 	pr := NewProcessResult()
 
+	total := actv.SentAmount.Add(actv.Fee)
+
 	// Create the lot of the asset
-	lot := lm.CreateAssetLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount, actv.SentAmount.Add(actv.Fee))
+	lot := lm.CreateAssetLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount, total)
 	if lot != nil {
 		pr.Value = lot.CostValue
 	}

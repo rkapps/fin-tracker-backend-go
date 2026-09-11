@@ -12,7 +12,7 @@ import (
 type LotManager interface {
 	CloseLot(ctx context.Context, lot *domain.ActivityLot) error
 	CreateAssetLot(ctx context.Context, actv *domain.Activity, acctId string, symbol string, qty decimal.Decimal, value decimal.Decimal) *domain.ActivityLot
-	CreateGLDisposal(ctx context.Context, lots []*domain.ActivityLot, activity *domain.Activity) decimal.Decimal
+	CreateGLDisposal(ctx context.Context, lots []*domain.ActivityLot, activity *domain.Activity, price decimal.Decimal) decimal.Decimal
 	CreateGLIncome(ctx context.Context, lots *domain.ActivityLot, activity *domain.Activity) error
 
 	MatchOpenLots(ctx context.Context, account domain.Account, symbol string) []*domain.ActivityLot
@@ -20,7 +20,7 @@ type LotManager interface {
 	NextLotSeq(ctx context.Context, accountID string) int
 	ReduceLotQty(ctx context.Context, actv *domain.Activity, samount decimal.Decimal) ([]*domain.ActivityLot, decimal.Decimal, error)
 	StoreTransfer(ctx context.Context, actv *domain.Activity, lots []*domain.ActivityLot)
-	UpdateBankLot(ctx context.Context, activity *domain.Activity) (*domain.ActivityLot, error)
+	// UpdateBankLot(ctx context.Context, activity *domain.Activity) (*domain.ActivityLot, error)
 	UpdateCashLot(ctx context.Context, activity *domain.Activity, acctId string, symbol string, amount decimal.Decimal) (*domain.ActivityLot, error)
 	UpdateFeeLot(ctx context.Context, activity *domain.Activity) decimal.Decimal
 }

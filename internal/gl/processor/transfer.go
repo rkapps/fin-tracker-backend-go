@@ -27,8 +27,8 @@ func (p TransferActivityProcessor) Process(ctx context.Context, actv *domain.Act
 	pr := NewProcessResult()
 
 	if strings.Compare(actv.RcvSymbol, "USD") == 0 {
-		lm.UpdateCashLot(newctx, actv, actv.SentAccountID, actv.SentSymbol, actv.SentAmount.Neg())
-		lm.UpdateCashLot(newctx, actv, actv.RcvAccountID, actv.RcvSymbol, actv.SentAmount)
+		lm.UpdateCashLot(newctx, actv, actv.SentAccountID, actv.SentSymbol, actv.SentAmount)
+		lm.UpdateCashLot(newctx, actv, actv.RcvAccountID, actv.RcvSymbol, actv.SentAmount.Neg())
 	} else {
 
 		// Reduce the lot of the asset and get the costvalue for the gl

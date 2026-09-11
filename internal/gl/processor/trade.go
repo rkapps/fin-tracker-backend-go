@@ -2,10 +2,11 @@ package processor
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
-	"github.com/rkapps/fin-tracker-backend-go/internal/crypto"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
+	"github.com/shopspring/decimal"
 )
 
 type TradeActivityProcessor struct {
@@ -26,42 +27,43 @@ func (p TradeActivityProcessor) Process(ctx context.Context, actv *domain.Activi
 	newctx := logger.WithContext(ctx, p.logger)
 	pr := NewProcessResult()
 
-	if crypto.IsCurrency(actv.RcvSymbol) {
-
-		// Reduce the lot of the asset and get the costvalue for the gl
-		touched, value, _ := lm.ReduceLotQty(newctx, actv, actv.SentAmount)
-
-		lm.CreateGLDisposal(newctx, touched, actv)
-		// actv.GlAmount = gl
-
-		// update cash lot --- this adds the amount for trade
-		lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount)
-
-		pr.Value = actv.RcvAmount
-		p.logger.Debug("Process", "CostValue", value, "RcvValue", actv.RcvAmount)
-
-	} else if crypto.IsCurrency(actv.SentSymbol) {
-
-		// update cash lot --- send negative of sentamount
-		lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.SentSymbol, actv.SentAmount.Neg())
-
-		// Create the lot of the asset
-		lm.CreateAssetLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount, actv.SentAmount)
-		pr.Value = actv.SentAmount
-	} else {
-
-		// Reduce the lot of the asset and get the costvalue for the gl
-		touched, value, _ := lm.ReduceLotQty(newctx, actv, actv.SentAmount)
-
-		lm.CreateGLDisposal(newctx, touched, actv)
-		// actv.GlAmount = gl
-		pr.Value = value
-
-		// for _, lot := range touched {
-		// Create the lot of the asset
-		lm.CreateAssetLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount, value)
-
+	// validate if rcvsymbol and sentsymbol is a currency.
+	if ClassifyAsset(actv.SentSymbol) == AssetClassCash {
+		return nil, fmt.Errorf("Sent '%s' should not be a currency", actv.SentSymbol)
 	}
+
+	// validate if rcvsymbol and sentsymbol is a currency.
+	if ClassifyAsset(actv.RcvSymbol) == AssetClassCash {
+		return nil, fmt.Errorf("Receive '%s' should not be a currency", actv.RcvSymbol)
+	}
+
+	// Reduce the lot of the asset and get the costvalue for the gl
+	touched, _, _ := lm.ReduceLotQty(newctx, actv, actv.SentAmount)
+
+	var price decimal.Decimal
+	if ClassifyAsset(actv.RcvSymbol) == AssetClassStablecoin {
+		pr.Value = actv.RcvAmount
+		price = actv.RcvAmount.Div(actv.SentAmount)
+
+	} else if ClassifyAsset(actv.SentSymbol) == AssetClassStablecoin {
+		pr.Value = actv.SentAmount
+		price = decimal.NewFromFloat(1.0)
+	} else {
+		pr.Value = actv.SentAmount.Mul(actv.SentPrice)
+		price = actv.SentAmount.Mul(actv.SentPrice)
+		if !price.IsZero() {
+			price = actv.RcvAmount.Div(price)
+		}
+	}
+
+	// create disposal lot
+	gl := lm.CreateGLDisposal(newctx, touched, actv, price)
+
+	actv.GlAmount = gl
+
+	// Create the lot of the asset
+	lm.CreateAssetLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount, pr.Value)
+
 	lm.UpdateFeeLot(ctx, actv)
 
 	return pr, nil

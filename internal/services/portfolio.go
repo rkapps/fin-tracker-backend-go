@@ -142,8 +142,8 @@ func (p PortfolioService) GetActivities(uid string, category string, atype strin
 		ractv := dto.NewActivityResponseFromActivity(*acct, *actv)
 		ractv.Value = actv.Value
 		ractv.GlAmount = actv.GlAmount
-		// ractv.RcvAccount = actv.RcvAccount
-		// ractv.SentAccount = actv.SentAccount
+		ractv.RcvAccount = actv.RcvAccountID
+		ractv.SentAccount = actv.SentAccountID
 		ractv.RcvBalance = actv.RcvBalance
 		ractv.SentBalance = actv.SentBalance
 		if actv.TxnType == domain.ActivityTypeDividend || actv.TxnType == domain.ActivityTypeInterest {

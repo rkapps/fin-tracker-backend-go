@@ -2,6 +2,7 @@ package processor
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
@@ -25,18 +26,29 @@ func (p DisposalActivityProcessor) Process(ctx context.Context, actv *domain.Act
 	newctx := logger.WithContext(ctx, p.logger)
 	pr := NewProcessResult()
 
+	// validate if sentsymbol is a currency.
+	if ClassifyAsset(actv.RcvSymbol) != AssetClassCash {
+		p.logger.Error("Process", "Actv", actv.ID, "Account", actv.AccountID)
+		return nil, fmt.Errorf("'%s' is not a currency", actv.RcvSymbol)
+	}
+
 	// Reduce the lot of the asset and get the costvalue for the gl
-	touched, value, _ := lm.ReduceLotQty(newctx, actv, actv.SentAmount)
-	// update the cash lot
-	_, _ = lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount)
+	touched, _, _ := lm.ReduceLotQty(newctx, actv, actv.SentAmount)
 
-	_ = lm.UpdateFeeLot(ctx, actv)
+	// // get the price and create the gl
+	// price := actv.RcvAmount.Div(actv.SentAmount)
 
-	gl := lm.CreateGLDisposal(newctx, touched, actv)
+	// net proceeds actually landing in cash = gross RcvAmount - Fee
+	netProceeds := actv.RcvAmount.Sub(actv.Fee)
+	price := netProceeds.Div(actv.SentAmount)
+
+	gl := lm.CreateGLDisposal(newctx, touched, actv, price)
+
+	lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.RcvSymbol, netProceeds.Neg())
 
 	actv.GlAmount = gl
-	pr.Value = actv.RcvAmount
-	p.logger.Debug("Process", "CostValue", value, "RcvValue", actv.RcvAmount)
+	pr.Value = netProceeds
+	p.logger.Debug("Process", "Value", actv.RcvAmount)
 
 	return pr, nil
 }

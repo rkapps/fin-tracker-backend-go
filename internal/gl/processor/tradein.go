@@ -26,15 +26,19 @@ func (p TradeInActivityProcessor) Process(ctx context.Context, actv *domain.Acti
 	pr := NewProcessResult()
 
 	// Reduce the lot of the asset and get the costvalue for the gl
-	touched, value, _ := lm.ReduceLotQty(newctx, actv, actv.SentAmount)
-	// lm.CreateGLDisposal(newctx, touched, actv)
-	gl := lm.CreateGLDisposal(newctx, touched, actv)
+	touched, _, _ := lm.ReduceLotQty(newctx, actv, actv.SentAmount)
+
+	pr.Value = actv.SentAmount.Mul(actv.SentPrice)
+	price := actv.RcvAmount.Div(actv.SentAmount)
+
+	// create disposal lot
+	gl := lm.CreateGLDisposal(newctx, touched, actv, price)
 
 	// update feelot
 	lm.UpdateFeeLot(ctx, actv)
 
 	actv.GlAmount = gl
-	pr.Value = value
+	pr.Value = actv.SentAmount.Mul(actv.SentPrice)
 
 	return pr, nil
 }

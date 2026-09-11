@@ -2,7 +2,7 @@ package processor
 
 import (
 	"context"
-	"strings"
+	"fmt"
 
 	"github.com/rkapps/fin-tracker-backend-go/cmd/common/logger"
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
@@ -27,27 +27,28 @@ func (p AquisitionActivityProcessor) Process(ctx context.Context, actv *domain.A
 
 	pr := NewProcessResult()
 
-	// Create the lot of the asset
-	lm.CreateAssetLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount, actv.SentAmount)
-
-	if len(actv.SentAccountID) > 0 && strings.Compare(actv.SentAccountID, actv.RcvAccountID) != 0 {
-		_, err := lm.UpdateBankLot(newctx, actv)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// update the cash lot
-		_, err := lm.UpdateCashLot(newctx, actv, actv.AccountID, actv.SentSymbol, actv.SentAmount)
-		if err != nil {
-			return nil, err
-		}
-
-		lm.UpdateFeeLot(ctx, actv)
-
+	// validate if sentsymbol is a currency.
+	if ClassifyAsset(actv.SentSymbol) != AssetClassCash {
+		p.logger.Error("Process", "Actv", actv.ID, "Account", actv.AccountID)
+		return nil, fmt.Errorf("'%s' is not a currency", actv.SentSymbol)
+	}
+	if actv.SentAmount.IsZero() {
+		return nil, fmt.Errorf("Sent amount is zero")
 	}
 
-	pr.Value = actv.SentAmount
-	p.logger.Debug("Process", "RcvValue", actv.RcvAmount)
+	total := actv.SentAmount.Add(actv.Fee)
+
+	// Create the lot of the asset
+	lm.CreateAssetLot(newctx, actv, actv.AccountID, actv.RcvSymbol, actv.RcvAmount, total)
+
+	// update the cash lot for the sent account
+	_, err := lm.UpdateCashLot(newctx, actv, actv.SentAccountID, actv.SentSymbol, total)
+	if err != nil {
+		return nil, err
+	}
+
+	pr.Value = total
+	p.logger.Debug("Process", "Value", total)
 
 	return pr, nil
 }
