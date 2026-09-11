@@ -23,6 +23,10 @@ func init() {
 			if err = createActivityIndex(database); err != nil {
 				return err
 			}
+			if err = createActivityLotIndex(database); err != nil {
+				return err
+			}
+
 			return nil
 		},
 		func(client *mongodb.MongoDatabase) error {
@@ -72,6 +76,24 @@ func createActivityIndex(database *mongodb.MongoDatabase) error {
 		return err
 	}
 	if err = coli.CreateIndexes(context.Background(), []mongo.IndexModel{
+		{
+			Keys:    bson.D{{Key: domain.FIELD_UID, Value: 1}, {Key: domain.FIELD_ACCOUNT_ID, Value: 1}, {Key: domain.FIELD_DATE, Value: 1}},
+			Options: options.Index().SetName("idx_uid_account_date").SetUnique(false),
+		},
+	}); err != nil {
+		return err
+	}
+
+	return err
+}
+
+func createActivityLotIndex(database *mongodb.MongoDatabase) error {
+	var err error
+	col := mongodb.GetMongoRepository[string, *domain.ActivityLot](database)
+	if err := col.CreateIndexes(context.Background(), []mongo.IndexModel{createIdIndex()}); err != nil {
+		return err
+	}
+	if err = col.CreateIndexes(context.Background(), []mongo.IndexModel{
 		{
 			Keys:    bson.D{{Key: domain.FIELD_UID, Value: 1}, {Key: domain.FIELD_ACCOUNT_ID, Value: 1}, {Key: domain.FIELD_DATE, Value: 1}},
 			Options: options.Index().SetName("idx_uid_account_date").SetUnique(false),
