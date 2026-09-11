@@ -33,8 +33,8 @@ func ResolveProcessor(actv domain.Activity, lm processor.LotManager, logConfig *
 	case domain.ActivityTypeSend:
 		return processor.NewSendActivityProcessor(logConfig), nil
 
-	// fee, stakefee
-	case domain.ActivityTypeFee, domain.ActivityTypeStakeFee:
+	// fee
+	case domain.ActivityTypeFee:
 		return processor.NewFeeActivityProcessor(logConfig), nil
 
 	// adjustment
@@ -65,8 +65,8 @@ func ResolveProcessor(actv domain.Activity, lm processor.LotManager, logConfig *
 	case domain.ActivityTypeStake, domain.ActivityTypeUnStake:
 		return processor.NewFeeActivityProcessor(logConfig), nil
 
-	// addliquidity - dispose the sent
-	case domain.ActivityTypeTradeIn, domain.ActivityTypeAddLiquidity:
+	// addliquidity - dispose the sent, , stakefee
+	case domain.ActivityTypeTradeIn, domain.ActivityTypeAddLiquidity, domain.ActivityTypeStakeFee:
 		return processor.NewTradeInActivityProcessor(logConfig), nil
 
 	// exitliquidity - add the receive
