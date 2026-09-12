@@ -67,7 +67,7 @@ func (s EthereumTransformer) Transform(ctx context.Context, ps core.PriceService
 		tsfrs := tsfrsm[ntxn.Hash]
 		s.debug = false
 
-		if strings.Compare(ntxn.Hash, "0x1295930e3dd0844acef789ee6eb5f99c4f8b7cf874083ec7c3040e2d57929f25") == 0 {
+		if strings.Compare(ntxn.Hash, "0xc3da2593f8ab4acd520e9c6c07c0255e4487b902c174d7f6c53b0ef4d218cfda") == 0 {
 			// s.debug = true
 		}
 		if i > 100 {
@@ -265,11 +265,12 @@ func (s EthereumTransformer) buildActivityFromNormal(
 			// withdraw
 			// hash - 0x3cd0719a3605fcdec3e78d557609eb0c58534b2e72983aeaf908319ef1de63a6
 		}
-	case 3:
+	case 3, 5:
 		mactvs := createErcMultiActivity(ps, eaccts, tsfrs, ETH_BASE_CURRENCY, s.logger, s.debug)
 		actvs = append(actvs, mactvs...)
 
 	default:
+		s.logger.Error("buildNormalErc20", "Warning", ntxn.Hash)
 		s.logger.Error("buildNormalErc20", "Warning", fmt.Sprintf("%s Not implemented", sel.TxnType), "Transfers", len(tsfrs))
 	}
 
@@ -287,13 +288,14 @@ func (s EthereumTransformer) buildActivityFromErc20(
 		if actv != nil {
 			actvs = append(actvs, actv)
 		}
-	case 2:
+	case 2, 3:
 		actv := createErc20Activity(ps, eaccts, tsfrs[0], ETH_BASE_CURRENCY, Selector{}, s.logger, s.debug)
 		if actv != nil {
 			actvs = append(actvs, actv)
 		}
 	default:
-		s.logger.Error("buildActivityFromErc20", "Warning", "Not implemented")
+		s.logger.Error("buildNormalErc20", "Warning", tsfrs[0].Hash)
+		s.logger.Error("buildActivityFromErc20", "Warning", "Not implemented", "Transfers", len(tsfrs))
 	}
 
 	return actvs
