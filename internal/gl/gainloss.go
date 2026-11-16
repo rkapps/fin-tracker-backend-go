@@ -258,7 +258,7 @@ func (gl *GainLoss) CreateGLIncome(ctx context.Context, lot *domain.ActivityLot,
 	acct := gl.acctsm[activity.AccountID]
 
 	txgainLoss := decimal.Zero
-	gainLoss := lot.CostValue
+	gainLoss := activity.RcvAmount
 	if acct.TaxStatus == domain.TaxStatusTaxable {
 		txgainLoss = gainLoss
 	}
