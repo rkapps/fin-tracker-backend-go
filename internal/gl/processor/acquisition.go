@@ -33,6 +33,7 @@ func (p AquisitionActivityProcessor) Process(ctx context.Context, actv *domain.A
 		return nil, fmt.Errorf("'%s' is not a currency", actv.SentSymbol)
 	}
 	if actv.SentAmount.IsZero() {
+		p.logger.Error("Process", "Actv", actv.ID, "Account", actv.AccountID)
 		return nil, fmt.Errorf("Sent amount is zero")
 	}
 
