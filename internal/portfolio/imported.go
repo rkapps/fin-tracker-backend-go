@@ -185,9 +185,13 @@ func (r ImportedAccountRefresher) Refresh(ctx context.Context, ps core.PriceServ
 				actv.Status = domain.ActivityStatusPending
 
 			case string(domain.ActivityTypeWithdraw):
+				actv.RcvAccount = iactv.RcvAccount
 				actv.RcvSymbol = iactv.RcvCurrency
 				actv.RcvAmount = iactv.RcvAmount
-				actv.RcvAccount = iactv.RcvAccount
+				if len(actv.RcvSymbol) == 0 {
+					actv.RcvSymbol = iactv.SentCurrency
+					actv.RcvAmount = iactv.SentAmount
+				}
 				actv.RcvPrice = decimal.NewFromFloat(1.0)
 				actv.SentAmount = iactv.SentAmount
 				actv.SentSymbol = iactv.SentCurrency
