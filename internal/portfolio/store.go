@@ -1,11 +1,9 @@
 package portfolio
 
 import (
-	"log"
 	"time"
 
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
-	"github.com/shopspring/decimal"
 )
 
 func (p Portfolio) saveData(uid string, asumys []*domain.AccountSummary, actvs []*domain.Activity,
@@ -36,16 +34,13 @@ func (p Portfolio) saveData(uid string, asumys []*domain.AccountSummary, actvs [
 		ids = append(ids, oactv.ID)
 	}
 	p.accountsStorage.DeleteActivities(ids)
-	err = p.accountsStorage.SaveActivities(actvs)
-	if err != nil {
-		log.Println(err)
-		for _, actv := range actvs {
-			if actv.Value.GreaterThan(decimal.NewFromInt(1833)) && actv.Value.LessThan(decimal.NewFromInt(1834)) {
-				log.Println(actv.ID)
-			}
+	if len(actvs) > 0 {
+		err = p.accountsStorage.SaveActivities(actvs)
+		if err != nil {
+			p.logger.Error("SaveData", "SaveActivities", err)
+			return err
 		}
-		p.logger.Error("SaveData", "SaveActivities", err)
-		return err
+
 	}
 
 	// clear and delete activitylogs
