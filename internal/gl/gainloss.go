@@ -100,7 +100,7 @@ func (gl *GainLoss) Run(ctx context.Context, actvs []*domain.Activity) (GainLoss
 		gl.debug = false
 		if //strings.Compare(actv.AccountID, "Solana-Fa8jM") == 0 ||
 		strings.Compare(actv.ID, "25370d6c-0059-5bee-ba1e-fc72e8ca8ab9") == 0 {
-			gl.debug = true
+			// gl.debug = true
 		}
 		if gl.debug {
 			gl.logger.Info("---Run---")
