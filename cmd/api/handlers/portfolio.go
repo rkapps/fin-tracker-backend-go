@@ -45,6 +45,7 @@ func (p *PortfolioHandler) GetSummary(c *gin.Context) {
 	}
 
 	asumys, err := p.Service.GetSummary(uid)
+	p.logger.Info("GetSUmmary", "Count", len(asumys))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
