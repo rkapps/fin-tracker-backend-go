@@ -30,6 +30,9 @@ const (
 	FIELD_HISTORY_SYMBOL     = "metadata.symbol"
 	FIELD_RELEVANCE_SCORE    = "relevance_score"
 
+	// gl entry
+	FIELD_GL_ENTRY_TAX_DATE = "taxDate"
+
 	// Fields for transaction
 	FIELD_TRANSACTION_GROUP       = "group"
 	FIELD_TRANSACTION_CATEGORY    = "category"

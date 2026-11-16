@@ -260,8 +260,8 @@ func (p PortfolioService) GetIncome(uid string, category string, atype string,
 	return incomes, nil
 }
 
-func (p PortfolioService) GetGLEntries(uid string, id string) ([]*domain.GLEntry, error) {
-	return p.accountsStorage.GetGlEntries(uid)
+func (p PortfolioService) GetGLEntries(uid string, accountIds []string, startDate time.Time, endDate time.Time) ([]*domain.GLEntry, error) {
+	return p.accountsStorage.GetGlEntries(uid, accountIds, startDate, endDate)
 }
 
 func (p PortfolioService) RefreshUserAccounts(ctx context.Context, uid string, simulate bool) error {

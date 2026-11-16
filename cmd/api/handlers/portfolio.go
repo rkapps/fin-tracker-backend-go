@@ -170,10 +170,24 @@ func (p *PortfolioHandler) GetGainLoss(c *gin.Context) {
 		acctIds = strings.Split(ids, ",")
 	}
 
+	sYear := c.Query("year")
+	year := 0
+	if len(sYear) > 0 {
+		year, _ = strconv.Atoi(sYear)
+	}
+
+	startDate := time.Time{}
+	endDate := time.Time{}
+
+	if year > 0 {
+		startDate = utils.TruncateToStartOfYear(year)
+		endDate = utils.TruncateToEndOYear(year)
+	}
+
 	category := c.Query("category")
 	atype := c.Query("type")
 	p.logger.Info("GetGainloss", "Category-Type", fmt.Sprintf("%s-%s", category, atype), "AcctIds", acctIds)
-	gls, err := p.Service.GetGLEntries(uid, "")
+	gls, err := p.Service.GetGLEntries(uid, acctIds, startDate, endDate)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return

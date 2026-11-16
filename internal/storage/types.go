@@ -43,7 +43,7 @@ type AccountStorageService interface {
 
 	// Glentry
 	DeleteGlEntries(ids []string) error
-	GetGlEntries(uid string) ([]*domain.GLEntry, error)
+	GetGlEntries(uid string, accountIds []string, startDate time.Time, endDate time.Time) ([]*domain.GLEntry, error)
 	SaveGlEntries(glEntries []*domain.GLEntry) error
 }
 

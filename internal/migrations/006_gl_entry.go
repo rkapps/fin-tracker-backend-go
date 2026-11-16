@@ -23,7 +23,11 @@ func init() {
 			}
 			if err = col.CreateIndexes(context.Background(), []mongo.IndexModel{
 				{
-					Keys:    bson.D{{Key: domain.FIELD_UID, Value: 1}, {Key: domain.FIELD_ACCOUNT_ID, Value: 1}},
+					Keys: bson.D{
+						{Key: domain.FIELD_UID, Value: 1},
+						{Key: domain.FIELD_ACCOUNT_ID, Value: 1},
+						{Key: domain.FIELD_GL_ENTRY_TAX_DATE, Value: 1},
+					},
 					Options: options.Index().SetName("idx_uid_account_date").SetUnique(false),
 				},
 			}); err != nil {

@@ -2,6 +2,7 @@ package portfolio
 
 import (
 	"log"
+	"time"
 
 	"github.com/rkapps/fin-tracker-backend-go/internal/domain"
 	"github.com/shopspring/decimal"
@@ -67,7 +68,7 @@ func (p Portfolio) saveData(uid string, asumys []*domain.AccountSummary, actvs [
 	err = p.accountsStorage.SaveActivityLots(lots)
 
 	//Gl entries
-	oglEntries, _ := p.accountsStorage.GetGlEntries(uid)
+	oglEntries, _ := p.accountsStorage.GetGlEntries(uid, []string{}, time.Time{}, time.Time{})
 	clear(ids)
 	for _, entry := range oglEntries {
 		ids = append(ids, entry.ID)
