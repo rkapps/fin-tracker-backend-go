@@ -62,9 +62,14 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 
 		for i, txn := range txns {
 
-			if strings.Compare(txn.Id, "e12f748a-42a9-5a2e-b46e-35753dc5a49f") == 0 {
-				r.logger.Debug("Transform", "Transaction", fmt.Sprintf("%s-%s", txn.Type, txn.Id), "CreatedAt", txn.Created_At)
-				r.logger.Debug("Transform", "Status", txn.Status)
+			debug := false
+			if strings.Compare(txn.Id, "f872a05b-96c9-5204-ae9a-b5f8f639799b==") == 0 ||
+				strings.Compare(txn.Id, "46cff90a-f2a6-58b9-b904-ac8bba25cb11") == 0 {
+				// debug = true
+			}
+			if debug {
+				r.logger.Info("Transform", "Transaction", fmt.Sprintf("%s-%s", txn.Type, txn.Id), "CreatedAt", txn.Created_At)
+				r.logger.Info("Transform", "Status", txn.Status)
 			}
 
 			if strings.Compare(txn.Status, "canceled") == 0 || strings.Compare(txn.Status, "cancelled") == 0 {
@@ -166,10 +171,17 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 				actv.FeeCurrency = sell.Fee.Currency
 
 			case "send":
-				// log.Println(txn)
+				if debug {
+					log.Println(txn)
+				}
 				tamount, _ := utils.ConvertStringToDecimal(txn.Network.Transaction_Fee.Amount)
 
 				if len(txn.To.Address) == 0 {
+
+					// skip 0 amount
+					if namount.IsZero() {
+						continue
+					}
 					actv.TxnType = domain.ActivityTypeReceive
 					actv.RcvAccountID = acred.Account.ID
 					actv.RcvSymbol = symbol
@@ -323,22 +335,36 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 					actv.RcvAmount = amount.Mul(fprice)
 				}
 			case "staking_transfer":
-				r.logger.Debug("Transform", "Transaction", fmt.Sprintf("%s-%s", txn.Type, txn.Id), "Date", txn.Created_At)
-				r.logger.Debug("Transform", "Amount", txn.Amount, "NativeAmount", txn.Native_Amount)
+				if debug {
+					r.logger.Info("Transform", "Transaction", fmt.Sprintf("%s-%s", txn.Type, txn.Id), "Date", txn.Created_At)
+					r.logger.Info("Transform", "Amount", txn.Amount, "NativeAmount", txn.Native_Amount)
+				}
 
 				duration := actv.Date.Sub(time.Unix(0, 0))
 				ms := int(duration.Minutes())
 				sactv := stkActvsm[ms]
 				if sactv != nil {
+
 					actv.TxnType = domain.ActivityTypeTransfer
 					actv.SentAccountID = actv.AccountID
 					actv.RcvAccountID = actv.AccountID
 					if amount.IsPositive() {
+						// same symbol ignore
+						if strings.Compare(symbol, sactv.SentSymbol) == 0 {
+							continue
+						}
+
 						actv.RcvSymbol = symbol
 						actv.RcvAmount = sactv.SentAmount
 						actv.SentSymbol = sactv.SentSymbol
 						actv.SentAmount = sactv.SentAmount
 					} else {
+
+						// same symbol ignore
+						if strings.Compare(symbol, sactv.RcvSymbol) == 0 {
+							continue
+						}
+
 						actv.RcvSymbol = sactv.RcvSymbol
 						actv.RcvAmount = sactv.RcvAmount
 						actv.SentSymbol = symbol
@@ -363,13 +389,20 @@ func (r CoinbaseAccountTransformer) Transform(ctx context.Context, ps core.Price
 				}
 
 			case "retail_eth2_deprecation":
-				actv.TxnType = domain.ActivityTypeTransfer
-				actv.SentAccountID = actv.AccountID
-				actv.SentSymbol = symbol
-				actv.SentAmount = amount.Neg()
-				actv.RcvAccountID = actv.AccountID
-				actv.RcvSymbol = "ETH"
-				actv.RcvAmount = actv.SentAmount
+				if debug {
+					r.logger.Info("Transform", "Sent", fmt.Sprintf("%s-%v", symbol, amount))
+				}
+				if amount.IsNegative() {
+					actv.TxnType = domain.ActivityTypeTransfer
+					actv.SentAccountID = actv.AccountID
+					actv.SentSymbol = symbol
+					actv.SentAmount = amount.Neg()
+					actv.RcvAccountID = actv.AccountID
+					actv.RcvSymbol = "ETH"
+					actv.RcvAmount = actv.SentAmount
+				} else {
+					continue
+				}
 
 			case "retail_simple_dust", "incentives_rewards_payout", "raise_offering_pooling", "tx",
 				"unstaking_transfer", "retail_instant_unstaking":
