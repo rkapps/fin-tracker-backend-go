@@ -125,7 +125,7 @@ func (p *Provider) fetchERC20Transfers(acred domain.AccountWithCredential, block
 	for {
 		resp, err := p.HTTP.GetERC20Transfers(acred.Account.Address(), &blockNumber, page, PAGE_OFFSET)
 		if err != nil {
-			// p.logger.Error("fetchERC20Transfers", "Error", err)
+			p.logger.Error("fetchERC20Transfers", "Error", err)
 		}
 		p.logger.Info("fetchERC20", "erc20", fmt.Sprintf("%s-%s", acred.Account.ID, acred.Account.Address()), "count", len(resp))
 		var items []domain.RawItem
@@ -195,7 +195,7 @@ func (p *Provider) fetchInternalTransactions(acred domain.AccountWithCredential,
 
 		resp, err := p.HTTP.GetInternalTransactions(acred.Account.Address(), &blockNumber, page, PAGE_OFFSET)
 		if err != nil {
-			// p.logger.Error("fetchInternal", "Error", err)
+			p.logger.Error("fetchInternal", "Error", err)
 		}
 		p.logger.Info("fetchInternal", "Internal", fmt.Sprintf("%s-%s", acred.Account.ID, acred.Account.Address()), "count", len(resp))
 
@@ -228,7 +228,7 @@ func (p *Provider) fetchNormalTransactions(acred domain.AccountWithCredential, b
 
 		resp, err := p.HTTP.GetNormalTransactions(acred.Account.Address(), &blockNumber, page, PAGE_OFFSET)
 		if err != nil {
-			// p.logger.Error("fetchNormal", "Error", err)
+			p.logger.Error("fetchNormal", "Error", err)
 		}
 		p.logger.Info("fetchNormal", "normal", fmt.Sprintf("%s-%s", acred.Account.ID, acred.Account.Address()), "count", len(resp))
 		var items []domain.RawItem
